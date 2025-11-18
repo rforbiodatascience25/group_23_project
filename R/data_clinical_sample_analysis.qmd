@@ -9,6 +9,8 @@ format: html
 library(readr)
 library(here)
 library(tidyverse)
+library(igraph)
+library(ggraph)
 ```
 
 # Load Data
@@ -17,11 +19,9 @@ library(tidyverse)
 clinical_sample <- read.delim(here("data", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
 ```
 
-```{r}
-clinical_sample |>
-  select(-c(PATIENT_ID, SAMPLE_ID))|>
-  summarise_all(unique)
-```
+# Exploratory Analysis
+
+Categorical Variables:
 
 ```{r}
 clinical_sample %>% select(CANCER_TYPE) %>% unique()
@@ -31,4 +31,113 @@ clinical_sample %>% select(METASTATIC_SITE) %>% unique()
 clinical_sample %>% select(PRIMARY_SITE) %>% unique()
 clinical_sample %>% select(GENE_PANEL) %>% unique()
 
+```
+
+Are patient ids and sample ids unique here? Yes
+
+```{r}
+length(unique(clinical_sample$PATIENT_ID))
+length(unique(clinical_sample$SAMPLE_ID))
+```
+
+Number Metastatic vs Primary
+
+```{r}
+clinical_sample |> group_by(SAMPLE_TYPE)|> summarise(n= n())
+```
+
+Age distribution
+
+```{r}
+ggplot(clinical_sample, aes(AGE_AT_SEQ_REPORT))+
+  geom_bar()
+```
+
+```{r}
+ggplot(clinical_sample, aes(TMB_NONSYNONYMOUS))+
+  geom_density()
+```
+
+```{r}
+max(clinical_sample$TMB_NONSYNONYMOUS)
+clinical_sample |> select(PATIENT_ID, SAMPLE_ID, TMB_NONSYNONYMOUS)|>
+  arrange(desc(TMB_NONSYNONYMOUS)) |> head()
+```
+
+Number of tumors in organs
+
+```{r}
+clinical_sample |>
+  mutate(sample_site = ifelse(METASTATIC_SITE=='Not Applicable', PRIMARY_SITE, METASTATIC_SITE))|>
+  ggplot( aes(sample_site))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1, size = 4))
+```
+
+```{r}
+clinical_sample <- clinical_sample |>
+  mutate(sample_site = ifelse(METASTATIC_SITE=='Not Applicable', PRIMARY_SITE, METASTATIC_SITE))
+
+common_tumor_sites <- clinical_sample|>
+  group_by(sample_site)|> 
+  summarise(n = n())|>
+  filter(n>20)
+
+clinical_sample|>
+  filter(sample_site %in% common_tumor_sites$sample_site)|>
+  ggplot(aes(sample_site))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, hjust=1, size = 10))
+```
+
+Network of Metastasis
+
+```{r}
+nodes <- clinical_sample |>
+  select(PRIMARY_SITE, METASTATIC_SITE)|>
+  mutate(to = ifelse(METASTATIC_SITE=='Not Applicable', NA, METASTATIC_SITE))|>
+  rename(from = PRIMARY_SITE) |> 
+  select(-METASTATIC_SITE)|>
+  na.omit(to)|>
+  select(-to)|>
+  unique()
+network_inf <- clinical_sample |>
+  select(PRIMARY_SITE, METASTATIC_SITE)|>
+  mutate(to = ifelse(METASTATIC_SITE=='Not Applicable', NA, METASTATIC_SITE))|>
+  rename(from = PRIMARY_SITE) |> 
+  select(-METASTATIC_SITE)|>
+  na.omit(to)|>
+  group_by(from, to)|>
+  summarise(n = n())
+
+length(unique(network_inf$from))
+v <-c(unique(network_inf$from), unique(network_inf$to))
+v <- unique(v)
+g <- graph_from_data_frame(network_inf, directed = TRUE)#, vertices = c(nodes, nodes)
+ggraph(g , layout = 'stress')+
+  geom_edge_link(aes(alpha = n), arrow = arrow(length = unit(2.5, 'mm')))+#
+  geom_node_point()+
+  geom_node_text(aes(label=v), repel = TRUE, size = 3)
+```
+
+```{r}
+network_common_tumor_sites <- network_inf|>
+  filter(from %in% common_tumor_sites$sample_site)
+v <- network_common_tumor_sites|>
+  select(-n)|>
+  pivot_longer(cols = c(from, to), values_to = 'vertice')|>
+  select(-name)|>
+  distinct(vertice)|>
+  mutate(common_site = ifelse(vertice %in% common_tumor_sites$sample_site, TRUE, FALSE))
+g_common <- graph_from_data_frame(network_common_tumor_sites)
+ggraph(g_common , layout = 'stress')+
+  geom_edge_link(aes(alpha = n), arrow = arrow(length = unit(2.5, 'mm')))+#
+  geom_node_point(aes(color = v$common_site))+
+  geom_node_text(aes(label=v$vertice), repel = TRUE, size = 3)
+```
+
+```{r}
+network_inf |>
+  arrange(desc(n)) |> 
+  head()
 ```

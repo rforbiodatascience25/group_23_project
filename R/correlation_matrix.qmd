@@ -1,0 +1,41 @@
+---
+title: "correlation_matrix"
+format: html
+---
+
+# Load Packages
+
+```{r}
+library("GDAtools")
+library("corrplot")
+library(readr)
+library(here)
+library(tidyverse)
+```
+
+# Load Data
+
+```{r}
+clinical_sample <- read.delim(here("data", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
+
+mutations <- read.delim(here("data", "data_mutations.txt"), sep = "\t", header = TRUE)
+
+clinical_patient <- read.delim(here("data", "data_clinical_patient.txt"), sep = "\t", skip = 4, header = TRUE)
+```
+
+# Clean Data
+
+```{r}
+colnames(clinical_patient)
+```
+
+```{r}
+patient_clean <- clinical_patient |> select(-c(AGE_GROUP))
+sample_clean <- clinical_sample |>
+  select(c(PATIENT_ID, SAMPLE_ID,CANCER_TYPE, TMB_NONSYNONYMOUS, AGE_AT_SEQ_REPORT) )
+mutation_clean <- mutations |>
+  select(c(Variant_Classification, Tumor_Sample_Barcode))
+
+```
+
+How many mutations per sample
