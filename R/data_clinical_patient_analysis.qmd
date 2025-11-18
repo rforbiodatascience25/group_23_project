@@ -58,6 +58,24 @@ patients |>
          Patient_ID = X.Patient.Identifier)
 ```
 
+```{r}
+patients <- patients |>
+  mutate(
+    Age_num = case_when(
+      Age.Group.at.Diagnosis.in.Years == "<30" ~ 25,
+      Age.Group.at.Diagnosis.in.Years == "31-50" ~ 40,
+      Age.Group.at.Diagnosis.in.Years == "50-60" ~ 55,
+      Age.Group.at.Diagnosis.in.Years == "61-70" ~ 65,
+      Age.Group.at.Diagnosis.in.Years == ">71" ~ 75
+    )
+  )
+
+```
+
+age group -\> make factors based on age group
+
+"early"
+
 ## Plots
 
 We will be looking at the proportion of men vs women that have survived the cancer depending on their age and then depending on the type of treatment they received. (Survival proportion per treatment)
@@ -70,7 +88,7 @@ facet =
 patients |> 
   ggplot(mapping = aes(x = Age.Group.at.Diagnosis.in.Years, 
                        fill =  Sex)) +
-  geom_histogram()
+  geom_bar()
 ```
 
 ```{r}
@@ -80,7 +98,7 @@ patients |>
   ggplot(aes(x = Age.Group.at.Diagnosis.in.Years,
              fill = Sex)) +
   geom_bar(position = "dodge") +
-  facet_wrap(~ Overall.Survival.Status)
+  facet_wrap(~ Suvival.Status.Clean)
 ```
 
 ```{r}
@@ -90,4 +108,34 @@ patients |>
                        fill = Sex))+
   geom_bar(position = "dodge")+
   facet_wrap(~ Overall.Survival..Months.)
+```
+
+```{r}
+patients |> 
+  ggplot(mapping = aes(x = Drug.Type,
+                       y = Overall.Survival..Months.,
+                       fill = Sex))+
+  geom_boxplot()+
+  facet_wrap(~Age.Group.at.Diagnosis.in.Years)
+```
+
+How many months considered still alive?
+
+```{r}
+summ_age <- count(patients$Age_num)
+patients |> 
+  ggplot(aes(x = summ_age, y = Suvival.Status.Clean)) +
+  geom_line(alpha = 0.4) 
+```
+
+```{r}
+library(survival)
+library(survminer)
+
+patients$Overall.Survival..Months. <- as.numeric(patients$Overall.Survival..Months.)
+
+fit <- survfit(Surv(Overall.Survival..Months., Overall.Survival.Status) ~ Age.Group.at.Diagnosis.in.Years, data = patients)
+
+ggsurvplot(fit, data = patients)
+
 ```
