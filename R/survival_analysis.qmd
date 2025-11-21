@@ -33,6 +33,8 @@ Need sex, age, cancer type to be transformed to numerical categories
 
 # Cox regression
 
+Cox regression for hazard analysis
+
 ```{r}
 cox_model <- coxph()
 ```
