@@ -85,6 +85,12 @@ patients <- patients |>
   mutate(Survival_Months = as.numeric(Survival_Months))
 ```
 
+```{r}
+patients |> 
+  write_tsv(file = file.path("/net/pupil1/home/people/s243419/R_for_bio_data_science/projects/group23_project/data",'data_clinical_patients_clean'))
+
+```
+
 age group -\> make factors based on age group
 
 "early"
