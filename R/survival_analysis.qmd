@@ -18,17 +18,17 @@ library(survival)
 # Data import
 
 ```{r}
-data_mutation <- read_tsv("/net/pupil1/home/people/s253729/R/r_for_bio_data_science/group23_project/data/data_mutation_cleaned")
+clinical_sample <- read.delim(here("data", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
 
-data_clinical_sample <- read_tsv("/net/pupil1/home/people/s253729/R/r_for_bio_data_science/group23_project/data/data_clinical_sample.txt",
-                                 skip = 4)
+mutations <- read.delim(here("data", "data_mutations.txt"), sep = "\t", header = TRUE)
 
-data_clinical_patient <- read_tsv("/net/pupil1/home/people/s253729/R/r_for_bio_data_science/group23_project/data/data_clinical_patient_clean",
-                                  skip = 4)
+clinical_patient <- read.delim(here("data", "data_clinical_patient.txt"), sep = "\t", skip = 4, header = TRUE)
 ```
+
+# Data wrangling
+
+Need sex, age, cancer type to be transformed to numerical categories
 
 # Kaplan-Meier curve
 
 # Cox regression
-
-test
