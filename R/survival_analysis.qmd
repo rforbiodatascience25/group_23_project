@@ -1,0 +1,32 @@
+---
+title: "Survival Analysis"
+format: html
+editor: visual
+---
+
+# Library import
+
+```{r}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(purrr)
+library(survival)
+```
+
+# Data import
+
+```{r}
+data_mutation <- read_tsv("/net/pupil1/home/people/s253729/R/r_for_bio_data_science/group23_project/data/data_mutation_cleaned")
+
+data_clinical_sample <- read_tsv("/net/pupil1/home/people/s253729/R/r_for_bio_data_science/group23_project/data/data_clinical_sample.txt",
+                                 skip = 4)
+
+data_clinical_patient <- read_tsv("/net/pupil1/home/people/s253729/R/r_for_bio_data_science/group23_project/data/data_clinical_patient.txt",
+                                  skip = 4)
+```
+
+# Kaplan-Meier curve
+
+# Cox regression
