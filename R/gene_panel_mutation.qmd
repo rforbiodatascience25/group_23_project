@@ -1,0 +1,79 @@
+---
+title: "data_gene_panel_matrix_clean"
+format: html
+editor: visual
+---
+
+## Load libraries:
+
+```{r}
+#| echo : False
+library("tidyverse")
+library("dplyr")
+library("tidyr")
+```
+
+## Data wrangling:
+
+```{r}
+#Load the gene panel matrix data
+gene_panel_matrix <- read_delim("data/data_gene_panel_matrix.txt", delim = "\t")
+gene_panel_matrix
+```
+
+```{r}
+#Add an extra column with the IMPACT version
+gene_panel_matrix <- gene_panel_matrix |> 
+  mutate(IMPACT_version = case_when(
+    mutations == "IMPACT341" ~ "IMPACT_v3",
+    mutations == "IMPACT410" ~ "IMPACT_v5",
+    mutations == "IMPACT468" ~ "IMPACT_v6"
+  ))
+```
+
+```{r}
+#Load the mutations data
+data_mutation <- read_tsv("data/data_mutation_cleaned",
+                          show_col_types = FALSE)
+```
+
+Some rows in the data_mutation object are duplicates that differ only in the "consequence" column. Given that the consequence is not going to be studied, these duplicate rows will be removed.
+
+```{r}
+#Remove the duplicates
+data_mutation <- data_mutation |> 
+  distinct(across(-consequence),
+           .keep_all = TRUE)
+```
+
+```{r}
+#Rename the ID column and the gene column
+data_mutation <- data_mutation |> 
+  rename(SAMPLE_ID = Tumor_Sample_Barcode,
+         gene = Hugo_Symbol)
+```
+
+```{r}
+#Select the columns of interest
+data_mutation <- data_mutation |> 
+  select(SAMPLE_ID,
+         gene,
+         Variant_Classification)
+#Merge both objects in a new one
+combined_data <- left_join(gene_panel_matrix,
+                           data_mutation,
+                           by = "SAMPLE_ID")
+```
+
+```{r}
+#Group the data by the Sample ID and count the number of mutations per patient
+combined_data <- combined_data |> 
+  group_by(SAMPLE_ID) |> 
+  summarise(
+    IMPACT_version = first(IMPACT_version),
+    n_mutation = n(),
+    mutations = list(select(cur_data(),
+                            gene,
+                            Variant_Classification))        
+  )
+```
