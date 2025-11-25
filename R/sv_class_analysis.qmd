@@ -1,0 +1,218 @@
+---
+title: "Structural Variant analysis"
+format: html
+editor: visual
+---
+
+## Import library
+
+```{r}
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(here)
+library(readr)
+```
+
+## Import data
+
+```{r}
+raw_data_sv <- read_tsv(here("data", "data_sv.txt"),na = c("", "NA", "NULL"))
+
+raw_clinical_sample <- read.delim(here("data", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
+
+raw_data_sv |> slice_sample(n = 5)
+raw_clinical_sample |> slice_sample(n = 5)
+```
+
+## Data cleaning
+
+```{r}
+sv_clean <- raw_data_sv |> select(c(Sample_Id, Site1_Hugo_Symbol, Site1_Chromosome, Site2_Hugo_Symbol, Site2_Chromosome, Class, SV_Length))
+
+clinical_clean <- raw_clinical_sample |> select(c(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))
+
+
+```
+
+## Data augmentation
+
+The clinical data has 1.6k rows and 1 entry = 1 patient with a unique sample id (one sample id = one. On the other hand, the sv data only has 346 rows, and the sample id column is not a primary key: one patient may have been sequenced with more than one Structural Variant. Then, we can augment our data in two different ways if we want to look at the SVs separately (sv_clinic_augm), or adding the SVs information per patient (clinical_with_sv).
+
+```{r}
+
+sv_clinic_augm <- sv_clean |> left_join(clinical_clean, by = c("Sample_Id" = "SAMPLE_ID"))
+
+sv_per_patient <- sv_clean |> 
+  group_by(Sample_Id) |> 
+  summarize(Total_SV = n(),                            
+    N_Deletions = sum(Class == "DELETION"),  
+    N_Duplications = sum(Class == "DUPLICATION"),
+    N_Inversions = sum(Class == "INVERSION"),
+    N_Translocations = sum(Class == "TRANSLOCATION")
+  )
+
+clinical_with_sv <- clinical_clean |> 
+  left_join(sv_per_patient, by = c("SAMPLE_ID" = "Sample_Id")) |> 
+  mutate(Total_SV = replace_na(Total_SV, 0))
+
+```
+
+## Data visualisation
+
+### Analysis of structural variants class
+
+**Repartition of mutation class:**
+
+```{r}
+sv_clinic_augm |> ggplot(aes(x = Class, fill = Class))+
+  geom_bar(color = "black") + 
+  theme_minimal()+
+  theme(panel.grid.major.x = element_blank()) + 
+  labs(x = "Structural variant class", y =" counts")
+  
+```
+
+**Reparition of SVs length:**
+
+Excluding the transclocation class which hasn't any "determined" size.
+
+```{r}
+ 
+sv_clinic_augm |> filter(Class != "TRANSLOCATION") |> 
+  ggplot(aes(x=SV_Length, fill = Class)) +
+  geom_histogram() + 
+  scale_x_log10() +
+  facet_wrap(~Class, scales = "free_y", ncol = 1) +
+  theme_minimal() 
+
+sv_clinic_augm |> filter(Class != "TRANSLOCATION") |> 
+  ggplot(aes(x = SV_Length, fill = Class, color = Class)) +
+  geom_density(alpha = 0.3) +  
+  scale_x_log10() +
+  theme_minimal() 
+```
+
+**Repartition of SVs among chromosomes?**
+
+### Is a gene recurrent in SVs ?
+
+```{r}
+genes_longer <- sv_clinic_augm |> 
+  pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
+  filter(!is.na(Gene_Name))
+
+nrow(genes_longer)
+
+genes_longer  |> 
+  count(Gene_Name, sort = TRUE) |> 
+  head(10)
+```
+
+The gene EGFR is involved in 59 sites in total over 692 sites for the 346 SVs. Let's have a closer look at this.
+
+```{r}
+
+EGFR_SV <- sv_clinic_augm |> 
+  filter(Site1_Hugo_Symbol == "EGFR" | Site2_Hugo_Symbol == "EGFR") 
+
+nrow(EGFR_SV)
+
+EGFR_SV |> 
+  ggplot(aes(x = Class, fill = Class)) +
+  geom_bar(color = "black", alpha = 0.8) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+EGFR_SV |> 
+  ggplot(aes(x = CANCER_TYPE, fill = Class)) +
+  geom_bar(color = "black", alpha = 0.8) +
+  theme_minimal() 
+
+```
+
+EGFR is involved in 30 SVs, and among these 25 are deletion!
+
+### Link between SVs, TMB and cancer types
+
+While TMB captures nucleotide-level errors, SVs represent structural genomic instability.
+
+```{r}
+clinical_with_sv |> 
+  mutate(Has_SV = ifelse(Total_SV > 0, "With SV", "No SV")) |> 
+  ggplot(aes(x = SAMPLE_TYPE, fill = Has_SV)) +
+  geom_bar(position = "fill") + 
+  theme_minimal() +
+  labs(title = "Are Structural Variants enriched in Metastases?",
+       y = "Proportion of Patients",
+       x = NULL,
+       fill = "SV Status")
+
+
+clinical_with_sv |> 
+  mutate(Has_SV = ifelse(Total_SV > 0, "With SV", "No SV")) |> 
+  ggplot(aes(x = SAMPLE_TYPE, fill = Has_SV)) +
+  geom_bar(position = "fill") + 
+  scale_y_continuous() +
+  coord_flip() +
+  facet_wrap(~CANCER_TYPE, ncol = 2) +
+  theme_minimal() +
+  labs(title = "Are Structural Variants enriched in Metastases?",
+       subtitle = "Comparison by Cancer Type",
+       y = "Proportion of Patients",
+       x = NULL,
+       fill = "SV Status")
+```
+
+```{r}
+
+clinical_with_sv |>  mutate(CANCER_TYPE = fct_reorder(CANCER_TYPE, TMB_NONSYNONYMOUS, .fun = median)) |> 
+  ggplot(aes(x = CANCER_TYPE, y = TMB_NONSYNONYMOUS)) +
+  geom_boxplot(fill = "orange", alpha = 0.6) +
+  scale_y_log10() +
+  coord_flip() + 
+  theme_minimal() +
+  labs(title = "Tumor Mutational Burden (TMB) across Cancer Types",
+       x = NULL, 
+       y = "TMB") +
+  theme_minimal()
+
+
+clinical_with_sv |>  mutate(CANCER_TYPE = fct_reorder(CANCER_TYPE, Total_SV, .fun = mean)) |> 
+  ggplot(aes(x = CANCER_TYPE, y = Total_SV)) +
+  geom_jitter(alpha = 0.3, color = "darkblue") +
+  coord_flip() +
+  labs(title = "Structural Variants per Cancer Type", x = NULL, y = "SVs Counts") +
+  theme_minimal()
+
+```
+
+```{r}
+clinical_with_sv |> 
+  ggplot(aes(x = TMB_NONSYNONYMOUS, y = Total_SV)) +
+  #geom_point(aes(color = CANCER_TYPE), alpha = 0.6) +
+  geom_jitter(aes(color = CANCER_TYPE), alpha = 0.6) +
+  geom_smooth(method = "lm", color = "black", se = FALSE) +
+  scale_x_log10() + 
+  theme_minimal() +
+  labs(title = "Correlation: TMB vs. SV",
+       x = "TMB",
+       y = "Number of SVs")
+```
+
+### TMB Distribution across Cancer Types
+
+```{r}
+clinical_with_sv |> 
+  ggplot(aes(x = SAMPLE_TYPE, y = TMB_NONSYNONYMOUS, fill = SAMPLE_TYPE)) +
+  geom_boxplot(alpha = 0.8) +
+  scale_y_log10() +
+  facet_wrap(~CANCER_TYPE, scales = "free_y") +
+  theme_minimal() +
+  theme(legend.position = "none") + 
+  labs(title = "Comparison of TMB in Primary vs. Metastasis samples per cancer type",
+       subtitle = "",
+       x = NULL,
+       y = "TMB (log scale)")
+```
