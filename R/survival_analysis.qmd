@@ -39,9 +39,8 @@ KM_f <- survfit(Surv(Survival_Months, OS_status) ~1, data = patients)
 #convert to a tibble
 
 tibble_KM_f <- tibble(
-  time = fit$time,
-  survival = fit$surv)
-print(tibble_fit)
+  time = KM_f$time,
+  survival = KM_f$surv)
 
 ggplot(tibble_KM_f, 
        mapping = aes(x = time,
