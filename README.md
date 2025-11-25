@@ -43,14 +43,17 @@ Detailed information for each column with examples can be found in the descripti
 
 -   data description in read-me+ clean up
 
--   do analysis on subset of cancer type = glioma
+-   mutation analysis of glioma samples(Maxence)
+
+-   do analysis on subset of cancer type = glioma(Cora, Louis, maybe Romane)
+
+-   structure github
 
 # Presentation:
 
 1.  Introduction to our data(give background)(cancer data, study, data formats in the 5 files)
-2.  Patient information(age distribution, sex, number of patients, etc)(barplot age &sex stacked)
-3.  Survival Rate with Cancer Type+ general survival
-4.  Probability to die based on Cancer Type
-5.  Location of Cancer(network)
-6.  SV+most mutated gene+most present in Glioma
-7.  Technical differences in Analysis Tool(after some mutation introduction)
+2.  Material(Francesc) with Impact
+3.  Overview over data, general plots
+4.  Patient information(age distribution, sex, number of patients, etc)(barplot age &sex stacked)+ survival rate
+5.  SV+most mutated gene+most present in Glioma
+6.  Network based on glioma

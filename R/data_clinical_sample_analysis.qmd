@@ -33,6 +33,10 @@ clinical_sample %>% select(GENE_PANEL) %>% unique()
 
 ```
 
+```{r}
+clinical_sample %>% filter(CANCER_TYPE=='Glioma') %>% nrow
+```
+
 Are patient ids and sample ids unique here? Yes
 
 ```{r}
