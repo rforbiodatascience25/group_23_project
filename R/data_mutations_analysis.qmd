@@ -107,7 +107,7 @@ data_mutation_without_nas <- data_mutation_without_nas |>
 ## Explanation of the variables
 
 | Column name | What it is |
-|------------------------------------|------------------------------------|
+|----|----|
 | Hugo_Symbol | The **Name** of the gene. |
 | Entrez_Gene_Id | The gene's unique **ID number**. |
 | Chromosome | The specific chromosome where the mutation occurred |

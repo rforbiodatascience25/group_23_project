@@ -59,11 +59,13 @@ analysis_data <- patient_sample_mutations |>
   select(-c(PATIENT_ID, SAMPLE_ID))|>
   mutate_if(is.character, as.factor)
 
+correlation_matrix<- hetcor(analysis_data)
+
 corrplot(correlation_matrix$correlations, method="color", tl.col="black", tl.srt=45)
   
 
 
-correlation_matrix<- hetcor(analysis_data)
+
 ```
 
 \

@@ -34,3 +34,11 @@ Detailed information for each column with examples can be found in the descripti
 -   comparison number of mutations and IMPACT version(Francesc)
 -   Kind of mutation to TMB, Metastasis(Maxence)
 -   Kind of Mutations numbers(Maxence)
+
+# New TODOs:
+
+-   get data script, download data from web and clean(louis), into raw and data folder
+
+-   bar plot: numbers of mutation, but stacked with kind of mutation(Louis data set)
+
+-   

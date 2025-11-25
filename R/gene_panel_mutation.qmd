@@ -1,0 +1,169 @@
+---
+title: "data_gene_panel_matrix_clean"
+format: html
+editor: visual
+---
+
+## Load libraries:
+
+```{r}
+#| echo : False
+library(tidyverse)
+library(here)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(viridis)
+```
+
+## Data wrangling:
+
+```{r}
+#Load the gene panel matrix data
+gene_panel_matrix <- read_delim(here("data",
+                                     "data_gene_panel_matrix.txt"), delim = "\t")
+gene_panel_matrix
+```
+
+```{r}
+#Add an extra column with the IMPACT version
+gene_panel_matrix <- gene_panel_matrix |> 
+  mutate(IMPACT_version = case_when(
+    mutations == "IMPACT341" ~ "IMPACT_v3",
+    mutations == "IMPACT410" ~ "IMPACT_v5",
+    mutations == "IMPACT468" ~ "IMPACT_v6"
+  ))
+```
+
+```{r}
+#Load the mutations data
+data_mutation <- read_tsv(here("data",
+                               "data_mutation_cleaned"),
+                          show_col_types = FALSE)
+```
+
+Some rows in the data_mutation object are duplicates that differ only in the "consequence" column. Given that the consequence is not going to be studied, these duplicate rows will be removed.
+
+```{r}
+#Remove the duplicates
+data_mutation <- data_mutation |> 
+  distinct(across(-consequence),
+           .keep_all = TRUE)
+```
+
+```{r}
+#Rename the ID column and the gene column
+data_mutation <- data_mutation |> 
+  rename(SAMPLE_ID = Tumor_Sample_Barcode,
+         gene = Hugo_Symbol)
+```
+
+```{r}
+#Select the columns of interest
+data_mutation <- data_mutation |> 
+  select(SAMPLE_ID,
+         gene,
+         Variant_Classification)
+#Merge both objects in a new one
+combined_data <- left_join(gene_panel_matrix,
+                           data_mutation,
+                           by = "SAMPLE_ID")
+```
+
+```{r}
+#Group the data by the Sample ID and count the number of mutations per patient
+combined_data <- combined_data |> 
+  group_by(SAMPLE_ID) |> 
+  summarise(
+    IMPACT_version = first(IMPACT_version),
+    n_mutation = n(),
+    mutations = list(select(cur_data(),
+                            gene,
+                            Variant_Classification))        
+  )
+```
+
+```{r}
+#Create a new object with the percentages of each type of mutation per
+#IMPACT version
+percentage_type <- combined_data |> 
+  select(IMPACT_version,
+         mutations) |> 
+  #It is necessary to temporary unnest to work with the nested tibble data
+  unnest(mutations)
+
+#Group some mutation types to reduce the number of different categories
+percentage_type <- percentage_type |>
+  #Combine Frame shift del and ins into "Frame_Shift_Mutation"
+  mutate(Variant_Classification = case_when(
+    Variant_Classification %in% c(
+      "Frame_Shift_Del",
+      "Frame_Shift_Ins") ~ "Frame_Shift_Mutation",
+    TRUE ~ Variant_Classification)) |>
+  #Group the less represented mutations into "Other"
+  mutate(Variant_Classification = ifelse(
+    Variant_Classification %in% c("Frame_Shift_Mutation",
+                                  "Missense_Mutation",
+                                  "Nonsense_Mutation",
+                                  "Splice_Site"),
+    Variant_Classification,
+    "Other"
+  )) |> 
+  count(IMPACT_version,
+        Variant_Classification) |> 
+  group_by(IMPACT_version) |> 
+  mutate(percentage = n / sum(n) * 100)
+```
+
+## Data representation
+
+### Number of mutations per IMPACT version
+
+A representation of the number of mutations detected by the IMPACT version is done in order to assess whether the latest versions of IMPACT demonstrate improved capacity for identifying new mutations.
+
+```{r}
+ggplot(data = combined_data,
+       mapping = aes(x = IMPACT_version,
+                     y = n_mutation,
+                     fill = IMPACT_version)) +
+  geom_boxplot(alpha = 0.5) +
+  #It is necessary to do the log10 of the y values to prevent outliers from
+  #hiding the main distribution
+  scale_y_log10() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  labs(title = "Number of mutations per IMPACT version (log scale)",
+       y = "Mutations (log10)",
+       x = "IMPACT version")
+```
+
+As shown in the plot, the overall number of mutations detected increases with higher IMPACT versions, reflecting that a greater number of studied genes corresponds to a higher number of detected mutations. The medians of detected mutations are the following:
+
+```{r}
+results <- combined_data |> 
+  group_by(IMPACT_version) |> 
+  summarise(mut_median = median(n_mutation))
+
+results
+```
+
+### Distribution of mutation type by IMPACT version
+
+```{r}
+ggplot(data = percentage_type,
+       mapping = aes(x = IMPACT_version,
+                     y = percentage,
+                     fill = Variant_Classification)) +
+  geom_col(alpha = 0.8) + 
+  theme_minimal() + 
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  labs(title = "Distribution of mutation type by IMPACT version",
+       y = "Percentage",
+       x = "IMPACT version",
+       fill = "Mutation type")
+```
+
+While newer IMPACT versions detect more mutations overall, the distribution of mutation types remains largely unchanged. This indicates that version upgrades increase sensitivity without altering the relative composition of mutation types.
