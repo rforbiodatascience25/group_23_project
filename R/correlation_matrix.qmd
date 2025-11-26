@@ -32,7 +32,7 @@ colnames(clinical_patient)
 ```{r}
 patient_clean <- clinical_patient |> select(-c(AGE_GROUP))
 sample_clean <- clinical_sample |>
-  select(c(PATIENT_ID, SAMPLE_ID,CANCER_TYPE, TMB_NONSYNONYMOUS, AGE_AT_SEQ_REPORT) )
+  select(c(PATIENT_ID, SAMPLE_ID,CANCER_TYPE, TMB_NONSYNONYMOUS, AGE_AT_SEQ_REPORT, TUMOR_PURITY) )
 mutation_clean <- mutations |>
   select(c(Variant_Classification, Tumor_Sample_Barcode))|>
   group_by(Tumor_Sample_Barcode)|>

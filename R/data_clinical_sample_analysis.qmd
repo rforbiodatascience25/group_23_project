@@ -33,10 +33,6 @@ clinical_sample %>% select(GENE_PANEL) %>% unique()
 
 ```
 
-```{r}
-clinical_sample %>% filter(CANCER_TYPE=='Glioma') %>% nrow
-```
-
 Are patient ids and sample ids unique here? Yes
 
 ```{r}
@@ -144,4 +140,72 @@ ggraph(g_common , layout = 'stress')+
 network_inf |>
   arrange(desc(n)) |> 
   head()
+```
+
+# Exploratory Analysis Glioma
+
+```{r}
+sample_glioma <- clinical_sample %>% 
+  filter(CANCER_TYPE=='Glioma')
+
+```
+
+```{r}
+nrow(sample_glioma)
+```
+
+```{r}
+sample_glioma |> group_by(SAMPLE_TYPE)|> summarise(n= n())
+```
+
+Exploratory Plots
+
+```{r}
+ggplot(sample_glioma, aes(AGE_AT_SEQ_REPORT))+
+  geom_bar()
+ggplot(sample_glioma, aes(TUMOR_PURITY))+
+  geom_bar()
+ggplot(sample_glioma, aes(TMB_NONSYNONYMOUS))+
+  geom_density()
+
+max(sample_glioma$TMB_NONSYNONYMOUS)
+sample_glioma |> select(PATIENT_ID, SAMPLE_ID, TMB_NONSYNONYMOUS)|>
+  arrange(desc(TMB_NONSYNONYMOUS)) |> head()
+```
+
+```{r}
+sample_glioma |>
+  ggplot( aes(CANCER_TYPE_DETAILED))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1, size = 10))
+```
+
+How many did survive
+
+```{r}
+patient_sample_glioma <- sample_glioma|>
+  left_join(clinical_patient, by = 'PATIENT_ID')
+
+```
+
+```{r}
+ggplot(patient_sample_glioma, aes(SEX))+
+  geom_bar()
+
+ggplot(patient_sample_glioma, aes(OS_MONTHS))+
+  geom_bar()
+
+ggplot(patient_sample_glioma, aes(OS_STATUS))+
+  geom_bar()
+
+ggplot(patient_sample_glioma, aes(DRUG_TYPE))+
+  geom_bar()
+
+patient_sample_glioma |> filter(OS_STATUS == '1:DECEASED')|>
+  ggplot(aes(OS_MONTHS))+
+  geom_bar()
+
+patient_sample_glioma |> filter(!OS_STATUS == '1:DECEASED')|>
+  ggplot(aes(OS_MONTHS))+
+  geom_bar()
 ```
