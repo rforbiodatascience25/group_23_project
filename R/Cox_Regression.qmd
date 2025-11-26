@@ -14,6 +14,7 @@ library(dplyr)
 library(purrr)
 library(survival)
 library(broom)
+library(survminer)
 ```
 
 # Data import
@@ -136,4 +137,26 @@ df_glioma_gender |>
   labs(title = "Influence of the gender on the survival states, stratified by age group") +
   theme_classic() 
 
+```
+
+```{r}
+newdata <- data.frame(
+  Age_group = factor("<30", levels = levels(df_glioma_gender$Age_group)), 
+  Sex = factor(c("Female", "Male"), levels = levels(as.factor(df_glioma_gender$Gender)))
+)
+
+surv_fit <- survfit(cox_model_age_gender, newdata = newdata)
+
+ggsurvplot(
+  surv_fit,
+  data = newdata, 
+  conf.int = TRUE,  
+  pval = TRUE,  
+  risk.table = TRUE,  # Add a table of at-risk individuals
+  ggtheme = theme_minimal(),
+  title = "Adjusted Survival Curves by Gender",
+  xlab = "Time (Months)",
+  ylab = "Survival Probability",
+  legend.title = "Gender"
+)
 ```
