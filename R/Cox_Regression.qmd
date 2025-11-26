@@ -75,13 +75,13 @@ We see that the log-likelihood ratio are the same, thus the tumor purity doesn't
 df_glioma |> 
   ggplot(
     aes(x = TUMOR_PURITY,
-        y = Survival_Months,
-        shape = as.factor(OS_status),
-        color = as.factor(OS_status)
+        y = Survival_Months
           ) 
   ) +
-  geom_point() + 
-  labs(title = "Influence of the tumor purity on the survival months") +
+  geom_point() +
+  facet_wrap(~as.factor(OS_status))+
+  labs(title = "Influence of the tumor purity on the survival months stratified 
+       by the survival state") +
   theme_classic()
 ```
 
@@ -107,18 +107,31 @@ df_glioma_gender <- df_glioma |>
     Gender = if_else(
       Sex == 0, 
       "Male", 
-      "Female"
-    )
+      "Female",
+    ),
+    Survival_Status = if_else(
+      OS_status == 0,
+      "Living", # OS_status = 0
+      "Deceased"   # OS_status = 1
+    ),
+    Age_group = factor(Age_group, 
+                       levels = c(
+                         "<30", 
+                         "31-50", 
+                         "50-60", 
+                         "61-70", 
+                         ">71")
+                       )
   )
 
 df_glioma_gender |> 
   ggplot(
     aes(x = Gender,
         y = Survival_Months,
-        color = Gender
+        fill = Survival_Status
           ) 
   ) +
-  geom_boxplot() + 
+  geom_boxplot(position = position_dodge(width = 0.8), linewidth = 0.8) + 
   facet_wrap(~Age_group) + 
   labs(title = "Influence of the gender on the survival states, stratified by age group") +
   theme_classic() 
