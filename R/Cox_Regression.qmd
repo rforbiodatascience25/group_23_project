@@ -1,0 +1,126 @@
+---
+title: "Survival Analysis"
+format: html
+editor: visual
+---
+
+# Library import
+
+```{r}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(purrr)
+library(survival)
+library(broom)
+```
+
+# Data import
+
+```{r}
+clinical_sample <- read.delim(here("raw/tmb_mskcc_2018", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
+
+mutations <- read.delim(here("data", "data_mutation_cleaned"), sep = "\t", header = TRUE)
+
+clinical_patient <- read.delim(here("data", "data_clinical_patients_clean.tsv"), sep = "\t", header = TRUE)
+```
+
+# Data wrangling
+
+Need sex, age, cancer type to be transformed to numerical categories
+
+```{r}
+new_clinical_sample <- clinical_sample |> 
+  select(c(1,2,3,4,11)) |> 
+  drop_na()
+
+clinical_patient <- clinical_patient |> 
+  rename(PATIENT_ID = Patient_ID)
+# if sex ~ 0 it's a male and sex ~ 1 it's a female
+
+df <- clinical_patient |> 
+  left_join(new_clinical_sample) |> 
+  mutate(TUMOR_PURITY = as.numeric(TUMOR_PURITY),
+         CANCER_TYPE = as.factor(CANCER_TYPE)) |> 
+  drop_na()
+```
+
+# Cox regression
+
+Cox regression for hazard analysis
+
+```{r}
+cancer_types <- df |> 
+  select(CANCER_TYPE) |> 
+  distinct()
+
+print("The different cancer types are:")
+cancer_types
+```
+
+```{r}
+df_glioma <- df |> 
+  filter(CANCER_TYPE == "Glioma")
+cox_model_baseline <- coxph(Surv(Survival_Months, OS_status) ~ 1, data = df_glioma)
+
+cox_model_tumor_purity <- coxph(Surv(Survival_Months, OS_status) ~ TUMOR_PURITY, data = df_glioma) 
+
+anova(cox_model_baseline,cox_model_tumor_purity)
+```
+
+We see that the log-likelihood ratio are the same, thus the tumor purity doesn't affect the survival rate for a patient having Glioma.
+
+```{r}
+df_glioma |> 
+  ggplot(
+    aes(x = TUMOR_PURITY,
+        y = Survival_Months,
+        shape = as.factor(OS_status),
+        color = as.factor(OS_status)
+          ) 
+  ) +
+  geom_point() + 
+  labs(title = "Influence of the tumor purity on the survival months") +
+  theme_classic()
+```
+
+And indeed, we can't see any trend on this graph, confirming that the tumor purity doesn't impact the survival rate. What about the Age group and the sex of the patient?
+
+```{r}
+cox_model_age_gender <- coxph(Surv(Survival_Months, OS_status) ~ Age_group + Sex, data = df_glioma) 
+
+anova(cox_model_baseline,cox_model_age_gender)
+```
+
+The p-value dropped a lot here, it's still not significant but it's close to significance (p-value of 0.075), let's check which of age_group and gender leads the trend here.
+
+```{r}
+summary(cox_model_age_gender)
+```
+
+The only p-value below 0.05 here is for the gender, thus even though we would think age_group might be relevant, the only significant part is the gender for patient who have a Glioma!
+
+```{r}
+df_glioma_gender <- df_glioma |>
+  mutate(
+    Gender = if_else(
+      Sex == 0, 
+      "Male", 
+      "Female"
+    )
+  )
+
+df_glioma_gender |> 
+  ggplot(
+    aes(x = Gender,
+        y = Survival_Months,
+        color = Gender
+          ) 
+  ) +
+  geom_boxplot() + 
+  facet_wrap(~Age_group) + 
+  labs(title = "Influence of the gender on the survival states, stratified by age group") +
+  theme_classic() 
+
+```
