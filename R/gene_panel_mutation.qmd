@@ -20,7 +20,8 @@ library(viridis)
 
 ```{r}
 #Load the gene panel matrix data
-gene_panel_matrix <- read_delim(here("data",
+gene_panel_matrix <- read_delim(here("raw",
+                                     "tmb_mskcc_2018",
                                      "data_gene_panel_matrix.txt"), delim = "\t")
 gene_panel_matrix
 ```
@@ -113,6 +114,15 @@ percentage_type <- percentage_type |>
         Variant_Classification) |> 
   group_by(IMPACT_version) |> 
   mutate(percentage = n / sum(n) * 100)
+
+#Order the categories for a better representation
+percentage_type <- percentage_type |> 
+  mutate(Variant_Classification = factor(Variant_Classification,
+                                         levels = c("Missense_Mutation",
+                                                    "Nonsense_Mutation",
+                                                    "Frame_Shift_Mutation",
+                                                    "Splice_Site",
+                                                    "Other")))
 ```
 
 ## Data representation
