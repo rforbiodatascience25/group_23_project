@@ -1,0 +1,60 @@
+---
+title: "presentation_group23"
+format: revealjs
+---
+
+## Introduction/Background
+
+Study(mailny investigating TMB), why was the study conducted?
+
+we focus on Mutations here
+
+## Materials
+
+Dataset, some statistics(maily cancer type)
+
+and Impact version
+
+## Methods
+
+-   Survival Analysis
+
+-   Cox Regression
+
+-   Gene Set Enrichment Analysis
+
+## Results
+
+-   Surivival analysis(overall)
+
+-   Number of Mutations & SV per Cancer Type
+
+-   SV Analysis
+
+    -   Kind of SVs+ Length
+
+    -   Number of SVs per Gene-\>EGFR
+
+    -   EGFR per Cancer Type -\> Glioma
+
+    -   Overview Glioma
+
+    -   Survival Correlation with Co-founders(especially gender)
+
+    -   Survival analysis on gender(subset glioma)
+
+    -   Gene SV+ Mutation from Glioma
+
+    -   GSEA (SV) & Mutations
+
+## Discussion
+
+-   Study
+
+    -   Tumor burden
+
+    -   higher TMB-\> higher survival
+
+    -   more mutations no indication of severity of cancer
+
+    -   Glioma only exemption, here no correlation?
