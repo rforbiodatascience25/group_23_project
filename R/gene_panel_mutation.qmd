@@ -7,7 +7,6 @@ editor: visual
 ## Load libraries:
 
 ```{r}
-#| echo : False
 library(tidyverse)
 library(here)
 library(dplyr)
@@ -110,6 +109,7 @@ percentage_type <- percentage_type |>
     Variant_Classification,
     "Other"
   )) |> 
+  #Calculate the percentage
   count(IMPACT_version,
         Variant_Classification) |> 
   group_by(IMPACT_version) |> 

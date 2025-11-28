@@ -1,0 +1,124 @@
+---
+title: "mutation_types"
+format: html
+editor: visual
+---
+
+## Load libraries
+
+```{r}
+#| echo: False
+library(tidyverse)
+library(here)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(viridis)
+```
+
+## Data wrangling
+
+```{r}
+#Load the mutations data
+mutations <- read_delim(here("data",
+                             "data_mutation_cleaned"), delim = "\t")
+#Remove the duplicates
+mutations <- mutations |> 
+  distinct(across(-consequence),
+           .keep_all = TRUE) |> 
+  #Select the columns of interest
+  select(Hugo_Symbol,
+         Tumor_Sample_Barcode,
+         Variant_Classification) |> 
+  #Modify the columns name
+  rename(SAMPLE_ID = Tumor_Sample_Barcode,
+         gene = Hugo_Symbol) |> 
+  #Group some mutation types to reduce the number of different categories
+  #Combine Frame shift del and ins into "Frame_Shift_Mutation"
+  mutate(Variant_Classification = case_when(
+    Variant_Classification %in% c(
+      "Frame_Shift_Del",
+      "Frame_Shift_Ins") ~ "Frame_Shift_Mutation",
+    TRUE ~ Variant_Classification)) |>
+  #Group the less represented mutations into "Other"
+  mutate(Variant_Classification = ifelse(
+    Variant_Classification %in% c("Frame_Shift_Mutation",
+                                  "Missense_Mutation",
+                                  "Nonsense_Mutation",
+                                  "Splice_Site"),
+    Variant_Classification,
+    "Other"
+  ))
+```
+
+```{r}
+#Load the clinical sample data
+clinical_sample <- read_delim(here("raw",
+                                   "tmb_mskcc_2018",
+                                   "data_clinical_sample.txt"))
+clinical_sample
+```
+
+```{r}
+#Remove the first 4 rows
+clinical_sample <- clinical_sample |> 
+  slice(-1:-4) |> 
+  #Select the columns of interest
+  select(`Sample Identifier`,
+         `Cancer Type`) |> 
+  #Modify the columns name
+  rename(SAMPLE_ID = `Sample Identifier`,
+         Cancer_Type = `Cancer Type`)
+```
+
+```{r}
+#Merge the objects
+clinical_sample_mutation <- left_join(mutations,
+                                      clinical_sample,
+                                      by = "SAMPLE_ID")
+```
+
+```{r}
+#Count the frequence of each mutation for each cancer type
+mutations_count <- clinical_sample_mutation |> 
+  group_by(Cancer_Type,
+           Variant_Classification) |> 
+  summarise(count = n(),
+            .groups = "drop")
+
+#Count the total mutations for each cancer
+mutations_total <- mutations_count |> 
+  group_by(Cancer_Type) |> 
+  summarise(total_count = sum(count),
+            .groups = "drop")
+
+#Calculate the percentage for each mutation for each cancer type
+mutations_percentage <- mutations_count |> 
+  left_join(mutations_total,
+            by = "Cancer_Type") |> 
+  mutate(percentage = (count/total_count) * 100) |> 
+  select(Cancer_Type,
+         Variant_Classification,
+         count,
+         total_count,
+         percentage)
+```
+
+## Data representation
+
+```{r}
+ggplot(data = mutations_percentage,
+       mapping = aes(x = Cancer_Type,
+                     y = percentage,
+                     fill = Variant_Classification)) + 
+  geom_col(alpha = 0.8) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   size = 7)) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  labs(title = "Distribution of Mutation Type by Cancer Type",
+       x = "Cancer Type",
+       y = "Percentage")
+```
