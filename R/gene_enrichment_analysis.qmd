@@ -38,11 +38,12 @@ gene_sv_count <- sv_clean |>
 
 gene_sv_stats <- gene_sv_count$n
 names(gene_sv_stats) = gene_sv_count$ensembl_gene
+length(gene_sv_stats)
 ```
 
 ```{r}
 pathway_scoring <- fgseaMultilevel(pathways= BP_list, stats = gene_sv_stats,minSize = 0, maxSize = 500, scoreType = "std")
-arrange(pathway_scoring, pval)
+pathway_scoring <- arrange(pathway_scoring, pval)
 ```
 
 ## Mutations
@@ -64,7 +65,19 @@ names(gene_mutation_stats) = gene_mutation_count$ensembl_gene
 
 ```{r}
 pathway_scoring_m <- fgseaMultilevel(pathways= BP_list, stats = gene_mutation_stats,minSize = 15, maxSize = 500, scoreType = "std")
-arrange(pathway_scoring_m, padj)
+pathway_scoring_m <- arrange(pathway_scoring_m, padj)
+```
+
+Comparison of results:
+
+```{r}
+overlap <- inner_join(
+  pathway_scoring %>% head(n=100),
+  pathway_scoring_m %>%  head(n=100), by = 'pathway'
+  ) %>% 
+  select(pathway, pval.x, pval.y)
+
+overlap
 ```
 
 # FSC with gene mutation per sample
@@ -92,7 +105,7 @@ gene_mutation_stats <- mutation_gene_sample$n
 names(gene_mutation_stats) = mutation_gene_sample$ensembl_gene
 
 pathway_scoring_m <- fgseaMultilevel(pathways= BP_list, stats = gene_mutation_stats,minSize = 15, maxSize = 500, scoreType = "std")
-arrange(pathway_scoring_m, padj)
+patway_scoring_m <- arrange(pathway_scoring_m, padj)
 ```
 
 ## SV
