@@ -39,7 +39,7 @@ Detailed information for each column with examples can be found in the descripti
 
 -   Add cleaning into Importing_raw_data script(louis), add merging and then load into data folder
 
-    -   load merged data Sample+Patient, SV , Mutation, Impact into data
+    -   load merged data Sample+Patient+ Impact, SV , Mutation
 
     -   changing analysis scripts to load data in scripts
 
