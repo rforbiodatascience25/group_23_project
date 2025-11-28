@@ -43,9 +43,9 @@ mutations <- read.delim(file.path(folder, "tmb_mskcc_2018/data_mutations.txt"), 
 
 clinical_patient <- read.delim(file.path(folder, "tmb_mskcc_2018/data_clinical_patient.txt"), sep = "\t", skip = 4, header = TRUE)
 
-gene_panel_matrix <- read_delim(file.path(folder, "tmb_mskcc_2018/data_gene_panel_matrix.txt"), delim = "\t")
+gene_panel_matrix <- read.delim(file.path(folder, "tmb_mskcc_2018/data_gene_panel_matrix.txt"), sep = "\t")
 
-raw_data_sv <- read_tsv(file.path(folder, "tmb_mskcc_2018/data_sv.txt"),na = c("", "NA", "NULL"))
+raw_data_sv <- read.delim(file.path(folder, "tmb_mskcc_2018/data_sv.txt"),sep = '\t')
 ```
 
 TODO:
