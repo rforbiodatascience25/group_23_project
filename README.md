@@ -49,6 +49,22 @@ Detailed information for each column with examples can be found in the descripti
 
 -   structure github
 
+Potential analysis:
+
+-   Gene level enrichment(are certain genes more often mutated than others)
+
+-   Map genes to functional pathways
+
+-   correlation tmb vs mutation of specific genes
+
+-   clustering by mutations and check for cancer types
+
+-   SV burden per sample
+
+-   correlation of numbers of mutations vs sample coverage/tumor purity
+
+-   prediction of os_months/cancer type
+
 # Presentation:
 
 1.  Introduction to our data(give background)(cancer data, study, data formats in the 5 files)

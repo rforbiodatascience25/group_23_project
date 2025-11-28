@@ -105,7 +105,7 @@ The only p-value below 0.05 here is for the gender, thus even though we would th
 ```{r}
 df_glioma_gender <- df_glioma |>
   mutate(
-    Gender = if_else(
+    Sex = if_else(
       Sex == 0, 
       "Male", 
       "Female",
@@ -127,7 +127,7 @@ df_glioma_gender <- df_glioma |>
 
 df_glioma_gender |> 
   ggplot(
-    aes(x = Gender,
+    aes(x = Sex,
         y = Survival_Months,
         fill = Survival_Status
           ) 
@@ -142,7 +142,7 @@ df_glioma_gender |>
 ```{r}
 newdata <- data.frame(
   Age_group = factor("<30", levels = levels(df_glioma_gender$Age_group)), 
-  Sex = factor(c("Female", "Male"), levels = levels(as.factor(df_glioma_gender$Gender)))
+  Sex = factor(c("Female", "Male"), levels = levels(as.factor(df_glioma_gender$Sex)))
 )
 
 surv_fit <- survfit(cox_model_age_gender, newdata = newdata)
@@ -166,3 +166,26 @@ ggsurvplot(
   legend.title = "Gender"
 )
 ```
+
+It's a surprising results, especially when you take into account that gliomas aren't curable if a child has it, so this result might be biased by the sample size.
+
+```{r}
+n_sample <- df_glioma_gender |> 
+  nrow()
+
+sprintf("There are %.i samples of Glioma in our dataset.", n_sample)
+```
+
+```{r}
+df_glioma_gender |> 
+  ggplot(
+   aes(x= Age_group,
+       fill = Sex
+        ) 
+  ) + 
+  geom_bar() +
+  labs(title = "Count of the age_group stratified by gender") +
+  theme_classic()
+```
+
+So we can see two things: first we have very few samples for the agre groups before 30 yo and after 71 yo, second there are more male than female. This two differences combined with the few number of samples are very likely to bias our study.

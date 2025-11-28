@@ -8,6 +8,11 @@ editor: visual
 
 ```{r}
 library(here)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(purrr)
+library(table1)
 ```
 
 # Download raw data
@@ -43,11 +48,304 @@ mutations <- read.delim(file.path(folder, "tmb_mskcc_2018/data_mutations.txt"), 
 
 clinical_patient <- read.delim(file.path(folder, "tmb_mskcc_2018/data_clinical_patient.txt"), sep = "\t", skip = 4, header = TRUE)
 
-gene_panel_matrix <- read_delim(file.path(folder, "tmb_mskcc_2018/data_gene_panel_matrix.txt"), delim = "\t")
+gene_panel_matrix <- read.delim(file.path(folder, "tmb_mskcc_2018/data_gene_panel_matrix.txt"), sep = "\t")
 
-raw_data_sv <- read_tsv(file.path(folder, "tmb_mskcc_2018/data_sv.txt"),na = c("", "NA", "NULL"))
+raw_data_sv <- read.delim(file.path(folder, "tmb_mskcc_2018/data_sv.txt"),sep = '\t')
 ```
 
-TODO:
+# Data cleaning of mutations
 
--   clean data of mutations(Louis)
+## NA handling
+
+We begin by looking at all the columns with all nas in it.
+
+```{r}
+all_na_columns <- mutations |> 
+  
+  summarise(across(.cols = everything(), 
+                   .fns = ~ all(is.na(.x)))) |> 
+  
+  pivot_longer(cols = everything(), 
+               names_to = "column_name", 
+               values_to = "is_all_na") |> 
+  
+  filter(is_all_na == TRUE) |> 
+  
+  pull(column_name)
+
+print("Columns containing only NA values:")
+print(all_na_columns)
+```
+
+```{r}
+sprintf("There are %i empty columns.",length(all_na_columns))
+```
+
+We drop all these columns:
+
+```{r}
+data_mutation_without_nas <- mutation |> 
+  select(-all_of(all_na_columns))
+
+# Verify the result by comparing the number of columns
+print(paste("Original columns:", ncol(mutation)))
+print(paste("New columns:", ncol(data_mutation_without_nas)))
+  
+```
+
+The new data set looks like this
+
+```{r}
+data_mutation_without_nas |> 
+  slice_sample(n=5)
+```
+
+```{r}
+print("The resulting columns are:")
+colnames(data_mutation_without_nas)
+```
+
+However, there are still columns with some NAs in it -\> what to do about it?
+
+```{r}
+na_containing_columns <- data_mutation_without_nas |> 
+  summarise(across(
+    everything(),
+    .fns = ~ sum(is.na(.x))
+  )) |> 
+  pivot_longer(
+    everything(),
+    names_to = "column_name",
+    values_to = "na_count"
+  ) |> 
+  filter(na_count > 0)
+
+na_containing_columns
+```
+
+We see that dbSNP_RS is almost only NAs (20026 over 20563), thus we can drop this column. Apart from that, the only variables that have a significant number of NAs are ALLELE_NUM ans IS_NEW.
+
+```{r}
+data_mutation_without_nas <- data_mutation_without_nas |> 
+  select(-c("dbSNP_RS"))
+```
+
+## Explanation of the variables
+
+| Column name | What it is |
+|------------------------------------|------------------------------------|
+| Hugo_Symbol | The **Name** of the gene. |
+| Entrez_Gene_Id | The gene's unique **ID number**. |
+| Chromosome | The specific chromosome where the mutation occurred |
+| Start_Position | The first base pair coordinate of the mutation on the chromosome. |
+| End_Position | The last base pair coordinate of the mutation. (Often the same as `Start_Position` for single-base changes). |
+| Strand | Indicates whether the gene is read on the positive (`+`) or negative (`-`) strand of the DNA double helix. |
+| Center | The institution or center that submitted the sequencing data (e.g., `MSKCC` for Memorial Sloan Kettering Cancer Center). |
+| NCBI_Build | The specific version of the human genome reference sequence used for mapping (e.g., `GRCh37` is a common older version). |
+| Transcript_ID | The ID of the specific mRNA transcript (from the gene) that was analyzed. |
+| RefSeq | The reference sequence accession number for the transcript, used for high-quality sequence reporting. |
+| Reference_Allele | The normal (wild-type) base(s) found at this position in the reference genome. |
+| Tumor_Seq_Allele1 | The first DNA sequence read from the tumor sample. (Often the reference allele, especially if it's a heterozygous mutation). |
+| Tumor_Seq_Allele2 | The second DNA sequence read from the tumor sample, which is often the mutated allele. |
+| Variant_Type | Describes the physical nature of the change: **SNP** (Single Nucleotide Polymorphism - one base changed), **DEL** (Deletion), **INS** (Insertion), etc. |
+| Variant_Classification | Describes the functional impact of the mutation on the gene's function: `Missense_Mutation` (changes one amino acid), `Nonsense_Mutation` (creates a stop signal), `Frame_Shift_Del` (shifts the reading frame). |
+| Consequence | A technical, detailed description of the mutation's location and effect (e.g., `missense_variant`, `splice_region_variant`). |
+| HGVSc | HGVS notation describing the change at the **c**DNA level (e.g., `c.839G>A`). (The **Code Change** in the mRNA message.) |
+| HGVSp | HGVS notation describing the change at the protein level (e.g., `p.Arg280Lys`). This shows which amino acid was changed and what it became. |
+| HGVSp_Short | A short version of the protein change (e.g., `p.R280K`). |
+| Protein_position | The position number of the amino acid affected in the protein sequence. |
+| Codons | The triplet of DNA bases that codes for the amino acid, showing the change (e.g., `Cgg/Tgg`). |
+| t_ref_count | The number of times the **reference** allele (normal base) was observed in the **tumor** sample reads. |
+| t_alt_count | The number of times the **alternate** allele (mutant base) was observed in the **tumor** sample reads |
+| n_ref_count | The number of times the **reference** allele was observed in the matched **normal** (non-tumor) sample reads. |
+| n_alt_count | The number of times the **alternate** allele (mutant base) was observed in the matched **normal** sample reads. |
+| Mutation_Status | Indicates if the mutation is **SOMATIC** (acquired in the tumor, not inherited) or **GERMLINE** (inherited and present in all cells). Somatic is expected in cancer data. |
+| Validation_Status | Indicates if the mutation was confirmed by a secondary method (like an independent test). `Unknown` means it was not specifically validated. |
+| dbSNP_RS | The identifier (rs ID) from the **dbSNP** database if this change is a known polymorphism in the general population. If this is present, the mutation might not be cancer-specific. |
+| Hotspot | A simple flag (`0` or `1`) indicating if this specific amino acid position is known to be frequently mutated across many cancer types. |
+| ALLELE_NUM | The numerical index for the alternate allele (used internally in some formats). |
+| IS_NEW | Indicates whether this specific mutation was previously seen in the MSK-IMPACT cohort. |
+| Score | A general quality score or ranking of the mutation, which can vary depending on the analysis pipeline. |
+| Tumor_Sample_Barcode | A unique, standardized identifier that links that specific mutation event back to the original tissue sample taken from a specific patient. |
+
+It seems that ALLELE_NUM is an internal indicator, so we wouldn't use it, therefor we'll drop it.
+
+```{r}
+data_mutation_without_nas <- data_mutation_without_nas |> 
+  select(-c("ALLELE_NUM"))
+```
+
+For IS_NEW, we'll check if NA corresponds to a not-new allele, in this case we would just infere the NAs to be null or 0.
+
+```{r}
+is_new_values <- data_mutation_without_nas |>
+  summarize(unique_is_new = unique(IS_NEW))
+
+print("The values in the IS_NEW column are:")
+is_new_values 
+```
+
+So indeed the NAs here means that it's not new. So we will replace NAs by NOTNEW, and then input NOTNEW by 0 and NEWRECORD by 1 (hotspot encoding is easier to use in code).
+
+```{r}
+data_mutation_without_nas <- data_mutation_without_nas |> 
+  mutate(IS_NEW = case_when(
+    is.na(IS_NEW) ~ 0,
+    IS_NEW == "NEWRECORD" ~ 1
+  ))
+```
+
+For the rest of the column with NAs, we will keep all their rows and just using na.rm = TRUE when using the columns (we can do inference bc they're not statistical or calculated variable).
+
+We will search all columns with constant value to also drop them as we already know their values.
+
+```{r}
+is_single_value <- function(x) {
+  n_distinct(x) == 1
+}
+
+single_value_columns <- data_mutation_without_nas |> 
+  summarise(across(everything(), is_single_value)) |> 
+  pivot_longer(everything(), names_to = "column_name", values_to = "is_single_value") |> 
+  filter(is_single_value == TRUE) |> 
+  pull(column_name)
+  
+single_value_columns
+```
+
+So we can drop all these columns knowing their constant values.
+
+```{r}
+data_mutation_without_nas <- data_mutation_without_nas |> 
+  select(-c("Center","NCBI_Build","Strand","Validation_Status","Hotspot","Score"))
+```
+
+```{r}
+is_factor <-  function(x){
+  is_char <- is.character(x)
+  bool <- n_distinct(x)<=40
+  
+  return(is_char & bool)
+}
+
+column_to_factor <- data_mutation_without_nas |> 
+  select(where(is_factor)) |> 
+  names()
+
+print("The column to factor are:")
+column_to_factor
+```
+
+Lot of NAs in ALLELE_NUM and IS_NEW, how to deal with?
+
+```{r}
+data_mutation_without_nas <- data_mutation_without_nas |> 
+  mutate(across(all_of(column_to_factor), factor))
+```
+
+We see that for some rows there are several consequences -\> we split them into several columns. First lets check how many na is there in it.
+
+```{r}
+consequence_na <- data_mutation_without_nas |> 
+  summarise(consequence_na = sum(is.na(Consequence))) |> 
+  pull(consequence_na)
+
+sprintf("There is %i nas in the consequence column.", as.integer(consequence_na))
+```
+
+```{r}
+data_mutation_without_nas <-  data_mutation_without_nas |> 
+  mutate(n_consequences = str_count(Consequence,",")+1)
+```
+
+```{r}
+max_consequences <- data_mutation_without_nas$n_consequences |> 
+  max()
+sprintf("The max number of consequences for one row is %.4f",max_consequences)
+```
+
+```{r}
+data_mutation_without_nas |> 
+  count(n_consequences) |> 
+  ggplot(aes(x = n_consequences,
+             y = n)) + 
+  geom_col(fill = "grey") + 
+  theme_minimal() + 
+  labs(x = "Number of consequences per observation")
+```
+
+The vast majority observes only one consequence for their change in DNA.
+
+```{r}
+data_mutation_without_nas_wide <- data_mutation_without_nas |> 
+    separate(col = "Consequence",
+           into = str_c("consequence_", 1:max_consequences),
+           sep = ",",
+           remove = TRUE)
+```
+
+```{r}
+data_mutation_without_nas_long <- data_mutation_without_nas_wide |> 
+  pivot_longer(
+    cols = contains("consequence_"),
+    names_to = NULL,
+    values_to = "consequence"
+    ) |> 
+  drop_na("consequence") |> 
+  mutate(
+    consequence = as.factor(consequence)
+  )
+
+data_mutation_without_nas_long |> 
+  sample_n(5)
+```
+
+```{r}
+data_mutation_without_nas_long <- data_mutation_without_nas_long |> 
+  mutate(patient_id = str_extract(Tumor_Sample_Barcode, "^P-\\d{7}")) |> 
+  relocate(c(patient_id,Tumor_Sample_Barcode),
+           .before = Entrez_Gene_Id)
+```
+
+```{r}
+data_mutation_without_nas_long |> 
+  sample_n(5)
+
+```
+
+```{r}
+data_mutation_without_nas_long |> 
+  count(Variant_Classification) |> 
+  ggplot(aes(x = Variant_Classification,
+             y = n)) + 
+  geom_col(fill = "grey") + 
+  theme_minimal() + 
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(
+          angle = 30,
+          hjust = 1
+        )) +
+  labs(x = "Count of the different variant classifications") 
+         
+```
+
+```{r}
+data_mutation_without_nas_long |> 
+  ggplot(aes( x = t_ref_count
+                )) + 
+  geom_boxplot()
+```
+
+```{r}
+data_mutation_without_nas_long |> 
+  ggplot(aes( x = t_alt_count
+                )) + 
+  geom_boxplot()
+```
+
+# Export the cleaned data
+
+```{r}
+data_mutation_without_nas_long |>
+  write_tsv(file = here('data','data_mutation_cleaned'))
+```

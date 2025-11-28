@@ -64,6 +64,12 @@ clinical_sample |> select(PATIENT_ID, SAMPLE_ID, TMB_NONSYNONYMOUS)|>
   arrange(desc(TMB_NONSYNONYMOUS)) |> head()
 ```
 
+Join with Patient data
+
+```{r}
+patient_sample <- clinical_patient |> left_join(clinical_sample, by = 'PATIENT_ID')
+```
+
 Number of tumors in organs
 
 ```{r}
@@ -208,4 +214,103 @@ patient_sample_glioma |> filter(OS_STATUS == '1:DECEASED')|>
 patient_sample_glioma |> filter(!OS_STATUS == '1:DECEASED')|>
   ggplot(aes(OS_MONTHS))+
   geom_bar()
+```
+
+overlaid plots
+
+```{r}
+ggplot() +
+  geom_density(data = patient_sample,
+           aes(OS_MONTHS),
+           fill = "grey40",
+           alpha = 0.5)+
+  geom_density(data = patient_sample_glioma,
+           aes(OS_MONTHS),
+           fill = "blue",
+           alpha = 0.5)
+  
+ggplot() +
+  geom_density(data = patient_sample,
+           aes(SEX),
+           fill = "grey40",
+           alpha = 0.5)+
+  geom_density(data = patient_sample_glioma,
+           aes(SEX),
+           fill = "blue",
+           alpha = 0.5)
+  
+ggplot() +
+  geom_density(data = patient_sample,
+           aes(OS_STATUS),
+           fill = "grey40",
+           alpha = 0.5)+
+  geom_density(data = patient_sample_glioma,
+           aes(OS_STATUS),
+           fill = "blue",
+           alpha = 0.5)
+
+ggplot() +
+  geom_density(data = patient_sample,
+           aes(DRUG_TYPE),
+           fill = "grey40",
+           alpha = 0.5)+
+  geom_density(data = patient_sample_glioma,
+           aes(DRUG_TYPE),
+           fill = "blue",
+           alpha = 0.5)
+
+ggplot() +
+  geom_density(data = patient_sample|> filter(OS_STATUS == '1:DECEASED'),
+           aes(OS_MONTHS),
+           fill = "grey40",
+           alpha = 0.5)+
+  geom_density(data = patient_sample_glioma |> filter(OS_STATUS == '1:DECEASED'),
+           aes(OS_MONTHS),
+           fill = "blue",
+           alpha = 0.5)
+
+ggplot() +
+  geom_density(data = patient_sample|> filter(!OS_STATUS == '1:DECEASED'),
+           aes(OS_MONTHS),
+           fill = "grey40",
+           alpha = 0.5)+
+  geom_density(data = patient_sample_glioma |> filter(!OS_STATUS == '1:DECEASED'),
+           aes(OS_MONTHS),
+           fill = "blue",
+           alpha = 0.5)
+
+ggplot() +
+  geom_density(data = patient_sample,
+           aes(SAMPLE_COVERAGE),
+           fill = "grey40",
+           alpha = 0.5)+
+  geom_density(data = patient_sample_glioma,
+           aes(SAMPLE_COVERAGE),
+           fill = "blue",
+           alpha = 0.5)
+
+ggplot() +
+  geom_density(data = patient_sample,
+           aes(as.numeric(TUMOR_PURITY)),
+           fill = "grey40",
+           alpha = 0.5)+
+  geom_density(data = patient_sample_glioma,
+           aes(as.numeric(TUMOR_PURITY)),
+           fill = "blue",
+           alpha = 0.5)
+
+ggplot() +
+  geom_density(data = patient_sample,
+           aes(TMB_NONSYNONYMOUS),
+           fill = "grey40",
+           alpha = 0.5)+
+  geom_density(data = patient_sample_glioma,
+           aes(TMB_NONSYNONYMOUS),
+           fill = "blue",
+           alpha = 0.5)
+```
+
+```{r}
+patient_sample_glioma
+colnames(patient_sample_glioma)
 ```
