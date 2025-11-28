@@ -15,6 +15,7 @@ library(purrr)
 library(survival)
 library(broom)
 library(survminer)
+library(viridis)
 ```
 
 # Data import
@@ -59,6 +60,132 @@ cancer_types <- df |>
 print("The different cancer types are:")
 cancer_types
 ```
+
+## Regression on all cancer types
+
+```{r}
+cox_model_baseline_glob <- coxph(Surv(Survival_Months, OS_status) ~ 1, data = df) 
+cox_model_cancer_types_glob <- coxph(Surv(Survival_Months, OS_status) ~ CANCER_TYPE, data = df) 
+
+anova(cox_model_baseline_glob,cox_model_cancer_types_glob)
+```
+
+```{r}
+summary(cox_model_cancer_types_glob)
+```
+
+```{r}
+df_gender <- df |>
+  mutate(
+    Sex = if_else(
+      Sex == 0, 
+      "Male", 
+      "Female",
+    ),
+    Survival_Status = if_else(
+      OS_status == 0,
+      "Living", # OS_status = 0
+      "Deceased"   # OS_status = 1
+    ),
+    Age_group = factor(Age_group, 
+                       levels = c(
+                         "<30", 
+                         "31-50", 
+                         "50-60", 
+                         "61-70", 
+                         ">71")
+                       )
+  )
+
+df_gender |> 
+  ggplot(
+    aes(x = Survival_Status,
+        fill = Sex
+          ) 
+  ) +
+  geom_bar(position = position_dodge(width = 0.8), linewidth = 0.8) + 
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE,
+                     begin = 0.5
+                     )+
+  facet_wrap(~CANCER_TYPE) + 
+  labs(title = "Influence of the gender on the survival states, stratified by cancer type") +
+  theme_classic() 
+```
+
+```{r}
+cox_model_baseline_glob <- coxph(Surv(Survival_Months, OS_status) ~ 1, data = df) 
+cox_model_age_gender_glob <- coxph(Surv(Survival_Months, OS_status) ~ Age_group + Sex, data = df) 
+
+anova(cox_model_baseline_glob,cox_model_age_gender_glob)
+```
+
+```{r}
+summary(cox_model_age_gender_glob)
+```
+
+```{r}
+df_gender |> 
+  ggplot(
+    aes(x = Sex,
+        y = Survival_Months,
+        fill = Survival_Status
+          ) 
+  ) +
+  geom_boxplot(position = position_dodge(width = 0.8), linewidth = 0.8) + 
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE,
+                     begin = 0.5
+                     )+
+  facet_wrap(~Age_group) + 
+  labs(title = "Influence of the gender on the survival states, stratified by age group") +
+  theme_classic() 
+```
+
+```{r}
+newdata <- data.frame(
+  Age_group = factor("31-50", levels = levels(df_gender$Age_group)), 
+  Sex = factor(c("Female", "Male"), levels = levels(as.factor(df_gender$Sex)))
+)
+
+surv_fit_glob <- survfit(cox_model_age_gender_glob, newdata = newdata)
+risk_table_data <- summary(surv_fit_glob)$table
+
+risk_table_data
+```
+
+```{r}
+ggsurvplot(
+  surv_fit_glob,
+  data = newdata, 
+  legend.labs = c("Female", "Male"),
+  conf.int = TRUE,  
+  pval = TRUE,  
+  risk.table = FALSE, 
+  ggtheme = theme_minimal(),
+  title = "Adjusted Survival Curves by Gender",
+  xlab = "Time (Months)",
+  ylab = "Survival Probability",
+  legend.title = "Gender"
+)
+```
+
+```{r}
+df_gender |> 
+  ggplot(
+   aes(x= Age_group,
+       fill = Sex
+        ) 
+  ) + 
+  geom_bar() +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE
+                     )+
+  labs(title = "Count of the age_group stratified by gender") +
+  theme_classic()
+```
+
+## Regression on Glioma specifically
 
 ```{r}
 df_glioma <- df |> 
@@ -134,6 +261,10 @@ df_glioma_gender |>
   ) +
   geom_boxplot(position = position_dodge(width = 0.8), linewidth = 0.8) + 
   facet_wrap(~Age_group) + 
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE,
+                     begin = 0.5
+                     )+
   labs(title = "Influence of the gender on the survival states, stratified by age group") +
   theme_classic() 
 
@@ -141,7 +272,7 @@ df_glioma_gender |>
 
 ```{r}
 newdata <- data.frame(
-  Age_group = factor("<30", levels = levels(df_glioma_gender$Age_group)), 
+  Age_group = factor("31-50", levels = levels(df_glioma_gender$Age_group)), 
   Sex = factor(c("Female", "Male"), levels = levels(as.factor(df_glioma_gender$Sex)))
 )
 
@@ -158,7 +289,7 @@ ggsurvplot(
   legend.labs = c("Female", "Male"),
   conf.int = TRUE,  
   pval = TRUE,  
-  risk.table = TRUE,  # Add a table of at-risk individuals
+  risk.table = FALSE,  
   ggtheme = theme_minimal(),
   title = "Adjusted Survival Curves by Gender",
   xlab = "Time (Months)",
@@ -184,7 +315,10 @@ df_glioma_gender |>
         ) 
   ) + 
   geom_bar() +
-  labs(title = "Count of the age_group stratified by gender") +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE
+                     )+
+  labs(title = "Count of the age_group stratified by gender for the Glioma sample") +
   theme_classic()
 ```
 

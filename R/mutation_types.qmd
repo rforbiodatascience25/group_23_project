@@ -60,6 +60,22 @@ clinical_sample
 ```
 
 ```{r}
+#Create a subset for Glioma detailed cancer types
+sample_glioma <- clinical_sample |>  
+  filter(`Cancer Type`=='Glioma') |> 
+  #Remove the first 4 rows
+  slice(-1:-4) |> 
+  select(`Sample Identifier`,
+         `Cancer Type`,
+         `Cancer Type Detailed`) |> 
+  rename(SAMPLE_ID = `Sample Identifier`,
+         Cancer_Type = `Cancer Type`,
+         Detailed_Cancer_Type = `Cancer Type Detailed`)
+sample_glioma
+
+```
+
+```{r}
 #Remove the first 4 rows
 clinical_sample <- clinical_sample |> 
   slice(-1:-4) |> 
@@ -76,6 +92,13 @@ clinical_sample <- clinical_sample |>
 clinical_sample_mutation <- left_join(mutations,
                                       clinical_sample,
                                       by = "SAMPLE_ID")
+#Create a subset for glioma mutations
+glioma_mutations <- clinical_sample_mutation |> 
+  filter(Cancer_Type == "Glioma")
+
+glioma_sample_mutation <- left_join(glioma_mutations,
+                                    sample_glioma,
+                                    by = "SAMPLE_ID")
 ```
 
 ```{r}
@@ -85,31 +108,24 @@ mutations_count <- clinical_sample_mutation |>
            Variant_Classification) |> 
   summarise(count = n(),
             .groups = "drop")
+```
 
-#Count the total mutations for each cancer
-mutations_total <- mutations_count |> 
-  group_by(Cancer_Type) |> 
-  summarise(total_count = sum(count),
-            .groups = "drop")
-
-#Calculate the percentage for each mutation for each cancer type
-mutations_percentage <- mutations_count |> 
-  left_join(mutations_total,
-            by = "Cancer_Type") |> 
-  mutate(percentage = (count/total_count) * 100) |> 
-  select(Cancer_Type,
-         Variant_Classification,
-         count,
-         total_count,
-         percentage)
+```{r}
+#Count the frequence for each mutation for each detailed glioma type
+glioma_mutations_count <- glioma_sample_mutation |> 
+  group_by(Detailed_Cancer_Type,
+           Variant_Classification) |> 
+  summarise(count = n(),
+            .groups = "drop") |> 
+  filter(!is.na(Detailed_Cancer_Type))
 ```
 
 ## Data representation
 
 ```{r}
-ggplot(data = mutations_percentage,
+ggplot(data = mutations_count,
        mapping = aes(x = Cancer_Type,
-                     y = percentage,
+                     y = count,
                      fill = Variant_Classification)) + 
   geom_col(alpha = 0.8) +
   theme_minimal() +
@@ -120,5 +136,22 @@ ggplot(data = mutations_percentage,
                      discrete = TRUE) +
   labs(title = "Distribution of Mutation Type by Cancer Type",
        x = "Cancer Type",
-       y = "Percentage")
+       y = "Mutation Count")
+```
+
+```{r}
+ggplot(data = glioma_mutations_count,
+       mapping = aes(x = Detailed_Cancer_Type,
+                     y = count,
+                     fill = Variant_Classification)) + 
+  geom_col(alpha = 0.8) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90,
+                                   hjust = 1,
+                                   size = 7)) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  labs(title = "Distribution of Mutation Type by Glioma Type",
+       x = "Detailed Glioma Type",
+       y = "Mutation Count")
 ```
