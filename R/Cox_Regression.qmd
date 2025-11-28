@@ -144,7 +144,7 @@ df_gender |>
 
 ```{r}
 newdata <- data.frame(
-  Age_group = factor("<30", levels = levels(df_gender$Age_group)), 
+  Age_group = factor("31-50", levels = levels(df_gender$Age_group)), 
   Sex = factor(c("Female", "Male"), levels = levels(as.factor(df_gender$Sex)))
 )
 
@@ -161,7 +161,7 @@ ggsurvplot(
   legend.labs = c("Female", "Male"),
   conf.int = TRUE,  
   pval = TRUE,  
-  risk.table = TRUE,  # Add a table of at-risk individuals
+  risk.table = FALSE, 
   ggtheme = theme_minimal(),
   title = "Adjusted Survival Curves by Gender",
   xlab = "Time (Months)",
@@ -272,7 +272,7 @@ df_glioma_gender |>
 
 ```{r}
 newdata <- data.frame(
-  Age_group = factor("<30", levels = levels(df_glioma_gender$Age_group)), 
+  Age_group = factor("31-50", levels = levels(df_glioma_gender$Age_group)), 
   Sex = factor(c("Female", "Male"), levels = levels(as.factor(df_glioma_gender$Sex)))
 )
 
@@ -289,7 +289,7 @@ ggsurvplot(
   legend.labs = c("Female", "Male"),
   conf.int = TRUE,  
   pval = TRUE,  
-  risk.table = TRUE,  # Add a table of at-risk individuals
+  risk.table = FALSE,  
   ggtheme = theme_minimal(),
   title = "Adjusted Survival Curves by Gender",
   xlab = "Time (Months)",
