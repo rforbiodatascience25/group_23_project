@@ -3,3 +3,12 @@ title: "gene_enrichment_analysis"
 format: html
 ---
 
+```{r}
+library(fgsea)
+library(msigdbr)
+```
+
+```{r}
+BP_df = msigdbr(species = "human", category = "C5", subcategory = "BP")
+BP_list = split(BP_df$ensembl_gene, BP_df$gs_name)
+```
