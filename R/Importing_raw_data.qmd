@@ -44,7 +44,7 @@ untar(
 ```{r}
 clinical_sample <- read.delim(file.path(folder, "tmb_mskcc_2018/data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
 
-mutations <- read.delim(file.path(folder, "tmb_mskcc_2018/data_mutations.txt"), sep = "\t", header = TRUE)
+mutation <- read.delim(file.path(folder, "tmb_mskcc_2018/data_mutations.txt"), sep = "\t", header = TRUE)
 
 clinical_patient <- read.delim(file.path(folder, "tmb_mskcc_2018/data_clinical_patient.txt"), sep = "\t", skip = 4, header = TRUE)
 
@@ -60,7 +60,7 @@ raw_data_sv <- read.delim(file.path(folder, "tmb_mskcc_2018/data_sv.txt"),sep = 
 We begin by looking at all the columns with all nas in it.
 
 ```{r}
-all_na_columns <- mutations |> 
+all_na_columns <- mutation |> 
   
   summarise(across(.cols = everything(), 
                    .fns = ~ all(is.na(.x)))) |> 
@@ -84,7 +84,7 @@ sprintf("There are %i empty columns.",length(all_na_columns))
 We drop all these columns:
 
 ```{r}
-data_mutation_without_nas <- mutation |> 
+data_mutation_without_nas <- mutations |> 
   select(-all_of(all_na_columns))
 
 # Verify the result by comparing the number of columns
@@ -347,7 +347,7 @@ data_mutation_without_nas_long |>
 
 ```{r}
 data_mutation_without_nas_long |>
-  write_tsv(file = here('data','data_mutation_cleaned'))
+  write_tsv(file = here('data','data_mutation_cleaned.tsv'))
 ```
 
 # Patients Cleaning

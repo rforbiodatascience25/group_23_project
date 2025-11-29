@@ -8,7 +8,128 @@ library(fgsea)
 library(msigdbr)
 ```
 
+# Load GO data
+
 ```{r}
 BP_df = msigdbr(species = "human", category = "C5", subcategory = "BP")
 BP_list = split(BP_df$ensembl_gene, BP_df$gs_name)
+```
+
+# FCS with mutations per Gene
+
+## Structural Variance
+
+Data: Genes + number of mutation/numbers of SVs
+
+```{r}
+sv_clean <- raw_data_sv |> select(c(Sample_Id, Site1_Hugo_Symbol, Site1_Chromosome, Site2_Hugo_Symbol, Site2_Chromosome, Class, SV_Length))
+
+clinical_clean <- clinical_sample |> select(c(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))
+
+gene_sv_count <- sv_clean |> 
+  left_join(clinical_clean, by = c("Sample_Id" = "SAMPLE_ID")) |>
+  filter(CANCER_TYPE == 'Glioma')|>
+  pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
+  filter(!is.na(Gene_Name))|>
+  count(Gene_Name, sort = TRUE)|>
+  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Gene_Name' = 'gene_symbol'))|>
+  distinct()|>
+  na.omit()
+
+gene_sv_stats <- gene_sv_count$n
+names(gene_sv_stats) = gene_sv_count$ensembl_gene
+length(gene_sv_stats)
+```
+
+```{r}
+pathway_scoring <- fgseaMultilevel(pathways= BP_list, stats = gene_sv_stats,minSize = 0, maxSize = 500, scoreType = "std")
+pathway_scoring <- arrange(pathway_scoring, pval)
+```
+
+## Mutations
+
+```{r}
+data_mutations <- read_tsv(file = here('data','data_mutation_cleaned'))
+
+gene_mutation_count <- data_mutations |> 
+  left_join(clinical_clean, by = c("Tumor_Sample_Barcode" = "SAMPLE_ID"))|>
+  filter(CANCER_TYPE == "Glioma")|> 
+  count(Hugo_Symbol, sort = TRUE)|>
+  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Hugo_Symbol' = 'gene_symbol'))|>
+  distinct()|>
+  na.omit()
+
+gene_mutation_stats <- gene_mutation_count$n
+names(gene_mutation_stats) = gene_mutation_count$ensembl_gene
+```
+
+```{r}
+pathway_scoring_m <- fgseaMultilevel(pathways= BP_list, stats = gene_mutation_stats,minSize = 15, maxSize = 500, scoreType = "std")
+pathway_scoring_m <- arrange(pathway_scoring_m, padj)
+```
+
+Comparison of results:
+
+```{r}
+overlap <- inner_join(
+  pathway_scoring %>% head(n=100),
+  pathway_scoring_m %>%  head(n=100), by = 'pathway'
+  ) %>% 
+  select(pathway, pval.x, pval.y)
+
+overlap
+```
+
+# FSC with gene mutation per sample
+
+## Mutation
+
+How many samples are mutated for that gene
+
+how many samples have this mutated gene
+
+```{r}
+mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
+
+mutation_gene_sample <- mutations %>% 
+  left_join(clinical_clean |> select(SAMPLE_ID, CANCER_TYPE), by = c("Tumor_Sample_Barcode" = "SAMPLE_ID")) |>
+  filter(CANCER_TYPE == 'Glioma')|>
+  select(Tumor_Sample_Barcode, Hugo_Symbol) %>% 
+  distinct() %>% 
+  count(Hugo_Symbol, sort = TRUE) %>% 
+  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Hugo_Symbol' = 'gene_symbol'))|>
+  distinct()|>
+  na.omit()
+
+gene_mutation_stats <- mutation_gene_sample$n
+names(gene_mutation_stats) = mutation_gene_sample$ensembl_gene
+
+pathway_scoring_m <- fgseaMultilevel(pathways= BP_list, stats = gene_mutation_stats,minSize = 15, maxSize = 500, scoreType = "std")
+patway_scoring_m <- arrange(pathway_scoring_m, padj)
+```
+
+## SV
+
+```{r}
+sv_clean <- raw_data_sv |> select(c(Sample_Id, Site1_Hugo_Symbol, Site1_Chromosome, Site2_Hugo_Symbol, Site2_Chromosome, Class, SV_Length))
+
+clinical_clean <- clinical_sample |> select(c(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))
+
+sample_sv_count <- sv_clean |> 
+  left_join(clinical_clean, by = c("Sample_Id" = "SAMPLE_ID")) |>
+  filter(CANCER_TYPE == 'Glioma')|>
+  pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
+  filter(!is.na(Gene_Name))|>
+  select(Sample_Id, Gene_Name)|>
+  distinct()|>
+  count(Gene_Name, sort = TRUE)|>
+  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Gene_Name' = 'gene_symbol'))|>
+  distinct()|>
+  na.omit()
+
+sample_sv_stats <- sample_sv_count$n
+names(sample_sv_stats) = sample_sv_count$ensembl_gene
+
+pathway_scoring_m <- fgseaMultilevel(pathways= BP_list, stats = sample_sv_stats,minSize = 0, maxSize = 500, scoreType = "std")
+arrange(pathway_scoring_m, pval)
 ```
