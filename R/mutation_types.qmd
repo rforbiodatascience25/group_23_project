@@ -18,6 +18,8 @@ library(viridis)
 
 ## Data wrangling
 
+Load the mutations dataset and remove duplicate entries that only differ in the *consequence* column (they are not going to be studied). Select the columns of interest and rename them to *SAMPLE_ID*, *GENE* and *Variant_Classification*. Finally, group the less represented mutation types into broader categories to improve the final plots clarity.
+
 ```{r}
 #Load the mutations data
 mutations <- read_delim(here("data",
@@ -32,7 +34,7 @@ mutations <- mutations |>
          Variant_Classification) |> 
   #Modify the columns name
   rename(SAMPLE_ID = Tumor_Sample_Barcode,
-         gene = Hugo_Symbol) |> 
+         GENE = Hugo_Symbol) |> 
   #Group some mutation types to reduce the number of different categories
   #Combine Frame shift del and ins into "Frame_Shift_Mutation"
   mutate(Variant_Classification = case_when(
@@ -53,6 +55,8 @@ mutations <- mutations |>
 mutations
 ```
 
+Load the Clinical Sample data.
+
 ```{r}
 #Load the clinical sample data
 clinical_sample <- read_delim(here("data",
@@ -60,12 +64,12 @@ clinical_sample <- read_delim(here("data",
 clinical_sample
 ```
 
+Create a subset to study the differences for each Glioma detailed cancer type.
+
 ```{r}
 #Create a subset for Glioma detailed cancer types
 sample_glioma <- clinical_sample |>  
   filter(CANCER_TYPE=='Glioma') |> 
-  #Remove the first 4 rows
-  slice(-1:-4) |> 
   select(SAMPLE_ID,
          CANCER_TYPE,
          CANCER_TYPE_DETAILED)
@@ -73,14 +77,16 @@ sample_glioma <- clinical_sample |>
 sample_glioma
 ```
 
+Select the columns of interest in the Clinical Sample dataset.
+
 ```{r}
-#Remove the first 4 rows
 clinical_sample <- clinical_sample |> 
-  slice(-1:-4) |> 
   #Select the columns of interest
   select(SAMPLE_ID,
          CANCER_TYPE)
 ```
+
+Merge the Clinical Sample dataset with the Mutations dataset. From the resulting object, create a subset for the Glioma subcategories.
 
 ```{r}
 #Merge the objects
@@ -96,6 +102,8 @@ glioma_sample_mutation <- left_join(glioma_mutations,
                                     by = "SAMPLE_ID")
 ```
 
+Count the frequency of each mutation across cancer types and within each glioma subcategory in the subset.
+
 ```{r}
 #Count the frequence of each mutation for each cancer type
 mutations_count <- clinical_sample_mutation |> 
@@ -106,7 +114,7 @@ mutations_count <- clinical_sample_mutation |>
 ```
 
 ```{r}
-#Count the frequence for each mutation for each detailed glioma type
+#Count the frequence of each mutation for each detailed glioma type
 glioma_mutations_count <- glioma_sample_mutation |> 
   group_by(CANCER_TYPE_DETAILED,
            Variant_Classification) |> 
@@ -131,7 +139,8 @@ ggplot(data = mutations_count,
                      discrete = TRUE) +
   labs(title = "Distribution of Mutation Type by Cancer Type",
        x = "Cancer Type",
-       y = "Mutation Count")
+       y = "Mutation Count",
+       fill = "Mutation Type")
 ```
 
 ```{r}
@@ -146,7 +155,8 @@ ggplot(data = glioma_mutations_count,
                                    size = 7)) +
   scale_fill_viridis(option = "viridis",
                      discrete = TRUE) +
-  labs(title = "Distribution of Mutation Type by Glioma Type",
+  labs(title = "Distribution of Mutation Type by Glioma Subcategory",
        x = "Detailed Glioma Type",
-       y = "Mutation Count")
+       y = "Mutation Count",
+       fill = "Mutation Type")
 ```
