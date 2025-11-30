@@ -30,7 +30,7 @@ and Impact version
 
 ## Results
 
--   Surivival analysis(overall)
+-   Surivival analysis - stratified by Cancer type
 
 -   Number of Mutations & SV per Cancer Type
 
