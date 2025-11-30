@@ -1,6 +1,8 @@
 ---
 title: "correlation_matrix"
-format: html
+format: 
+  html:
+    self-contained: true
 ---
 
 # Load Packages
@@ -15,31 +17,23 @@ library(tidyverse)
 # Load Data
 
 ```{r}
-clinical_sample <- read.delim(here("data", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
-
-mutations <- read.delim(here("data", "data_mutations.txt"), sep = "\t", header = TRUE)
-
-clinical_patient <- read.delim(here("data", "data_clinical_patient.txt"), sep = "\t", skip = 4, header = TRUE)
+patient_sample <- read_tsv(file = here('data','patient_sample_gene_panel.tsv'))
+sv <- read_tsv(file = here('data','sv.tsv'))
+mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
 ```
 
-# Clean Data
+# Data Wrangling
 
 ```{r}
-colnames(clinical_patient)
-```
-
-```{r}
-patient_clean <- clinical_patient |> select(-c(AGE_GROUP))
-sample_clean <- clinical_sample |>
-  select(c(PATIENT_ID, SAMPLE_ID,CANCER_TYPE, TMB_NONSYNONYMOUS, AGE_AT_SEQ_REPORT, TUMOR_PURITY) )
-mutation_clean <- mutations |>
+mutation_counts <- mutations |>
   select(c(Variant_Classification, Tumor_Sample_Barcode))|>
   group_by(Tumor_Sample_Barcode)|>
   summarise(n_mutations = n())|>
   rename('SAMPLE_ID' = Tumor_Sample_Barcode)
 
-patient_sample <- patient_clean |> left_join(sample_clean, by = 'PATIENT_ID')
-patient_sample_mutations <- patient_sample |> left_join(mutation_clean, by = 'SAMPLE_ID')
+patient_sample_mutations <- patient_sample |>
+  select(c(PATIENT_ID, SAMPLE_ID,CANCER_TYPE, TMB_NONSYNONYMOUS, AGE_AT_SEQ_REPORT, TUMOR_PURITY, SEX,OS_MONTHS, OS_STATUS, DRUG_TYPE, SAMPLE_TYPE, SAMPLE_COVERAGE))|>
+  left_join(mutation_counts, by = 'SAMPLE_ID')
 ```
 
 How many mutations per sample
@@ -48,10 +42,13 @@ How many mutations per sample
 mutations |> group_by(Tumor_Sample_Barcode)|>
   summarise(n= n())|>
   ggplot(aes(n))+
-  geom_bar()
+  geom_bar()+
+  labs(title ='Numbers of Mutations per Sample')
 ```
 
 # Creating Correlation Matrix
+
+The aim is to find correlations between our information, which might be worth investigating
 
 ```{r}
 analysis_data <- patient_sample_mutations |> 
@@ -67,4 +64,4 @@ corrplot(correlation_matrix$correlations, method="color", tl.col="black", tl.srt
 
 ```
 
-\
+There are very little correlation between most of the variables. TMB is highly correlated with number of Mutation, which is logical since it is just a normalized version of the number of mutations.

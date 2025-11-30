@@ -1,32 +1,50 @@
 ---
 title: "gene_enrichment_analysis"
-format: html
+format: 
+  html:
+    self-contained: true
 ---
+
+# Load Libraries
 
 ```{r}
 library(fgsea)
 library(msigdbr)
 ```
 
-# Load GO data
+# Load data
+
+## Gene Ontology Information
+
+This loads a dataset where genes with their gene symbol and eEnsemblID are mapped to biological processes. With this information we can see if their are certain processes which are more often targeted by mutations than is expected by chance.
 
 ```{r}
 BP_df = msigdbr(species = "human", category = "C5", subcategory = "BP")
 BP_list = split(BP_df$ensembl_gene, BP_df$gs_name)
 ```
 
-# FCS with mutations per Gene
-
-## Structural Variance
-
-Data: Genes + number of mutation/numbers of SVs
+## Cleaned data
 
 ```{r}
-sv_clean <- raw_data_sv |> select(c(Sample_Id, Site1_Hugo_Symbol, Site1_Chromosome, Site2_Hugo_Symbol, Site2_Chromosome, Class, SV_Length))
+patient_sample <- read_tsv(file = here('data','patient_sample_gene_panel.tsv'))
+sv <- read_tsv(file = here('data','sv.tsv'))
+mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
+```
 
+# GSEA with mutations per Gene
+
+The Genes are ranked on the number of mutations or structural varinces that have been identified in them.
+
+## SV
+
+Gene Set Enrichment analysis is first applied on to the mutations which cause structural variances.
+
+Data format: Genes + number of SVs
+
+```{r}
 clinical_clean <- clinical_sample |> select(c(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))
 
-gene_sv_count <- sv_clean |> 
+gene_sv_count <- sv |> 
   left_join(clinical_clean, by = c("Sample_Id" = "SAMPLE_ID")) |>
   filter(CANCER_TYPE == 'Glioma')|>
   pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
@@ -46,12 +64,14 @@ pathway_scoring <- fgseaMultilevel(pathways= BP_list, stats = gene_sv_stats,minS
 pathway_scoring <- arrange(pathway_scoring, pval)
 ```
 
+Looking at the pvalue and adjusted p-value these results are not very robust. This is probabyl due to the small sample size of only 28 genes.
+
 ## Mutations
 
-```{r}
-data_mutations <- read_tsv(file = here('data','data_mutation_cleaned'))
+The same analysis, but now with the number of mutations
 
-gene_mutation_count <- data_mutations |> 
+```{r}
+gene_mutation_count <- mutations |> 
   left_join(clinical_clean, by = c("Tumor_Sample_Barcode" = "SAMPLE_ID"))|>
   filter(CANCER_TYPE == "Glioma")|> 
   count(Hugo_Symbol, sort = TRUE)|>
@@ -68,7 +88,9 @@ pathway_scoring_m <- fgseaMultilevel(pathways= BP_list, stats = gene_mutation_st
 pathway_scoring_m <- arrange(pathway_scoring_m, padj)
 ```
 
-Comparison of results:
+These results are more reliable than the ones of the structural variances. The most significant pathways also seem logical as they show that pathways are targeted by mutations which influence cell death and also cell cycle processes. This is very common in tumors.
+
+## Comparison of results:
 
 ```{r}
 overlap <- inner_join(
@@ -80,33 +102,11 @@ overlap <- inner_join(
 overlap
 ```
 
+This compares the 100 most mutated pathways form both analysis. Some interesting Pathways are shown here, for example the behaviour pathways, as it is common that brain cancer patients show changes in behaviour.
+
 # FSC with gene mutation per sample
 
-## Mutation
-
-How many samples are mutated for that gene
-
-how many samples have this mutated gene
-
-```{r}
-mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
-
-mutation_gene_sample <- mutations %>% 
-  left_join(clinical_clean |> select(SAMPLE_ID, CANCER_TYPE), by = c("Tumor_Sample_Barcode" = "SAMPLE_ID")) |>
-  filter(CANCER_TYPE == 'Glioma')|>
-  select(Tumor_Sample_Barcode, Hugo_Symbol) %>% 
-  distinct() %>% 
-  count(Hugo_Symbol, sort = TRUE) %>% 
-  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Hugo_Symbol' = 'gene_symbol'))|>
-  distinct()|>
-  na.omit()
-
-gene_mutation_stats <- mutation_gene_sample$n
-names(gene_mutation_stats) = mutation_gene_sample$ensembl_gene
-
-pathway_scoring_m <- fgseaMultilevel(pathways= BP_list, stats = gene_mutation_stats,minSize = 15, maxSize = 500, scoreType = "std")
-patway_scoring_m <- arrange(pathway_scoring_m, padj)
-```
+This is the same analysis as before, but here it is counted in how many samples the gene is mutated. This can alter some counts, if a sample contains multiple mutation per gene.
 
 ## SV
 
@@ -133,3 +133,25 @@ names(sample_sv_stats) = sample_sv_count$ensembl_gene
 pathway_scoring_m <- fgseaMultilevel(pathways= BP_list, stats = sample_sv_stats,minSize = 0, maxSize = 500, scoreType = "std")
 arrange(pathway_scoring_m, pval)
 ```
+
+## Mutations
+
+```{r}
+mutation_gene_sample <- mutations %>% 
+  left_join(clinical_clean |> select(SAMPLE_ID, CANCER_TYPE), by = c("Tumor_Sample_Barcode" = "SAMPLE_ID")) |>
+  filter(CANCER_TYPE == 'Glioma')|>
+  select(Tumor_Sample_Barcode, Hugo_Symbol) %>% 
+  distinct() %>% 
+  count(Hugo_Symbol, sort = TRUE) %>% 
+  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Hugo_Symbol' = 'gene_symbol'))|>
+  distinct()|>
+  na.omit()
+
+gene_mutation_stats <- mutation_gene_sample$n
+names(gene_mutation_stats) = mutation_gene_sample$ensembl_gene
+
+pathway_scoring_m <- fgseaMultilevel(pathways= BP_list, stats = gene_mutation_stats,minSize = 15, maxSize = 500, scoreType = "std")
+patway_scoring_m <- arrange(pathway_scoring_m, padj)
+```
+
+The comparison of the both counting versions, result in very similar outputs.

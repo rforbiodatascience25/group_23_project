@@ -1,9 +1,11 @@
 ---
 title: "logistic_regression"
-format: html
+format: 
+  html:
+    self-contained: true
 ---
 
-# [Load Packages](https://www.r-bloggers.com/2015/09/how-to-perform-a-logistic-regression-in-r/)
+# Load Libraries
 
 ```{r}
 library(readr)
@@ -11,40 +13,31 @@ library(here)
 library(tidyverse)
 ```
 
-# [Load Data](https://www.r-bloggers.com/2015/09/how-to-perform-a-logistic-regression-in-r/)
+# Load Data
 
 ```{r}
-clinical_sample <- read.delim(here("data", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
-
-mutations <- read.delim(here("data", "data_mutations.txt"), sep = "\t", header = TRUE)
-
-clinical_patient <- read.delim(here("data", "data_clinical_patient.txt"), sep = "\t", skip = 4, header = TRUE)
+patient_sample <- read_tsv(file = here('data','patient_sample_gene_panel.tsv'))
+sv <- read_tsv(file = here('data','sv.tsv'))
+mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
 ```
 
-# [Clean Data](https://www.r-bloggers.com/2015/09/how-to-perform-a-logistic-regression-in-r/)
+# Data Wrangling
 
 ```{r}
-
-patient_clean <- clinical_patient |> 
-  select(-c(AGE_GROUP))|>
-  mutate(Survival = str_sub(OS_STATUS, start = 1, end = 1))
-sample_clean <- clinical_sample |>
-  select(c(PATIENT_ID, SAMPLE_ID,CANCER_TYPE, TMB_NONSYNONYMOUS, AGE_AT_SEQ_REPORT) )
-mutation_clean <- mutations |>
+mutation_counts <- mutations |>
   select(c(Variant_Classification, Tumor_Sample_Barcode))|>
   group_by(Tumor_Sample_Barcode)|>
   summarise(n_mutations = n())|>
   rename('SAMPLE_ID' = Tumor_Sample_Barcode)
 
-patient_sample <- patient_clean |> left_join(sample_clean, by = 'PATIENT_ID')
-patient_sample_mutations <- patient_sample |> left_join(mutation_clean, by = 'SAMPLE_ID')
-
-analysis_data <- patient_sample_mutations |> 
-  select(-c(PATIENT_ID, SAMPLE_ID, OS_STATUS))|>
-  mutate_if(is.character, as.factor)
+patient_sample_mutations <- patient_sample |>
+  select(c(PATIENT_ID, SAMPLE_ID,CANCER_TYPE, TMB_NONSYNONYMOUS, AGE_AT_SEQ_REPORT, TUMOR_PURITY, SEX,OS_MONTHS, OS_STATUS, DRUG_TYPE, SAMPLE_TYPE, SAMPLE_COVERAGE))|>
+  left_join(mutation_counts, by = 'SAMPLE_ID')
 ```
 
-# [Fit Model](https://www.r-bloggers.com/2015/09/how-to-perform-a-logistic-regression-in-r/)
+# Fit Model
+
+We want to see if the survival is influenced by any of the variables.
 
 ```{r}
 model <- glm(Survival ~.,family=binomial(link='logit'),data=analysis_data)
@@ -52,8 +45,12 @@ model <- glm(Survival ~.,family=binomial(link='logit'),data=analysis_data)
 summary(model)
 ```
 
+Here no variable seems to have a big influence
+
 ```{r}
 anova(model, test="Chisq")
 ```
+
+Here multiple variables are marked as significance
 
 [Source: https://www.r-bloggers.com/2015/09/how-to-perform-a-logistic-regression-in-r/](https://www.r-bloggers.com/2015/09/how-to-perform-a-logistic-regression-in-r/)

@@ -84,7 +84,7 @@ sprintf("There are %i empty columns.",length(all_na_columns))
 We drop all these columns:
 
 ```{r}
-data_mutation_without_nas <- mutations |> 
+data_mutation_without_nas <- mutation |> 
   select(-all_of(all_na_columns))
 
 # Verify the result by comparing the number of columns
@@ -304,5 +304,5 @@ patients_sample_gene_panel <- left_join(patients_sample, gene_panel_matrix, by =
 
 ```{r}
 patients_sample_gene_panel|>
-  write_tsv(file = here('data','patient_sample_gene_panel'))
+  write_tsv(file = here('data','patient_sample_gene_panel.tsv'))
 ```
