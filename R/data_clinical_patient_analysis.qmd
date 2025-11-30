@@ -5,169 +5,143 @@ format: html
 editor: visual
 ---
 
-## Importing libraries
+# Importing libraries
 
 ```{r}
 #| echo : False
 library("tidyverse")
 library('here')
-library('Cairo')
 library('survival')
 library('survminer')
+library('viridis')
 ```
 
-## Importing data
+# Importing data
 
 ```{r}
-raw_patients <- read.csv(file = "../raw/tmb_mskcc_2018/data_clinical_patient.txt",sep = "\t", header = TRUE)
-#open txt file as a csv, sepertation as tabs: "\t"
+patients_sample_gene_panel <- read.delim(here("data", "patient_sample_gene_panel"), sep = "\t", header = TRUE)
 ```
 
-```{r}
-#removing the 4 first rows that "explain" the columns
-patients <- raw_patients[-c(1,2,3,4),]
-```
+# Subseting Data
 
-## Data Wrangling
+From the merge data set, we will do analysis on the patients information for now, so taking only the columns that were originally in the patient data set, diregarding the cancer types,..
 
 ```{r}
-#Chage names to shorter ones:
-patients <- patients |> 
-  rename(Survival_Months = Overall.Survival..Months., 
-         OS_status = Overall.Survival.Status,
-         Age_group = Age.Group.at.Diagnosis.in.Years,
-         Patient_ID = X.Patient.Identifier)
-```
-
-```{r}
-#Changing the OS status to numeric + adding a column to make it clearer (in case)
-#0 for the Living patients
-#1 for the patients that died
-patients <- patients |> 
-  mutate( 
-    OS_status = case_when(OS_status == "0:LIVING" ~ 0,
-                          OS_status == "1:DECEASED" ~ 1), 
-    Sex_num = case_when(Sex == 'Male' ~ 0,
-                    Sex == 'Female' ~ 1))
-```
-
-More data wrangling could be done?
-
-```{r}
-patients |> 
-  mutate(Age_group = factor(
-      Age_group,
+patients <- patients_sample_gene_panel |> 
+  select(c(SEX, OS_MONTHS, OS_STATUS, AGE_GROUP, DRUG_TYPE)) |> 
+  mutate(AGE_GROUP = factor(
+      AGE_GROUP,
       levels = c("<30", "31-50", "50-60", "61-70", ">71"),
       ordered = TRUE
-    ),)
+      )
+      )
 ```
 
-```{r}
-patients <- patients |>
-  mutate(
-    Age_average = case_when(
-      Age_group == "<30" ~ 25,
-      Age_group == "31-50" ~ 40,
-      Age_group == "50-60" ~ 55,
-      Age_group == "61-70" ~ 65,
-      Age_group == ">71" ~ 75
-    )
-  )
-```
+# Plots
+
+First, we will be looking at the age distribution of Cancers in men and woman and separating the death proprtion from the living ones.
 
 ```{r}
-patients <- patients |> 
-  mutate(Survival_Months = as.numeric(Survival_Months),
-         Age_average = as.numeric(Age_average)) 
-```
-
-```{r}
-current_raw_data_path <- here('data')
-
-patients |> 
-  write_tsv(file = file.path(current_raw_data_path,'data_clinical_patients_clean.tsv'))
-
-
-```
-
-age group -\> make factors based on age group
-
-"early"
-
-## Plots
-
-We will be looking at the proportion of men vs women that have survived the cancer depending on their age and then depending on the type of treatment they received. (Survival proportion per treatment)
-
-bins = age group?
-
-facet
-
-```{r}
-
-order = c('<30', '31-50', '50-60', '61-70', '>71')
 patients |>
-  ggplot(aes(x = factor(Age_group, levels = order),
-             fill = factor(Sex))) +
-  geom_bar(position = "dodge")+
-  labs(title="Proportion of Cancer diagnosed in Men and Woman at different ages", 
-       x = "Age group at Diagnosis (years)", fill = 'Gender')+
-  scale_fill_discrete(label = c('Male', 'Female'))
-  #facet_wrap(~ Suvival.Status.Clean)
+  ggplot(aes(x = AGE_GROUP,
+             fill = factor(SEX))) +
+  geom_bar()+
+  labs(title="Proportion of Cancer diagnosed in Men and Woman at different ages and their current status", 
+       x = "Age group at Diagnosis (years)",
+       fill = 'Gender')+
+  theme(plot.title = element_text(size = 10))+
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE,
+                     alpha = 0.7)+
+  facet_wrap(
+  ~OS_STATUS,
+  labeller = labeller(OS_STATUS = 
+                        c(`0` = "Alive",
+                          `1` = "Deceased")
+                      ))+
+  theme_classic()
 ```
 
-Most cases of cancer Seem to be diagnosed in between the ages of 61 to 70, for both man and woman. In general there seems to be more cases of cancers in man.
+In both groups, dead or alive, the patients, men and woman that have a cancer diagnosis are usually btween 61-70 years old. Cancers seems to be more diagnosed in man than in woman, at all ages.
+
+Looking more into this age group, lets consider the drug given against cancers.
 
 ```{r}
 patients |> 
-  filter(Age_group == "61-70") |> 
-  ggplot(mapping = aes(x = Drug.Type,
-                       fill = factor(Sex)))+
-  geom_bar(position = "dodge")
+  filter(AGE_GROUP == "61-70") |> 
+  ggplot(mapping = aes(x = DRUG_TYPE,
+                       fill = SEX))+
+  geom_bar()+
+  labs(title="Drug given to patients diagnosed with a cancer between 61-70years old, differenciated by male and woman", 
+       x = "Drug",
+       fill = 'Gender')+
+  theme(plot.title = element_text(size = 10))+
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE,
+                     alpha = 0.7)
+ggplot(patients, 
+       mapping = aes(x = DRUG_TYPE,
+                       fill = SEX))+
+  geom_bar()+
+  labs(title="Drug given to patients, of all ages, differenciated by male and woman", 
+       x = "Drug",
+       fill = 'Gender')+
+  theme(plot.title = element_text(size = 10))+
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE,
+                     alpha = 0.7)
 ```
 
 ```{r}
 patients |>
-  filter(Age_group == "61-70") |> 
-  ggplot(mapping = aes(x = Drug.Type,
-                       y = Survival_Months,
-                       fill = factor(OS_status)))+
+  filter(AGE_GROUP == "61-70") |> 
+  ggplot(mapping = aes(x = DRUG_TYPE,
+                       y = OS_MONTHS,
+                       fill = factor(OS_STATUS)))+
   geom_boxplot()+
-  facet_wrap(~ Sex)+
+  facet_wrap(~ SEX)+
   labs(title = 'Box Plot of the Drug success rate based on the proportion of patients still alive vs dead with the same drug', fill = 'Status', x = 'Drug Type against Cancer', y = 'Number of months survived')+
-  scale_fill_discrete(label = c('Alive', "Desceased"))+
-  theme()
-#Might not be the best way to represent it becase, how many patients total per drug? 
+  theme(plot.title = element_text(size = 10))+
+  scale_fill_viridis(label = c('Alive', "Desceased"),
+                     option = "viridis",
+                     discrete = TRUE,
+                     alpha = 0.7)
 ```
 
-How many months considered still alive?
+In General, PDL-1 is given more than other drugs, CTL4 is rarely given and sometimes Combo.
 
-outliers-\> drop?
+As for the 61-70 agre group, woman given CTLA4, both survived and died the most.
 
-```{r}
-summ_age <- count(patients$Age_average)
-patients |> 
-  ggplot(aes(x = summ_age, y = Suvival.Status.Clean)) +
-  geom_line(alpha = 0.4) 
-```
+For both men and women PDL-1 has the lowest death proportion. It could be that PDL-1 is generally more given, in cancers tha are less agressive, and combo or CTLA4 for more agressive cancers taht do not react to PDL-1.
+
+## Survival rate
+
+With the patient data, containing Overall Survival months (OS_MONTHS) and Overall Survival Status (OS_STATUS), it is possible to compute a survival probability over time, using the Kaplan Meier method. The Survival package follows this principal and allows us to compute the survival rate of the patients. To do so, Surv() creates the formula object, associating the status of a patients to it's survival time. Then, survfit uses the formula object to fit it to the Kaplan Meier estimator, calculating the survival probabilities at each observed event time. The result can then be used to plot the Kaplan–Meier survival.
 
 ```{r}
 
 #Using the Kaplan Meier based survival function: 
-
-KM_f <- survfit(Surv(Survival_Months, OS_status) ~1, data = patients)
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~1, data = patients)
 
 #convert to a tibble
 
 tibble_KM_f <- tibble(
   time = KM_f$time,
-  survival = KM_f$surv)
+  survival = KM_f$surv,
+  lower = KM_f$lower,
+  upper = KM_f$upper)
 print(tibble_KM_f)
 
 ggplot(tibble_KM_f, 
        mapping = aes(x = time,
                      y = survival))+
   geom_step()+
-  labs(title = 'Overall Survival rate of the patients')
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3, color = NA) +
+  ylim(0,NA) +
+  labs(title = 'Overall Survival rate of the patients', x = "time (months)")+
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE,
+                     alpha = 0.7)
 #change y min to 0 bcs they are not ALL dead 
 #x max needs to change too
 
@@ -180,7 +154,7 @@ ggplot(tibble_KM_f,
 #survival rate based on the gender of the patients:
 
 
-KM_f <- survfit(Surv(Survival_Months, OS_status) ~Sex, data = patients)
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~SEX, data = patients)
 
 #convert to a tibble
 #print(summary(KM_f))
@@ -189,19 +163,25 @@ print(KM_f)
 tibble_KM_f <- tibble(
   time = KM_f$time,
   survival = KM_f$surv,
-  strata = rep(names(KM_f$strata),KM_f$strata))
-print(tibble_KM_f)
+  strata = rep(names(KM_f$strata),KM_f$strata),
+  lower = KM_f$lower,
+  upper = KM_f$upper)
+tibble_KM_f <- tibble_KM_f |> 
+  mutate(strata = str_remove(strata, 'SEX ='))
 ggplot(tibble_KM_f,
        mapping = aes(x = time, 
                      y = survival, 
                      color = strata))+
   geom_step()+
+  #geom_ribbon(aes(ymin = lower, ymax = upper, fill = strata, alpha = 0.1)) +
   labs(title = 'Survival Curve of the patients depending on their gender', color = 'Gender')+
-  scale_color_discrete(label = c('Female', 'Male'))
+  scale_color_viridis_d(label = c('Female', 'Male'), 
+                      option = "inferno",
+                      alpha = 1)
 ```
 
 ```{r}
-KM_f <- survfit(Surv(Survival_Months, OS_status) ~Age_group, data = patients)
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~AGE_GROUP, data = patients)
 
 #convert to a tibble
 #print(summary(KM_f))
@@ -218,11 +198,13 @@ ggplot(tibble_KM_f,
                      color = strata))+
   geom_step()+
   labs(title = 'Survival Curve of the patients depending on their Age at the dignostic', color = 'Age Group')+
-  scale_color_discrete(label = order)
+  scale_color_viridis_d(option = "inferno",
+                        alpha = 1,
+                        label = order)
 ```
 
 ```{r}
-KM_f <- survfit(Surv(Survival_Months, OS_status) ~Drug.Type, data = patients)
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~DRUG_TYPE, data = patients)
 
 #convert to a tibble
 #print(summary(KM_f))
@@ -239,7 +221,7 @@ ggplot(tibble_KM_f,
                      color = strata))+
   geom_step()+
   labs(title = 'Survival Curve of the patients depending on their Medicationr', color = 'Drug')+
-  scale_color_discrete(label = c('CTLA4', 'PD-1/PDL-1', 'Combo'))
+  scale_color_viridis_d(label = c('CTLA4', 'PD-1/PDL-1', 'Combo'))
 ```
 
 From the course website we try to make a linear regression model
@@ -268,24 +250,3 @@ patients |>
 Death rate decreases over time
 
 However, the problem with a GLM, is that it does not take into account the "censored" patients, some patients are alive after 4 months but there is no later update. The data does not follow the patient until the end yet GML assumes it does.
-
-To get a survival curve we would need to use the Kaplan-Meier model.
-
-## **Creating survival objects and curves**
-
-The Kaplan-Meier method is the most common way to estimate survival times and probabilities. It is a non-parametric approach that results in a step function, where there is a step down each time an event occurs.
-
-```{r}
-patients |> 
-  arrange(Survival_Months) |> 
-  #Runs from 0 to 14 months
-  total_patients <- count() |>
-  filter(Survival_Months == 0) |> 
-  filter(OS_status == 1) |> 
-  dead_m0 <- count() |> 
-  p_m0 <- (total_patients-dead_m0)/total_patients
-  
-
-
-  
-```

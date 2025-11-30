@@ -19,26 +19,20 @@ library(viridis)
 
 ```{r}
 #Load the gene panel matrix data
-gene_panel_matrix <- read_delim(here("raw",
-                                     "tmb_mskcc_2018",
-                                     "data_gene_panel_matrix.txt"), delim = "\t")
-gene_panel_matrix
-```
-
-```{r}
-#Add an extra column with the IMPACT version
+gene_panel_matrix <- read_delim(here("data",
+                                     "patient_sample_gene_panel"), 
+                                delim = "\t")
+#Select the column of interest
 gene_panel_matrix <- gene_panel_matrix |> 
-  mutate(IMPACT_version = case_when(
-    mutations == "IMPACT341" ~ "IMPACT_v3",
-    mutations == "IMPACT410" ~ "IMPACT_v5",
-    mutations == "IMPACT468" ~ "IMPACT_v6"
-  ))
+  select(SAMPLE_ID,
+         IMPACT_version)
+gene_panel_matrix
 ```
 
 ```{r}
 #Load the mutations data
 data_mutation <- read_tsv(here("data",
-                               "data_mutation_cleaned"),
+                               "data_mutation_cleaned.tsv"),
                           show_col_types = FALSE)
 ```
 
@@ -176,4 +170,6 @@ ggplot(data = percentage_type,
        fill = "Mutation type")
 ```
 
-While newer IMPACT versions detect more mutations overall, the distribution of mutation types remains largely unchanged. This indicates that version upgrades increase sensitivity without altering the relative composition of mutation types.
+While newer IMPACT versions detect more mutations overall, the distribution of mutation types remains largely unchanged. The most significant change is the proportion of Frameshift mutations, which increases with each IMPACT version.
+
+This indicates that version upgrades increase sensitivity without substantially altering the mutation distribution.

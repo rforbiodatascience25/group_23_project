@@ -21,7 +21,7 @@ library(viridis)
 ```{r}
 #Load the mutations data
 mutations <- read_delim(here("data",
-                             "data_mutation_cleaned"), delim = "\t")
+                             "data_mutation_cleaned.tsv"), delim = "\t")
 #Remove the duplicates
 mutations <- mutations |> 
   distinct(across(-consequence),
@@ -49,30 +49,28 @@ mutations <- mutations |>
     Variant_Classification,
     "Other"
   ))
+
+mutations
 ```
 
 ```{r}
 #Load the clinical sample data
-clinical_sample <- read_delim(here("raw",
-                                   "tmb_mskcc_2018",
-                                   "data_clinical_sample.txt"))
+clinical_sample <- read_delim(here("data",
+                                   "patient_sample_gene_panel"))
 clinical_sample
 ```
 
 ```{r}
 #Create a subset for Glioma detailed cancer types
 sample_glioma <- clinical_sample |>  
-  filter(`Cancer Type`=='Glioma') |> 
+  filter(CANCER_TYPE=='Glioma') |> 
   #Remove the first 4 rows
   slice(-1:-4) |> 
-  select(`Sample Identifier`,
-         `Cancer Type`,
-         `Cancer Type Detailed`) |> 
-  rename(SAMPLE_ID = `Sample Identifier`,
-         Cancer_Type = `Cancer Type`,
-         Detailed_Cancer_Type = `Cancer Type Detailed`)
-sample_glioma
+  select(SAMPLE_ID,
+         CANCER_TYPE,
+         CANCER_TYPE_DETAILED)
 
+sample_glioma
 ```
 
 ```{r}
@@ -80,11 +78,8 @@ sample_glioma
 clinical_sample <- clinical_sample |> 
   slice(-1:-4) |> 
   #Select the columns of interest
-  select(`Sample Identifier`,
-         `Cancer Type`) |> 
-  #Modify the columns name
-  rename(SAMPLE_ID = `Sample Identifier`,
-         Cancer_Type = `Cancer Type`)
+  select(SAMPLE_ID,
+         CANCER_TYPE)
 ```
 
 ```{r}
@@ -94,7 +89,7 @@ clinical_sample_mutation <- left_join(mutations,
                                       by = "SAMPLE_ID")
 #Create a subset for glioma mutations
 glioma_mutations <- clinical_sample_mutation |> 
-  filter(Cancer_Type == "Glioma")
+  filter(CANCER_TYPE == "Glioma")
 
 glioma_sample_mutation <- left_join(glioma_mutations,
                                     sample_glioma,
@@ -104,7 +99,7 @@ glioma_sample_mutation <- left_join(glioma_mutations,
 ```{r}
 #Count the frequence of each mutation for each cancer type
 mutations_count <- clinical_sample_mutation |> 
-  group_by(Cancer_Type,
+  group_by(CANCER_TYPE,
            Variant_Classification) |> 
   summarise(count = n(),
             .groups = "drop")
@@ -113,18 +108,18 @@ mutations_count <- clinical_sample_mutation |>
 ```{r}
 #Count the frequence for each mutation for each detailed glioma type
 glioma_mutations_count <- glioma_sample_mutation |> 
-  group_by(Detailed_Cancer_Type,
+  group_by(CANCER_TYPE_DETAILED,
            Variant_Classification) |> 
   summarise(count = n(),
             .groups = "drop") |> 
-  filter(!is.na(Detailed_Cancer_Type))
+  filter(!is.na(CANCER_TYPE_DETAILED))
 ```
 
 ## Data representation
 
 ```{r}
 ggplot(data = mutations_count,
-       mapping = aes(x = Cancer_Type,
+       mapping = aes(x = CANCER_TYPE,
                      y = count,
                      fill = Variant_Classification)) + 
   geom_col(alpha = 0.8) +
@@ -141,7 +136,7 @@ ggplot(data = mutations_count,
 
 ```{r}
 ggplot(data = glioma_mutations_count,
-       mapping = aes(x = Detailed_Cancer_Type,
+       mapping = aes(x = CANCER_TYPE_DETAILED,
                      y = count,
                      fill = Variant_Classification)) + 
   geom_col(alpha = 0.8) +

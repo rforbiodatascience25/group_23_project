@@ -13,6 +13,7 @@ library(ggplot2)
 library(dplyr)
 library(here)
 library(readr)
+library(viridis)
 ```
 
 ## Import data
@@ -82,9 +83,10 @@ Excluding the transclocation class which hasn't any "determined" size.
  
 sv_clinic_augm |> filter(Class != "TRANSLOCATION") |> 
   ggplot(aes(x=SV_Length, fill = Class)) +
-  geom_histogram() + 
+  geom_histogram(position = "identity", alpha = 0.8) +
   scale_x_log10() +
-  facet_wrap(~Class, scales = "free_y", ncol = 1) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
   theme_minimal() 
 
 sv_clinic_augm |> filter(Class != "TRANSLOCATION") |> 
@@ -95,6 +97,26 @@ sv_clinic_augm |> filter(Class != "TRANSLOCATION") |>
 ```
 
 Density plot + histogram overlapped
+
+Kind of SVs per cancer type
+
+```{r}
+
+sv_clinic_augm |> 
+  group_by(CANCER_TYPE) |> 
+  ggplot(mapping = aes(x = CANCER_TYPE, fill = Class)) + 
+  geom_bar(alpha = 0.9) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1,
+                                   size = 7)) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  labs(title = "Distribution of SV Class by Cancer Type",
+       x = "Cancer Type",
+       y = "SV Count")
+
+```
 
 ### Is a gene recurrent in SVs ?
 
@@ -141,6 +163,11 @@ Are there other SVs in glioma samples ?
 glioma_SV <- sv_clinic_augm |> 
   filter(CANCER_TYPE == "Glioma") 
 
+glioma_SV_longer <- sv_clinic_augm |> 
+  filter(CANCER_TYPE == "Glioma") |> 
+  pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
+  filter(!is.na(Gene_Name))
+
 glioma_SV |> 
   ggplot(aes(x = Class, fill = Class)) +
   geom_bar(color = "black", alpha = 0.8) +
@@ -148,16 +175,33 @@ glioma_SV |>
   theme(legend.position = "none")
 
 glioma_SV |> 
-  ggplot(aes(x = Site1_Hugo_Symbol, fill = Class)) +
+  ggplot(aes(x = Site1_Hugo_Symbol, fill = Site1_Hugo_Symbol)) +
   geom_bar(color = "black", alpha = 0.8) +
   coord_flip() +
   theme_minimal() 
 
 glioma_SV |> 
-  ggplot(aes(x = Site2_Hugo_Symbol, fill = Class)) +
+  ggplot(aes(x = Site2_Hugo_Symbol, fill = Site1_Hugo_Symbol)) +
   geom_bar(color = "black", alpha = 0.8) +
   coord_flip() +
   theme_minimal() 
+
+glioma_SV |> 
+  mutate(Group = ifelse(Site1_Hugo_Symbol == "EGFR", "EGFR", "Other_genes"), Gene_Name = Site1_Hugo_Symbol) |> 
+  ggplot(aes(x = Group, fill = Site1_Hugo_Symbol)) +
+  geom_bar(size = 0.2) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() 
+
+glioma_SV_longer |> 
+  mutate(Group = ifelse(Gene_Name == "EGFR", "EGFR", "Other_genes"), Gene_Name = Gene_Name) |> 
+  ggplot(aes(x = Group, fill = Gene_Name)) +
+  geom_bar(color = "black", size = 0.2, alpha = 0.9) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() 
+  
 ```
 
 ### Study of mutations for glioma sample

@@ -77,7 +77,11 @@ Detailed information for each column with examples can be found in the descripti
 
 # New TODOs:
 
--   get data script, download data from web and clean(louis), into raw and data folder
+-   Add cleaning into Importing_raw_data script(louis), add merging and then load into data folder
+
+    -   load merged data Sample+Patient+ Impact, SV , Mutation
+
+    -   changing analysis scripts to load data in scripts
 
 -   bar plot: numbers of mutation, but stacked with kind of mutation(Louis data set)
 
@@ -89,6 +93,10 @@ Detailed information for each column with examples can be found in the descripti
 
 -   structure github
 
+    -   do requirements of course
+
+    -   add contributions in readme
+
 Potential analysis:
 
 -   Gene level enrichment(are certain genes more often mutated than others)
@@ -96,14 +104,6 @@ Potential analysis:
 -   Map genes to functional pathways
 
 -   correlation tmb vs mutation of specific genes
-
--   clustering by mutations and check for cancer types
-
--   SV burden per sample
-
--   correlation of numbers of mutations vs sample coverage/tumor purity
-
--   prediction of os_months/cancer type
 
 # Presentation:
 

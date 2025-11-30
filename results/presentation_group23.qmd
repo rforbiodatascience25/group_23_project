@@ -1,0 +1,65 @@
+---
+title: "presentation_group23"
+format: revealjs
+---
+
+## Introduction/Background
+
+Study(mailny investigating TMB), why was the study conducted?
+
+Looking at different cancers, they wanted to look if a specific component of cancers, TMB, could affect the survival and the success rate of treatment with Immune Checkpoint Inhibitors (ICI), such as PD1, PDL1 and CTLA4.
+
+we focus on Mutations here
+
+## Materials
+
+Dataset, some statistics(maily cancer type)
+
+and Impact version
+
+## Methods
+
+-   Survival Analysis:
+    -   package : 'survival'
+    -   Surv(): function object, parameters: survival time + status (dead or alive) of each patient
+    -   survfit(): fits the object to the Kaplan Meier estimator.
+    -   data used: clinical_patients
+    -   result: step curve, each step indicates the status of patients per unit time. It can be stratified to different parameters (sex, age, cancer..)
+-   Cox Regression
+-   Gene Set Enrichment Analysis
+
+## Results
+
+-   Surivival analysis(overall)
+
+-   Number of Mutations & SV per Cancer Type
+
+-   SV Analysis
+
+    -   Kind of SVs+ Length
+
+    -   Number of SVs per Gene-\>EGFR
+
+    -   EGFR per Cancer Type -\> Glioma
+
+    -   Overview Glioma
+
+    -   Survival Correlation with Co-founders(especially gender)
+
+    -   Survival analysis on gender(subset glioma)
+
+    -   Gene SV+ Mutation from Glioma
+
+    -   GSEA (SV) & Mutations
+
+## Discussion
+
+-   Study
+
+    -   Tumor burden
+
+    -   higher TMB-\> higher survival
+
+    -   more mutations no indication of severity of cancer
+
+    -   Glioma only exemption, here no correlation?

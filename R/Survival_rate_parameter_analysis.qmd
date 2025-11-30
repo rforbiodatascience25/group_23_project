@@ -15,46 +15,22 @@ library('here')
 ## Loading Data
 
 ```{r}
-current_path <- here('data')
-print(current_path)
-```
-
-```{r}
-getwd()
-```
-
-```{r}
-patients <- read_tsv('/net/pupil1/home/people/s243419/R_for_bio_data_science/projects/group23_project/data/data_clinical_patients_clean.tsv')
-sample <- read.csv('/net/pupil1/home/people/s243419/R_for_bio_data_science/projects/group23_project/raw/tmb_mskcc_2018/data_clinical_sample.txt', sep = '\t', skip = 4, header = TRUE)
-mutations <- read.delim(here("data", "data_mutation_cleaned"), sep = "\t", header = TRUE)
+patients_sample_gene_panel <- read.delim(here("data", "patient_sample_gene_panel"), sep = "\t", header = TRUE)
 
 
-```
-
-```{r}
-names(patient_sample_mutations)
 ```
 
 ## Data Wrangling
 
 ```{r}
-names(sample)
+patients_sample_gene_panel
 ```
 
 ```{r}
-patients <- patients |>  
-  select(-c(Age_group)) |> 
-  rename(PATIENT_ID = Patient_ID)
-patients_sample <- left_join(sample, patients, by = 'PATIENT_ID')
+patients_sample <- patients_sample_gene_panel |>  
+  select(c(SEX, OS_MONTHS, OS_STATUS, AGE_GROUP, DRUG_TYPE, CANCER_TYPE, TMB_NONSYNONYMOUS, AGE_AT_SEQ_REPORT))
 
 
-```
-
-```{r}
-
-patient_sample_mutations <- patient_sample_mutations |> 
-  mutate(OS_STATUS = case_when(OS_STATUS == '1:DECEASED' ~ 1, 
-                                                         OS_STATUS == '0:LIVING' ~ 0))
 ```
 
 ```{r}
@@ -66,7 +42,7 @@ patients_sample <- patients_sample |>
 
 patients_sample |> 
   ggplot(mapping = aes(x = TMB_group,
-                       fill = Drug.Type))+
+                       fill = DRUG_TYPE))+
   geom_bar()+
   labs(tile = 'Bar plot of Drug given againts different severity of TMB (Tumor Mutational Burden', x = 'TMB Severity')
 ```
@@ -78,8 +54,8 @@ patients_sample |>
 Does the cancer type affects the survival of patients?
 
 ```{r}
-
-KM_f <- survfit(Surv(Survival_Months, OS_status) ~CANCER_TYPE, data = patients_sample)
+library("viridis")
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~CANCER_TYPE, data = patients_sample)
 
 #convert to a tibble
 print(summary(KM_f))
@@ -99,9 +75,34 @@ ggplot(tibble_KM_f,
                      y = survival, 
                      color = strata))+
   geom_step()+
-  labs(title = 'Survival Curve of the patients depending on their Cancer type', color = 'Cancer Type')
+  labs(title = 'Survival Curve of the patients depending on their Cancer type', color = 'Cancer Type')+
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) 
 #hmm why does the cancer type repeats itself?? wrong
   
+```
+
+```{r}
+ggplot(patients_sample,
+       mapping = aes(x = AGE_AT_SEQ_REPORT, 
+                     fill = CANCER_TYPE))+
+  geom_bar()
+```
+
+```{r}
+ggplot(patients_sample,
+       mapping = aes(x = TMB_group, 
+                     fill = CANCER_TYPE))+
+  geom_bar()
+```
+
+```{r}
+ggplot(patients_sample,
+       mapping = aes(x = CANCER_TYPE, 
+                     fill = Sex))+
+  geom_bar()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+scale_fill_viridis(option = "viridis",
+                     discrete = TRUE, alpha =0.5) 
 ```
 
 ```{r}
@@ -126,7 +127,28 @@ patients_sample_glioma <- patients_sample |>
 
 ```{r}
 
-KM_f <- survfit(Surv(Survival_Months, OS_status) ~TMB_group, data = patients_sample_glioma)
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~TMB_group, data = patients_sample_glioma)
+
+#convert to a tibble
+#print(summary(KM_f))
+names(KM_f)
+print(KM_f)
+tibble_KM_f <- tibble(
+  time = KM_f$time,
+  survival = KM_f$surv,
+  strata = rep(names(KM_f$strata),KM_f$strata))
+tibble_KM_f <- tibble_KM_f %>%
+  mutate(strata = str_remove(strata, "TMB_group="))
+ggplot(tibble_KM_f,
+       mapping = aes(x = time, 
+                     y = survival, 
+                     color = strata))+
+  geom_step()+
+  labs(title = 'Survival Curve of the patients depending on their TMB', color = 'TMB severity', )
+```
+
+```{r}
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~TMB_group, data = patients_sample)
 
 #convert to a tibble
 #print(summary(KM_f))
@@ -160,11 +182,51 @@ ggplot(patients_sample_glioma,
   geom_bar()
 ```
 
+```{r}
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~Sex, data = patients_sample_glioma)
+
+#convert to a tibble
+#print(summary(KM_f))
+names(KM_f)
+print(KM_f)
+tibble_KM_f <- tibble(
+  time = KM_f$time,
+  survival = KM_f$surv,
+  strata = rep(names(KM_f$strata),KM_f$strata))
+tibble_KM_f <- tibble_KM_f %>%
+  mutate(strata = str_remove(strata, "TMB_group="))
+ggplot(tibble_KM_f,
+       mapping = aes(x = time, 
+                     y = survival, 
+                     color = strata))+
+  geom_step()+
+  labs(title = 'Survival Curve of the patients depending on their TMB', color = 'Gender', )
+```
+
+KM_f \<- survfit(Surv(Survival_Months, OS_status) \~TMB_group, data = patients_sample_glioma)
+
+```{r}
+#convert to a tibble 
+#print(summary(KM_f)) names(KM_f) print(KM_f) 
+tibble_KM_f <- tibble |> 
+  (time = KM_f$time,
+  survival = KM_f$surv, 
+  strata = rep(names(KM_f$strata),KM_f$strata)) 
+tibble_KM_f <- tibble_KM_f %>% 
+  mutate(strata = str_remove(strata, "TMB_group=")) 
+ggplot(tibble_KM_f, 
+       mapping = aes(x = time, 
+                     y = survival, 
+                     color = strata))+ 
+  geom_step()+ 
+  labs(title = 'Survival Curve of the patients depending on their TMB', color = 'TMB severity', )
+```
+
 ### By mutation number
 
 ```{r}
 
-KM_f <- survfit(Surv(Survival_Months, OS_status) ~ n_mutation_log, data = patients_sample)
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~ n_mutation_log, data = patients_sample)
 
 
 names(KM_f)
