@@ -15,7 +15,7 @@ This file describes different gene mutations and indicator for more than 20000 s
 #### Explanation of the variables
 
 | Column name | What it is |
-|------------------------------------|------------------------------------|
+|----|----|
 | Hugo_Symbol | The **Name** of the gene. |
 | Entrez_Gene_Id | The gene's unique **ID number**. |
 | Chromosome | The specific chromosome where the mutation occurred |
