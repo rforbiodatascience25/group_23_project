@@ -6,6 +6,10 @@
 
 This file contains the main informations of all the patients that were studied, it contains 6 columns, patient ID, sex, age at diagnosis, drug received, the "survived month" and their overall status (alive or dead, at the time of the check up). From this data set it is possible to look at the survival rate of the patients and see if different factors such as the medication or the age may have an impact on the survival rate.
 
+### data_clinical_sample.txt
+
+This files contains information about the specific samples like cancer type, sample site, measurements on how clean the sample was and how many cancer cells were found per sample. There is one sample per patient. This file also contains the specific age of the patient at the time when the sample was taken.
+
 ### data_gene_panel_matrix.txt
 
 ### data_mutations.txt
@@ -15,7 +19,7 @@ This file describes different gene mutations and indicator for more than 20000 s
 #### Explanation of the variables
 
 | Column name | What it is |
-|----|----|
+|------------------------------------|------------------------------------|
 | Hugo_Symbol | The **Name** of the gene. |
 | Entrez_Gene_Id | The gene's unique **ID number**. |
 | Chromosome | The specific chromosome where the mutation occurred |

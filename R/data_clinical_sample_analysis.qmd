@@ -299,7 +299,7 @@ ggplot() +
            fill = "blue",
            alpha = 0.5)
 
-ggplot() +
+tmb_full_glioma <- ggplot() +
   geom_density(data = patient_sample,
            aes(TMB_NONSYNONYMOUS),
            fill = "grey40",
@@ -308,6 +308,8 @@ ggplot() +
            aes(TMB_NONSYNONYMOUS),
            fill = "blue",
            alpha = 0.5)
+
+ggsave("../results/figures/density_full_vs_glioma.png", plot = tmb_full_glioma)
 ```
 
 ```{r}

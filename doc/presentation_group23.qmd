@@ -28,29 +28,37 @@ and Impact version
 -   Cox Regression
 -   Gene Set Enrichment Analysis
 
-## Results
+## Results 1
 
--   Surivival analysis - stratified by Cancer type
+-   Survival analysis - stratified by Cancer type
 
 -   Number of Mutations & SV per Cancer Type
 
+## Results 2
+
 -   SV Analysis
 
-    -   Kind of SVs+ Length
+-   Kind of SVs+ Length
 
-    -   Number of SVs per Gene-\>EGFR
+-   Number of SVs per Gene-\>EGFR
 
-    -   EGFR per Cancer Type -\> Glioma
+## Results 3
 
-    -   Overview Glioma
+-   EGFR per Cancer Type -\> Glioma
 
-    -   Survival Correlation with Co-founders(especially gender)
+-   Overview Glioma
 
-    -   Survival analysis on gender(subset glioma)
+## Results 4
 
-    -   Gene SV+ Mutation from Glioma
+-   Survival Correlation with Co-founders(especially gender)
 
-    -   GSEA (SV) & Mutations
+-   Survival analysis on gender(subset glioma)
+
+## Results 5
+
+-   Gene SV+ Mutation from Glioma
+
+-   GSEA (SV) & Mutations
 
 ## Discussion
 
