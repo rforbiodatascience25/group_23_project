@@ -4,7 +4,7 @@ format: html
 editor: visual
 ---
 
-## Loading Libraries
+# Loading Libraries
 
 ```{r}
 library('tidyverse')
@@ -13,14 +13,14 @@ library('here')
 library("viridis")
 ```
 
-## Loading Data
+# Loading Data
 
 ```{r}
 patients_sample_gene_panel <- read_delim(here("data", "patient_sample_gene_panel"), delim = "\t", col_names = TRUE)
 
 ```
 
-## Data Wrangling
+# Data Wrangling
 
 Selecting our columns of interest (originally form clinical patient and clinical sample files).
 
@@ -30,6 +30,8 @@ patients_sample <- patients_sample_gene_panel |>
 
 
 ```
+
+# Analysis
 
 ```{r}
 #Comparing the number of mutation, and the drug given, in the case of Glioma cancer
@@ -52,7 +54,10 @@ patients_sample |>
                        fill = DRUG_TYPE)
          )+
   geom_bar()+
-  labs(tile = 'Bar plot of Drug given againts different severity of TMB (Tumor Mutational Burden', x = 'TMB Severity')
+  labs(title = 'Bar plot of Drug given againts different severity of TMB', x = 'TMB Severity', fill = 'Drug Type')+
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE,
+                     alpha = 0.7) 
 ```
 
 ## Analysis by Cancer Type
@@ -67,7 +72,6 @@ KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~CANCER_TYPE, data = patients_sample)
 
 #convert to a tibble
 
-print(KM_f$strata)
 tibble_KM_f <- tibble(
   time = KM_f$time,
   survival = KM_f$surv,
@@ -81,9 +85,14 @@ ggplot(tibble_KM_f,
                      y = survival, 
                      color = strata))+
   geom_step()+
-  labs(title = 'Survival Curve of the patients depending on their Cancer type', x = 'Time (in months)', color = 'Cancer Type')+
   scale_fill_viridis(option = "viridis",
-                     discrete = TRUE) 
+                     discrete = TRUE) +
+  coord_cartesian(ylim = c(0,NA))+
+  labs(title = 'Survival Curve of the patients depending on their Cancer type', 
+       x = 'Time (in months)',
+       y = 'Overall Survival Probability',
+       color = 'Cancer Type')+
+  theme_minimal()
 
   
 ```
@@ -95,9 +104,13 @@ ggplot(patients_sample,
        mapping = aes(x = AGE_AT_SEQ_REPORT, 
                      fill = CANCER_TYPE))+
   geom_bar()+
-  labs(title = 'Reaprtition off cancers at the different diagnosis ages', x ='Age at Diagnosis')+
   scale_fill_viridis(option = "viridis",
-                     discrete = TRUE) 
+                     discrete = TRUE)+
+  labs(title = 'Repartition of cancers at the different diagnosis ages', 
+       x ='Age at Diagnosis', 
+       fill = 'Cancer Type')+
+    theme_minimal()
+
   
 ```
 
@@ -106,9 +119,13 @@ ggplot(patients_sample,
        mapping = aes(x = factor(TMB_group, order = TRUE), 
                      fill = CANCER_TYPE))+
   geom_bar()+
-  labs(title = 'Proportion of cancer types depending on their TMB severity', x = 'TMB severity')+
   scale_fill_viridis(option = "viridis",
-                     discrete = TRUE) 
+                     discrete = TRUE) +
+  labs(title = 'Proportion of cancer types depending on their TMB severity', 
+       x = 'TMB severity', 
+       fill = 'Cancer Type')+
+  theme_minimal()
+  
 ```
 
 ```{r}
@@ -116,11 +133,15 @@ ggplot(patients_sample,
        mapping = aes(x = CANCER_TYPE, 
                      fill = SEX))+
   geom_bar()+
-  labs(title = 'Proportion of males and females for each cancer type', x ='ancer Type')+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
   scale_fill_viridis(option = "viridis",
                      discrete = TRUE, 
-                     alpha =0.7) 
+                     alpha =0.7) +
+  labs(title = 'Proportion of males and females for each cancer type', 
+       x ='Cancer Type', 
+       fill = ' Gender')+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
 ```
 
 ```{r}
@@ -128,11 +149,15 @@ ggplot(patients_sample,
        mapping = aes(x = CANCER_TYPE, 
                      fill = DRUG_TYPE))+
   geom_bar()+
-  labs(title = 'Proportion of the type of drug given for each Cancer Type', x = 'cancer Type')+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  labs(title = 'Proportion of the type of drug given for each Cancer Type', 
+       x = 'cancer Type', 
+       fill = 'Drug Type')+
   scale_fill_viridis(option = "viridis",
                      discrete = TRUE, 
-                     alpha = 0.7) 
+                     alpha = 0.7) +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
 ```
 
 the impact of TMB on all cancer survival rate:
@@ -157,9 +182,14 @@ ggplot(tibble_KM_f,
                      y = survival, 
                      color = strata))+
   geom_step()+
-  labs(title = 'Survival Curve of the patients depending on their TMB', x = 'Time (in months)', color = 'TMB severity', )+
   scale_fill_viridis(option = "viridis",
-                     discrete = TRUE)
+                     discrete = TRUE)+
+  coord_cartesian(ylim = c(0,NA))+
+  labs(title = 'Survival Curve of the patients depending on their TMB', 
+       x = 'Time (in months)', 
+       y = 'Overall Survival Probability',
+       color = 'TMB severity', )+
+  theme_minimal()
 ```
 
 Higher TMB leads to higher survival.
@@ -194,9 +224,14 @@ ggplot(tibble_KM_f,
                      y = survival, 
                      color = strata))+
   geom_step()+
-  labs(title = 'Survival Curve of the patients depending on their TMB', x = 'Time (in months)',color = 'TMB severity', )+
-  scale_fill_viridis(option = "viridis",
-                     discrete = TRUE) 
+  scale_fill_viridis_d(option = "viridis") +
+  coord_cartesian(ylim = c(0, NA))+
+  labs(title = 'Survival Curve of the patients depending on their TMB', 
+       x = 'Time (in months)',
+       y = 'Overall Survival Probability',
+       color = 'TMB severity')+
+  theme_minimal()
+  
 ```
 
 There is maybe not enough High TMB to make a concrete conclusion here, the survival curve of high TMB could be biased.
@@ -210,7 +245,9 @@ Lets look more into it, what is the distribution of TMB in Glioma?
 ggplot(patients_sample_glioma, 
        mapping = aes(x = TMB_group))+
   geom_bar()+
-  labs(title = 'Repartition of TMB severity among patients with Glioma', x ='TMB severity')
+  labs(title = 'Repartition of TMB severity among patients with Glioma', 
+       x ='TMB severity')+
+  theme_minimal()
 ```
 
 ```{r}
@@ -218,14 +255,17 @@ ggplot(patients_sample_glioma,
        mapping = aes(x = (TMB_group), 
                      fill = DRUG_TYPE))+
   geom_bar()+
-  labs(title = 'Drug given to Glioma patients depending on their TMB severity', x = 'TMB severity')+
-  scale_fill_viridis(option = "viridis",
-                     discrete = TRUE, 
-                     alpha = 0.7) 
+  scale_fill_viridis_d(option = "viridis", 
+                     alpha = 0.7) +
+  labs(title = 'Drug given to Glioma patients depending on their TMB severity', 
+       x = 'TMB severity', 
+       fill = 'Drug Type')+
+  theme_minimal()
+  
 ```
 
 ```{r}
-KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~Sex, data = patients_sample_glioma)
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~SEX, data = patients_sample_glioma)
 
 #convert to a tibble
 
@@ -235,14 +275,19 @@ tibble_KM_f <- tibble(
   strata = rep(names(KM_f$strata),KM_f$strata))
 
 tibble_KM_f <- tibble_KM_f %>%
-  mutate(strata = str_remove(strata, "TMB_group="))
+  mutate(strata = str_remove(strata, "SEX="))
 
 ggplot(tibble_KM_f,
        mapping = aes(x = time, 
                      y = survival, 
                      color = strata))+
   geom_step()+
-  labs(title = 'Survival Curve of the patients depending on their TMB', x = 'Time (in months)', color = 'Gender')+
-  scale_fill_viridis(option = "viridis",
-                     discrete = TRUE) 
+  scale_fill_viridis_d(option = "viridis") +
+  coord_cartesian(ylim = c(0, NA))+
+  labs(title = 'Survival Curve of the patients depending on their TMB', 
+       x = 'Time (in months)', 
+       y = 'Overall Survival Probability',
+       color = 'Gender')+
+  theme_minimal()
+  
 ```
