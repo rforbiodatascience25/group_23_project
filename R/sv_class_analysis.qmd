@@ -19,7 +19,7 @@ library(viridis)
 ## Import data
 
 ```{r}
-raw_data_sv <- read_tsv(here("data", "data_sv.txt"),na = c("", "NA", "NULL"))
+raw_data_sv <- read_tsv(here("data", "sv_cleaned"))
 
 raw_clinical_sample <- read.delim(here("data", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
 
@@ -197,7 +197,7 @@ glioma_SV |>
 glioma_SV_longer |> 
   mutate(Group = ifelse(Gene_Name == "EGFR", "EGFR", "Other_genes"), Gene_Name = Gene_Name) |> 
   ggplot(aes(x = Group, fill = Gene_Name)) +
-  geom_bar(color = "black", size = 0.2, alpha = 0.9) +
+  geom_bar(color = "black", linewidth = 0.2, alpha = 0.9) +
   scale_fill_viridis(option = "viridis",
                      discrete = TRUE) +
   theme_minimal() 

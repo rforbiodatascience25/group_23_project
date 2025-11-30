@@ -84,7 +84,7 @@ sprintf("There are %i empty columns.",length(all_na_columns))
 We drop all these columns:
 
 ```{r}
-data_mutation_without_nas <- mutations |> 
+data_mutation_without_nas <- mutation |> 
   select(-all_of(all_na_columns))
 
 # Verify the result by comparing the number of columns
@@ -286,7 +286,23 @@ gene_panel_matrix <- gene_panel_matrix |>
   )
 ```
 
-# Merging
+# Structural Variants Cleaning and exporting
+
+Discarding two columns that had a constant value: SOMATIC for SV_Status and GRCh37 for NCBI_Build.
+
+```{r}
+
+cleaned_sv <- raw_data_sv |> 
+  select(-SV_Status, -NCBI_Build)
+
+```
+
+The file's dimensions are inconsistent with the other files, and the Sample_ID column is not a unique identifier, so it cannot serve as a primary key for subsequent joins. We will export this cleaned file and handle the various merging operations later in the analysis, ensuring the appropriate joining method is applied based on the expected output.
+
+```{r}
+cleaned_sv |>
+  write_tsv(file = here('data','sv_cleaned'))
+```
 
 ## Merging Patient-Sample
 
