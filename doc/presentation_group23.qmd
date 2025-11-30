@@ -38,27 +38,27 @@ and Impact version
 
 -   SV Analysis
 
-    -   Kind of SVs+ Length
+-   Kind of SVs+ Length
 
-    -   Number of SVs per Gene-\>EGFR
+-   Number of SVs per Gene-\>EGFR
 
 ## Results 3
 
-    -   EGFR per Cancer Type -\> Glioma
+-   EGFR per Cancer Type -\> Glioma
 
-    -   Overview Glioma
+-   Overview Glioma
 
 ## Results 4
 
-    -   Survival Correlation with Co-founders(especially gender)
+-   Survival Correlation with Co-founders(especially gender)
 
-    -   Survival analysis on gender(subset glioma)
+-   Survival analysis on gender(subset glioma)
 
 ## Results 5
 
-    -   Gene SV+ Mutation from Glioma
+-   Gene SV+ Mutation from Glioma
 
-    -   GSEA (SV) & Mutations
+-   GSEA (SV) & Mutations
 
 ## Discussion
 
