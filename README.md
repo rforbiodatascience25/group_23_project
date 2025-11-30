@@ -12,6 +12,8 @@ This files contains information about the specific samples like cancer type, sam
 
 ### data_gene_panel_matrix.txt
 
+This file describes the IMPACT version used to identify mutations and structural variants for each patient. Three panel versions are available: IMPACTv_3 (341 genes), IMPACTv_5 (410 genes), and IMPACTv_6 (468 genes).
+
 ### data_mutations.txt
 
 This file describes different gene mutations and indicator for more than 20000 samples. Here's a detail explanation of all the variables implied in this table:
