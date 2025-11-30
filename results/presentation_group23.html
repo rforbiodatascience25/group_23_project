@@ -331,29 +331,34 @@
 </div>
 
 </section>
-<section id="introductionbackground" class="title-slide slide level1 center">
-<h1>Introduction/Background</h1>
+<section id="introductionbackground" class="slide level2">
+<h2>Introduction/Background</h2>
 <p>Study(mailny investigating TMB), why was the study conducted?</p>
+<p>Looking at different cancers, they wanted to look if a specific component of cancers, TMB, could affect the survival and the success rate of treatment with Immune Checkpoint Inhibitors (ICI), such as PD1, PDL1 and CTLA4.</p>
 <p>we focus on Mutations here</p>
 </section>
-
-<section id="materials" class="title-slide slide level1 center">
-<h1>Materials</h1>
+<section id="materials" class="slide level2">
+<h2>Materials</h2>
 <p>Dataset, some statistics(maily cancer type)</p>
 <p>and Impact version</p>
 </section>
-
-<section id="methods" class="title-slide slide level1 center">
-<h1>Methods</h1>
+<section id="methods" class="slide level2">
+<h2>Methods</h2>
 <ul>
-<li><p>Survival Analysis</p></li>
-<li><p>Cox Regression</p></li>
-<li><p>Gene Set Enrichment Analysis</p></li>
+<li>Survival Analysis:
+<ul>
+<li>package : ‘survival’</li>
+<li>Surv(): function object, parameters: survival time + status (dead or alive) of each patient</li>
+<li>survfit(): fits the object to the Kaplan Meier estimator.</li>
+<li>data used: clinical_patients</li>
+<li>result: step curve, each step indicates the status of patients per unit time. It can be stratified to different parameters (sex, age, cancer..)</li>
+</ul></li>
+<li>Cox Regression</li>
+<li>Gene Set Enrichment Analysis</li>
 </ul>
 </section>
-
-<section id="results" class="title-slide slide level1 center">
-<h1>Results</h1>
+<section id="results" class="slide level2">
+<h2>Results</h2>
 <ul>
 <li><p>Surivival analysis(overall)</p></li>
 <li><p>Number of Mutations &amp; SV per Cancer Type</p></li>
@@ -370,9 +375,8 @@
 </ul></li>
 </ul>
 </section>
-
-<section id="discussion" class="title-slide slide level1 center">
-<h1>Discussion</h1>
+<section id="discussion" class="slide level2">
+<h2>Discussion</h2>
 <ul>
 <li><p>Study</p>
 <ul>
