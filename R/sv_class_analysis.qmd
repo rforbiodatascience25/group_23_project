@@ -2,6 +2,8 @@
 title: "Structural Variant analysis"
 format: html
 editor: visual
+html:
+    self-contained: true
 ---
 
 ## Import library
@@ -19,33 +21,25 @@ library(viridis)
 ## Import data
 
 ```{r}
-raw_data_sv <- read_tsv(here("data", "sv_cleaned"))
+data_sv <- read_tsv(here("data", "sv_cleaned"))
 
-raw_clinical_sample <- read.delim(here("data", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
+data_patient_sample <- read.delim(here("data", "patient_sample_gene_panel"))
 
-raw_data_sv |> slice_sample(n = 5)
-raw_clinical_sample |> slice_sample(n = 5)
-```
-
-## Data cleaning
-
-```{r}
-sv_clean <- raw_data_sv |> select(c(Sample_Id, Site1_Hugo_Symbol, Site1_Chromosome, Site2_Hugo_Symbol, Site2_Chromosome, Class, SV_Length))
-
-clinical_clean <- raw_clinical_sample |> select(c(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))
-
-
+data_sv |> slice_sample(n = 5)
+data_patient_sample |> slice_sample(n = 5)
 ```
 
 ## Data augmentation
 
-The clinical data has 1.6k rows and 1 entry = 1 patient with a unique sample id (one sample id = one. On the other hand, the sv data only has 346 rows, and the sample id column is not a primary key: one patient may have been sequenced with more than one Structural Variant. Then, we can augment our data in two different ways if we want to look at the SVs separately (sv_clinic_augm), or adding the SVs information per patient (clinical_with_sv).
+The clinical data contains 1.6k rows, where each entry represents a unique patient with a unique patient ID and a unique sample ID. In contrast, the Structural Variants (SV) data only has 346 rows, and the sample ID column is not a primary key: a single patient may have multiple entries, each representing a different SV.
+
+Therefore, we can augment our clinical data in two distinct ways: either by looking at the SVs separately (resulting in the sv_clinic_augm dataset), or by aggregating and adding the number of each SV class per patient (resulting in the clinical_with_sv dataset).
 
 ```{r}
 
-sv_clinic_augm <- sv_clean |> left_join(clinical_clean, by = c("Sample_Id" = "SAMPLE_ID"))
+sv_clinic_augm <- data_sv |> left_join(data_patient_sample, by = c("Sample_Id" = "SAMPLE_ID"))
 
-sv_per_patient <- sv_clean |> 
+sv_per_patient <- data_sv |> 
   group_by(Sample_Id) |> 
   summarize(Total_SV = n(),                            
     N_Deletions = sum(Class == "DELETION"),  
@@ -54,30 +48,30 @@ sv_per_patient <- sv_clean |>
     N_Translocations = sum(Class == "TRANSLOCATION")
   )
 
-clinical_with_sv <- clinical_clean |> 
+clinical_with_sv <- data_patient_sample |> 
   left_join(sv_per_patient, by = c("SAMPLE_ID" = "Sample_Id")) |> 
   mutate(Total_SV = replace_na(Total_SV, 0))
 
 ```
 
-## Data visualisation
+## Data description
 
-### Analysis of structural variants class
-
-**Repartition of mutation class:**
+### **Distribution** of structural variant class
 
 ```{r}
 sv_clinic_augm |> ggplot(aes(x = Class, fill = Class))+
-  geom_bar(color = "black") + 
+  geom_bar(color = "black", alpha = 0.9) + 
   theme_minimal()+
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE)+
   theme(panel.grid.major.x = element_blank()) + 
   labs(x = "Structural variant class", y =" counts")
   
 ```
 
-**Reparition of SVs length:**
+### **Distribution of SVs length:**
 
-Excluding the transclocation class which hasn't any "determined" size.
+We omitted the translocation class here, as it lacks a determined size and was assigned a length of 0 in the dataset.
 
 ```{r}
  
@@ -87,76 +81,153 @@ sv_clinic_augm |> filter(Class != "TRANSLOCATION") |>
   scale_x_log10() +
   scale_fill_viridis(option = "viridis",
                      discrete = TRUE) +
-  theme_minimal() 
+  theme_minimal() +
+  labs(
+    x = 'SV Length (Log10 scale)', 
+    y = 'Count', 
+    fill = 'SV Class', 
+    title = 'Distribution of Structural Variant lengths by Class', 
+    subtitle = 'Translocations excluded' 
+  )
 
-sv_clinic_augm |> filter(Class != "TRANSLOCATION") |> 
-  ggplot(aes(x = SV_Length, fill = Class, color = Class)) +
-  geom_density(alpha = 0.3) +  
-  scale_x_log10() +
-  theme_minimal() 
 ```
 
-Density plot + histogram overlapped
+Even if deletion are over-represented, the few inversion are extremely long. We can also see the distribution of lengths within each class by using a density plot
 
-Kind of SVs per cancer type
+```{r}
+sv_clinic_augm |> filter(Class != "TRANSLOCATION") |> 
+  ggplot(aes(x = SV_Length, fill = Class, color = Class)) +
+  geom_density(alpha = 0.5) +  
+  scale_x_log10() +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  scale_color_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() +
+  labs(
+    x = 'SV Length (Log10 scale)', 
+    y = 'density', 
+    fill = 'SV Class', 
+    title = 'Density distribution of Structural Variant lengths by Class', 
+    subtitle = 'Translocations excluded' 
+  ) 
+```
+
+This clearly highlights the disparities in lenghts per class.
+
+### Class and number of SVs per cancer type
 
 ```{r}
 
 sv_clinic_augm |> 
   group_by(CANCER_TYPE) |> 
   ggplot(mapping = aes(x = CANCER_TYPE, fill = Class)) + 
-  geom_bar(alpha = 0.9) +
+  geom_bar(color = "black", linewidth = 0.2, alpha = 0.9) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45,
                                    hjust = 1,
                                    size = 7)) +
   scale_fill_viridis(option = "viridis",
                      discrete = TRUE) +
+  theme(panel.grid.major.x = element_blank()) + 
   labs(title = "Distribution of SV Class by Cancer Type",
        x = "Cancer Type",
        y = "SV Count")
 
 ```
 
-### Is a gene recurrent in SVs ?
+## Data analysis
+
+### Is a gene recurrent among SVs?
 
 ```{r}
 genes_longer <- sv_clinic_augm |> 
   pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
   filter(!is.na(Gene_Name))
 
-nrow(genes_longer)
-
 genes_longer  |> 
   count(Gene_Name, sort = TRUE) |> 
   head(10)
+
 ```
 
-The gene EGFR is involved in 59 sites in total over 692 sites for the 346 SVs. Let's have a closer look at this.
+```{r}
+sv_clinic_augm |> 
+  count(Site1_Hugo_Symbol, sort = TRUE) |> 
+  head(10)
+```
+
+```{r}
+sv_clinic_augm |> 
+  count(Site2_Hugo_Symbol, sort = TRUE) |> 
+  head(10)
+```
+
+\
+
+```{r}
+top_genes <- genes_longer  |> 
+  count(Gene_Name, sort = TRUE) |> 
+  head(10)
+
+top_genes |> 
+  mutate(Gene_Name = factor(Gene_Name, levels = rev(Gene_Name))) |>
+  ggplot(aes(x = Gene_Name, y = n, fill=Gene_Name)) +
+  geom_text(aes(label = n), hjust = -0.5, size = 4) +
+  geom_col(color = "black", alpha = 0.9, linewidth = 0.3) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() +
+  coord_flip() +
+  theme(panel.grid.major.y = element_blank(), legend.position = "none")+
+  labs(
+    title = "Top 10 Genes Impacted by Structural Variant Events",
+    subtitle = "EGFR is the most frequent hit",
+    x = NULL, 
+    y = "Total SV Events (Site 1 + Site 2)"
+  ) 
+```
+
+The gene EGFR is involved in 59 sites in total over 692 sites for the 346 SVs. Let's have a closer look at this. Here, we are reasoning per SV, and only consider the SVs where EGFR is involved either on at least one of the 2 sites.
 
 ```{r}
 
 EGFR_SV <- sv_clinic_augm |> 
   filter(Site1_Hugo_Symbol == "EGFR" | Site2_Hugo_Symbol == "EGFR") 
 
-nrow(EGFR_SV)
 
 EGFR_SV |> 
   ggplot(aes(x = Class, fill = Class)) +
-  geom_bar(color = "black", alpha = 0.8) +
+  geom_bar(color = "black", alpha = 0.9, linewidth = 0.3) +
   theme_minimal() +
-  theme(legend.position = "none")
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme(legend.position = "none", panel.grid.major.x = element_blank())
 
-EGFR_SV |> 
-  ggplot(aes(x = CANCER_TYPE, fill = Class)) +
-  geom_bar(color = "black", alpha = 0.8) +
-  theme_minimal() 
 
 ```
 
-EGFR is involved in 30 SVs, and among these 25 are deletion!
+EGFR is involved in 30 SVs, and among these 25 are deletion! Let's see if a type of cancer is predominant within the EGFR-involved SVs.
 
-Are there other SVs in glioma samples ?
+```{r}
+EGFR_SV |> 
+  ggplot(aes(x = CANCER_TYPE, fill = Class)) +
+  geom_bar(color = "black", alpha = 0.9, linewidth = 0.3) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() +
+  theme(panel.grid.major.x = element_blank()) +
+  labs(
+    title = "Frequency of EGFR SV Events by Cancer Type",
+    subtitle = "Decomposition of unique EGFR SVs by variant class and cancer type.", 
+    x = NULL,
+    y = "Total SVs Implicating EGFR", 
+    fill = "SV Class"
+  )
+
+```
+
+Almost all EGFR SVs are from glioma samples. But are there SVs impacting other gene in glioma ?
 
 ```{r}
 
@@ -173,73 +244,75 @@ glioma_SV |>
   geom_bar(color = "black", alpha = 0.8) +
   theme_minimal() +
   theme(legend.position = "none")
+```
 
+We will look at the genes from Site 1 and Site 2 separately
+
+```{r}
 glioma_SV |> 
   ggplot(aes(x = Site1_Hugo_Symbol, fill = Site1_Hugo_Symbol)) +
   geom_bar(color = "black", alpha = 0.8) +
   coord_flip() +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
   theme_minimal() 
+```
 
+```{r}
 glioma_SV |> 
   ggplot(aes(x = Site2_Hugo_Symbol, fill = Site1_Hugo_Symbol)) +
   geom_bar(color = "black", alpha = 0.8) +
   coord_flip() +
-  theme_minimal() 
-
-glioma_SV |> 
-  mutate(Group = ifelse(Site1_Hugo_Symbol == "EGFR", "EGFR", "Other_genes"), Gene_Name = Site1_Hugo_Symbol) |> 
-  ggplot(aes(x = Group, fill = Site1_Hugo_Symbol)) +
-  geom_bar(size = 0.2) +
-  scale_fill_viridis(option = "viridis",
+   scale_fill_viridis(option = "viridis",
                      discrete = TRUE) +
   theme_minimal() 
+
+```
+
+EGFR is overrepresented in both cancer types, confirming it as a major SV driver in glioma. We will therefore continue to aggregate both impact sites (Site 1 and Site 2) to account for the total event frequency.
+
+```{r}
+other_genes_levels <- glioma_SV_longer |>
+  filter(Gene_Name != "EGFR") |>
+  pull(Gene_Name) |>
+  unique() |>
+  sort()
+
+new_levels <- c("EGFR", other_genes_levels) # for EGFR to have the darkest color of the viridis palette
 
 glioma_SV_longer |> 
-  mutate(Group = ifelse(Gene_Name == "EGFR", "EGFR", "Other_genes"), Gene_Name = Gene_Name) |> 
+  mutate(Group = ifelse(Gene_Name == "EGFR", "EGFR", "Other_genes"), Gene_Name = factor(Gene_Name, levels = new_levels)) |> 
   ggplot(aes(x = Group, fill = Gene_Name)) +
-  geom_bar(color = "black", linewidth = 0.2, alpha = 0.9) +
+  geom_bar(color = "black", width = 0.6, linewidth = 0.25, alpha = 0.9) +
   scale_fill_viridis(option = "viridis",
                      discrete = TRUE) +
-  theme_minimal() 
-  
-```
-
-### Study of mutations for glioma sample
-
-```{r}
-
-data_mutations <- read_tsv(file = here('data','data_mutation_cleaned'))
-
-mutations_augm_pat <- data_mutations |> 
-  left_join(clinical_clean, by = c("Tumor_Sample_Barcode" = "SAMPLE_ID"))
-
-glioma_mut <- mutations_augm_pat |> 
-  filter(CANCER_TYPE == "Glioma")
-```
-
-```{r}
-
-glioma_mut |> 
-  count(Hugo_Symbol, sort = TRUE) |>  
-  slice_head(n = 10)
-
-table(glioma_mut$Chromosome)
-```
-
-### Link between SVs, TMB and cancer types
-
-While TMB captures nucleotide-level errors, SVs represent structural genomic instability.
-
-```{r}
-clinical_with_sv |> 
-  mutate(Has_SV = ifelse(Total_SV > 0, "With SV", "No SV")) |> 
-  ggplot(aes(x = SAMPLE_TYPE, fill = Has_SV)) +
-  geom_bar(position = "fill") + 
   theme_minimal() +
-  labs(title = "Are Structural Variants enriched in Metastases?",
-       y = "Proportion of Patients",
-       x = NULL,
-       fill = "SV Status")
+  labs(
+    title = "SV Event Frequency: EGFR vs. Other Genes in Glioma",
+    subtitle = "The 'Other_genes' bar is decomposed by individual gene.",
+    x = NULL,
+    y = "Total SV Impact Events"
+  ) + 
+  theme(legend.position = "none", panel.grid.major.x = element_blank())
+
+```
+
+### Exploration of link between SVs, TMB and all cancer types
+
+While TMB captures nucleotide-level errors, SVs represent structural genomic instability. Here, we explore the absence or presence of a link between those 2 genomic modifications, considering each patient separately (clinical_with_sv).
+
+```{r}
+
+# clinical_with_sv |> 
+#   mutate(Has_SV = ifelse(Total_SV > 0, "With SV", "No SV")) |> 
+#   ggplot(aes(x = SAMPLE_TYPE, fill = Has_SV)) +
+#   geom_bar(position = "fill") + 
+#   theme_minimal() +
+#   labs(title = "Are Structural Variants enriched in Metastases?",
+#        y = "Proportion of Patients",
+#        x = NULL,
+#        fill = "SV Status")
+
 
 
 clinical_with_sv |> 
@@ -270,30 +343,9 @@ clinical_with_sv |>  mutate(CANCER_TYPE = fct_reorder(CANCER_TYPE, TMB_NONSYNONY
        y = "TMB") +
   theme_minimal()
 
-
-clinical_with_sv |>  mutate(CANCER_TYPE = fct_reorder(CANCER_TYPE, Total_SV, .fun = mean)) |> 
-  ggplot(aes(x = CANCER_TYPE, y = Total_SV)) +
-  geom_jitter(alpha = 0.3, color = "darkblue") +
-  coord_flip() +
-  labs(title = "Structural Variants per Cancer Type", x = NULL, y = "SVs Counts") +
-  theme_minimal()
-
 ```
 
-```{r}
-clinical_with_sv |> 
-  ggplot(aes(x = TMB_NONSYNONYMOUS, y = Total_SV)) +
-  #geom_point(aes(color = CANCER_TYPE), alpha = 0.6) +
-  geom_jitter(aes(color = CANCER_TYPE), alpha = 0.6) +
-  geom_smooth(method = "lm", color = "black", se = FALSE) +
-  scale_x_log10() + 
-  theme_minimal() +
-  labs(title = "Correlation: TMB vs. SV",
-       x = "TMB",
-       y = "Number of SVs")
-```
-
-### TMB Distribution across Cancer Types
+There are no specific cancer types with an unusually high TMB. Maybe primary sites and metastases share different TMB?
 
 ```{r}
 clinical_with_sv |> 
@@ -309,4 +361,88 @@ clinical_with_sv |>
        y = "TMB (log scale)")
 ```
 
-Add legend primary/metastasis
+```{r}
+
+clinical_with_sv |>  mutate(CANCER_TYPE = fct_reorder(CANCER_TYPE, Total_SV, .fun = mean)) |> 
+  ggplot(aes(x = CANCER_TYPE, y = Total_SV)) +
+  geom_jitter(alpha = 0.3, color = "darkblue") +
+  coord_flip() +
+  labs(title = "Structural Variants per Cancer Type", x = NULL, y = "SVs Counts") +
+  theme_minimal()
+
+
+```
+
+The recorded SVs are too sparse to represent a substantial part of any cancer type.
+
+Maybe we can try to see if some cancers are SV-focused, or TMB focused?
+
+```{r}
+clinical_with_sv |> 
+  ggplot(aes(x = TMB_NONSYNONYMOUS, y = Total_SV)) +
+  #geom_point(aes(color = CANCER_TYPE), alpha = 0.6) +
+  geom_jitter(aes(color = CANCER_TYPE), alpha = 0.6) +
+  geom_smooth(method = "lm", color = "black", se = FALSE) +
+  scale_x_log10() + 
+  theme_minimal() +
+  labs(title = "Correlation: TMB vs. SV",
+       x = "TMB",
+       y = "Number of SVs")
+```
+
+The lack of sequenced data for the SVs presents a severe limitation for this analysis.
+
+## Study of mutations for glioma samples (to put in another file)
+
+### Import data
+
+```{r}
+
+data_mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
+
+mutations_augm_pat <- data_mutations |> 
+  left_join(data_patient_sample, by = c("Tumor_Sample_Barcode" = "SAMPLE_ID"))
+
+glioma_mut <- mutations_augm_pat |> 
+  filter(CANCER_TYPE == "Glioma")
+```
+
+```{r}
+
+top_genes_mut <- glioma_mut |> 
+  count(Hugo_Symbol, sort = TRUE) |>  
+  slice_head(n = 10)
+
+top_genes_mut
+```
+
+EGFR is not the first gene impacted by mutations, but it still is in 6th position.
+
+```{r}
+
+# Highlighting the EGFR column in red
+genes_list <- unique(top_genes_mut$Hugo_Symbol)
+custom_colors <- rep("black", length(genes_list))
+names(custom_colors) <- genes_list
+custom_colors["EGFR"] <- "red"
+
+top_genes_mut |> 
+  mutate(Hugo_Symbol = fct_reorder(Hugo_Symbol, n)) |>
+  ggplot(aes(x = Hugo_Symbol, y = n, fill=Hugo_Symbol, color = Hugo_Symbol)) +
+  geom_text(aes(label = n), hjust = -0.5, size = 4) +
+  geom_col(color = custom_colors, alpha = 0.9, linewidth = 0.3) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  scale_color_manual(values = custom_colors) +
+  theme_minimal() +
+  coord_flip() +
+  theme(panel.grid.major.y = element_blank(), legend.position = "none")+
+  labs(
+    title = "Top 10 genes in Glioma Impacted by Mutations",
+    subtitle = "EGFR is in 6th position",
+    x = NULL, 
+    y = "Total number of mutations"
+  ) 
+```
+
+It could be interesting to compare the patients having a glioma, to see if some glioma are enriched in EGFR SV, or others in mutations from the top 5 above (TERT TP53 PTEN NF1 ATRX).
