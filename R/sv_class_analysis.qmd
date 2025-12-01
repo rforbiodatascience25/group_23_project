@@ -1,10 +1,10 @@
 ---
 title: "Structural Variant analysis"
-format: html
+format: 
+  html:
+      self-contained: true
 editor: visual
 output-dir: "results"
-html:
-    self-contained: true
 ---
 
 ## Import library

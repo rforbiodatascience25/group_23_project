@@ -146,11 +146,11 @@ dbl (12): Site1_Region_Number, Site1_Position, Site2_Region_Number, Site2_Po...
 <pre><code># A tibble: 5 × 28
   Sample_Id  Site1_Hugo_Symbol Site1_Region Site1_Region_Number Site1_Chromosome
   &lt;chr&gt;      &lt;chr&gt;             &lt;chr&gt;                      &lt;dbl&gt; &lt;chr&gt;           
-1 P-0010994… EWSR1             Intron                        NA 22              
-2 P-0015471… LZTS1             Intron                        NA 8               
-3 P-0003560… PIK3R1            Exon                           7 5               
-4 P-0008258… EGFR              Intron                        NA 7               
-5 P-0011192… TERT              Promoter                      NA 5               
+1 P-0003871… KMT2C             IGR                           NA 7               
+2 P-0005144… RPTOR             Intron                        NA 17              
+3 P-0011219… EGFR              Intron                        NA 7               
+4 P-0013412… ERBB3             Exon                          28 12              
+5 P-0005239… SMARCA4           Intron                        NA 19              
 # ℹ 23 more variables: Site1_Position &lt;dbl&gt;, Site1_Description &lt;chr&gt;,
 #   Site2_Hugo_Symbol &lt;chr&gt;, Site2_Region &lt;chr&gt;, Site2_Region_Number &lt;dbl&gt;,
 #   Site2_Chromosome &lt;chr&gt;, Site2_Position &lt;dbl&gt;, Site2_Description &lt;chr&gt;,
@@ -162,41 +162,41 @@ dbl (12): Site1_Region_Number, Site1_Position, Site2_Region_Number, Site2_Po...
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>data_patient_sample <span class="sc">|&gt;</span> <span class="fu">slice_sample</span>(<span class="at">n =</span> <span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  PATIENT_ID    SEX OS_MONTHS OS_STATUS AGE_GROUP  DRUG_TYPE SEX_NUM
-1  P-0013389   Male        18         0     61-70 PD-1/PDL-1       0
-2  P-0016648   Male        14         0       &gt;71 PD-1/PDL-1       0
-3  P-0001771 Female        10         1     31-50 PD-1/PDL-1       1
-4  P-0019648   Male         9         0     61-70 PD-1/PDL-1       0
-5  P-0003719 Female        15         1     31-50 PD-1/PDL-1       1
-          SAMPLE_ID               CANCER_TYPE SAMPLE_TYPE SAMPLE_CLASS
-1 P-0013389-T01-IM5                  Melanoma  Metastasis        Tumor
-2 P-0016648-T01-IM6                  Melanoma  Metastasis        Tumor
-3 P-0001771-T01-IM3         Colorectal Cancer     Primary        Tumor
-4 P-0019648-T01-IM6 Cancer of Unknown Primary  Metastasis        Tumor
-5 P-0003719-T01-IM5            Bladder Cancer  Metastasis        Tumor
-       METASTATIC_SITE              PRIMARY_SITE         CANCER_TYPE_DETAILED
-1          Soft Tissue Cancer of Unknown Primary  Melanoma of Unknown Primary
-2 Lymph Node, Regional                      Skin               Acral Melanoma
-3       Not Applicable          Descending Colon         Colon Adenocarcinoma
-4              Scapula Cancer of Unknown Primary          Adenocarcinoma, NOS
-5      Retroperitoneum                   Bladder Bladder Urothelial Carcinoma
-  GENE_PANEL SAMPLE_COVERAGE TUMOR_PURITY ONCOTREE_CODE INSTITUTE
-1  IMPACT410             935           80           MUP     MSKCC
-2  IMPACT468             920           70          ACRM     MSKCC
-3  IMPACT341             153           40          COAD     MSKCC
-4  IMPACT468             814           10         ADNOS     MSKCC
-5  IMPACT410             594           70          BLCA     MSKCC
-  SOMATIC_STATUS AGE_AT_SEQ_REPORT TMB_NONSYNONYMOUS mutations
-1        Matched                69         5.8723182 IMPACT410
-2        Matched                87         1.7293962 IMPACT468
-3        Matched                44         4.4366212 IMPACT341
-4        Matched                67         0.8646981 IMPACT468
-5        Matched                43        47.9572652 IMPACT410
-  structural_variants IMPACT_version
-1           IMPACT410      IMPACT_v5
-2           IMPACT468      IMPACT_v6
-3           IMPACT341      IMPACT_v3
-4           IMPACT468      IMPACT_v6
-5           IMPACT410      IMPACT_v5</code></pre>
+1  P-0016648   Male        14         0       &gt;71 PD-1/PDL-1       0
+2  P-0016290 Female         2         1       &gt;71 PD-1/PDL-1       1
+3  P-0002965   Male        11         1     50-60 PD-1/PDL-1       0
+4  P-0007090   Male        13         1     50-60 PD-1/PDL-1       0
+5  P-0002818 Female        15         0     61-70 PD-1/PDL-1       1
+          SAMPLE_ID                CANCER_TYPE SAMPLE_TYPE SAMPLE_CLASS
+1 P-0016648-T01-IM6                   Melanoma  Metastasis        Tumor
+2 P-0016290-T01-IM6 Non-Small Cell Lung Cancer  Metastasis        Tumor
+3 P-0002965-T01-IM3 Non-Small Cell Lung Cancer     Primary        Tumor
+4 P-0007090-T02-IM5          Colorectal Cancer  Metastasis        Tumor
+5 P-0002818-T01-IM3       Head and Neck Cancer  Metastasis        Tumor
+       METASTATIC_SITE              PRIMARY_SITE
+1 Lymph Node, Regional                      Skin
+2                Liver                      Lung
+3       Not Applicable                      Lung
+4                Liver          Transverse Colon
+5                 Neck Cancer of Unknown Primary
+                    CANCER_TYPE_DETAILED GENE_PANEL SAMPLE_COVERAGE
+1                         Acral Melanoma  IMPACT468             920
+2                    Lung Adenocarcinoma  IMPACT468             775
+3           Lung Squamous Cell Carcinoma  IMPACT341             970
+4                   Colon Adenocarcinoma  IMPACT410             758
+5 Head and Neck Neuroendocrine Carcinoma  IMPACT341             528
+  TUMOR_PURITY ONCOTREE_CODE INSTITUTE SOMATIC_STATUS AGE_AT_SEQ_REPORT
+1           70          ACRM     MSKCC        Matched                87
+2           40          LUAD     MSKCC        Matched                83
+3           20          LUSC     MSKCC        Matched                56
+4      default          COAD     MSKCC        Matched                52
+5      default          HNNE     MSKCC        Matched                70
+  TMB_NONSYNONYMOUS mutations structural_variants IMPACT_version
+1          1.729396 IMPACT468           IMPACT468      IMPACT_v6
+2          8.646981 IMPACT468           IMPACT468      IMPACT_v6
+3          7.764087 IMPACT341           IMPACT341      IMPACT_v3
+4          4.893598 IMPACT410           IMPACT410      IMPACT_v5
+5         19.964795 IMPACT341           IMPACT341      IMPACT_v3</code></pre>
 </div>
 </div>
 </section>
