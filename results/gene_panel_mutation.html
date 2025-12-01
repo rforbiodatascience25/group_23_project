@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>gene_enrichment_analysis</title>
+<title>gene_panel_mutation</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -3084,7 +3084,7 @@ vertical-align: -.125em;
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">gene_enrichment_analysis</h1>
+<h1 class="title">gene_panel_mutation</h1>
 </div>
 
 
@@ -3101,409 +3101,1247 @@ vertical-align: -.125em;
 </header>
 
 
-<section id="load-libraries" class="level1">
-<h1>Load Libraries</h1>
+<section id="load-libraries" class="level2">
+<h2 class="anchored" data-anchor-id="load-libraries">Load libraries:</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fgsea)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(msigdbr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.4     ✔ tidyr     1.3.1
+✔ purrr     1.0.4     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>here() starts at /home/people/s253698/Projects/group23_project</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(viridis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: viridisLite</code></pre>
+</div>
 </div>
 </section>
-<section id="load-data" class="level1">
-<h1>Load data</h1>
-<section id="gene-ontology-information" class="level2">
-<h2 class="anchored" data-anchor-id="gene-ontology-information">Gene Ontology Information</h2>
-<p>This loads a dataset where genes with their gene symbol and eEnsemblID are mapped to biological processes. With this information we can see if their are certain processes which are more often targeted by mutations than is expected by chance.</p>
+<section id="data-wrangling" class="level2">
+<h2 class="anchored" data-anchor-id="data-wrangling">Data wrangling:</h2>
+<p>Load the Gene Panel Matrix dataset and select the <em>SAMPLE_ID</em> and <em>IMPACT_version</em> columns.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>BP_df <span class="ot">=</span> <span class="fu">msigdbr</span>(<span class="at">species =</span> <span class="st">&quot;human&quot;</span>, <span class="at">category =</span> <span class="st">&quot;C5&quot;</span>, <span class="at">subcategory =</span> <span class="st">&quot;BP&quot;</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>BP_list <span class="ot">=</span> <span class="fu">split</span>(BP_df<span class="sc">$</span>ensembl_gene, BP_df<span class="sc">$</span>gs_name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Load the gene panel matrix data</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>gene_panel_matrix <span class="ot">&lt;-</span> <span class="fu">read_delim</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                                     <span class="st">&quot;patient_sample_gene_panel&quot;</span>), </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                                <span class="at">delim =</span> <span class="st">&quot;</span><span class="sc">\t</span><span class="st">&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 1661 Columns: 25
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: &quot;\t&quot;
+chr (19): PATIENT_ID, SEX, AGE_GROUP, DRUG_TYPE, SAMPLE_ID, CANCER_TYPE, SAM...
+dbl  (6): OS_MONTHS, OS_STATUS, SEX_NUM, SAMPLE_COVERAGE, AGE_AT_SEQ_REPORT,...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
 </div>
-</section>
-<section id="cleaned-data" class="level2">
-<h2 class="anchored" data-anchor-id="cleaned-data">Cleaned data</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>patient_sample <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="at">file =</span> <span class="fu">here</span>(<span class="st">&#39;data&#39;</span>,<span class="st">&#39;patient_sample_gene_panel.tsv&#39;</span>))</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sv <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="at">file =</span> <span class="fu">here</span>(<span class="st">&#39;data&#39;</span>,<span class="st">&#39;sv_cleaned.tsv&#39;</span>))</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>mutations <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="at">file =</span> <span class="fu">here</span>(<span class="st">&#39;data&#39;</span>,<span class="st">&#39;data_mutation_cleaned.tsv&#39;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-</section>
-</section>
-<section id="gsea-with-mutations-per-gene" class="level1">
-<h1>GSEA with mutations per Gene</h1>
-<p>The Genes are ranked on the number of mutations or structural variances that have been identified in them.</p>
-<section id="sv" class="level2">
-<h2 class="anchored" data-anchor-id="sv">SV</h2>
-<p>Gene Set Enrichment analysis is first applied on to the mutations which cause structural variances.</p>
-<p>Data format: Genes + number of SVs</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>clinical_clean <span class="ot">&lt;-</span> patient_sample <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">c</span>(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>gene_sv_count <span class="ot">&lt;-</span> sv <span class="sc">|&gt;</span> </span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Sample_Id&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&#39;Glioma&#39;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(<span class="st">&quot;Site1_Hugo_Symbol&quot;</span>, <span class="st">&quot;Site2_Hugo_Symbol&quot;</span>), <span class="at">names_to =</span> <span class="st">&quot;Position&quot;</span>, <span class="at">values_to =</span> <span class="st">&quot;Gene_Name&quot;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Gene_Name))<span class="sc">|&gt;</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Gene_Name, <span class="at">sort =</span> <span class="cn">TRUE</span>)<span class="sc">|&gt;</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Gene_Name&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>gene_sv_stats <span class="ot">&lt;-</span> gene_sv_count<span class="sc">$</span>n</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gene_sv_stats) <span class="ot">=</span> gene_sv_count<span class="sc">$</span>ensembl_gene</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(gene_sv_stats)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Select the column of interest</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>gene_panel_matrix <span class="ot">&lt;-</span> gene_panel_matrix <span class="sc">|&gt;</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SAMPLE_ID,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>         IMPACT_version)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>gene_panel_matrix</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 28</code></pre>
+<pre><code># A tibble: 1,661 × 2
+   SAMPLE_ID         IMPACT_version
+   &lt;chr&gt;             &lt;chr&gt;         
+ 1 P-0000057-T01-IM3 IMPACT_v3     
+ 2 P-0000062-T01-IM3 IMPACT_v3     
+ 3 P-0000063-T01-IM3 IMPACT_v3     
+ 4 P-0000071-T01-IM3 IMPACT_v3     
+ 5 P-0000082-T01-IM3 IMPACT_v3     
+ 6 P-0000088-T01-IM3 IMPACT_v3     
+ 7 P-0000103-T01-IM3 IMPACT_v3     
+ 8 P-0000121-T01-IM3 IMPACT_v3     
+ 9 P-0000165-T01-IM3 IMPACT_v3     
+10 P-0000184-T01-IM3 IMPACT_v3     
+# ℹ 1,651 more rows</code></pre>
 </div>
 </div>
+<p>Load the Mutations dataset.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_sv <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> gene_sv_stats,<span class="at">minSize =</span> <span class="dv">0</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam, : There are ties in the preranked stats (89.29% of the list).
-The order of those tied genes will be arbitrary, which may produce unexpected results.</code></pre>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Load the mutations data</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>data_mutation <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="fu">here</span>(<span class="st">&quot;data&quot;</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                               <span class="st">&quot;data_mutation_cleaned.tsv&quot;</span>),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize,
-gseaParam, : All values in the stats vector are greater than zero and scoreType
-is &quot;std&quot;, maybe you should switch to scoreType = &quot;pos&quot;.</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in fgseaMultilevel(pathways = BP_list, stats = gene_sv_stats, minSize =
-0, : For some of the pathways the P-values were likely overestimated. For such
-pathways log2err is set to NA.</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_sv <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_gene_sv, pval)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pathway_scoring_gene_sv<span class="sc">|&gt;</span> <span class="fu">select</span>(pathway, pval, padj), <span class="at">n =</span> <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                                         pathway
-                                                                          &lt;char&gt;
- 1:                GOBP_POSITIVE_REGULATION_OF_INTRACELLULAR_SIGNAL_TRANSDUCTION
- 2:                                        GOBP_POSITIVE_REGULATION_OF_SIGNALING
- 3:                              GOBP_REGULATION_OF_PHOSPHORUS_METABOLIC_PROCESS
- 4:                     GOBP_POSITIVE_REGULATION_OF_PHOSPHORUS_METABOLIC_PROCESS
- 5:                         GOBP_REGULATION_OF_INTRACELLULAR_SIGNAL_TRANSDUCTION
- 6:                    GOBP_POSITIVE_REGULATION_OF_CELLULAR_BIOSYNTHETIC_PROCESS
- 7: GOBP_POSITIVE_REGULATION_OF_NUCLEOBASE_CONTAINING_COMPOUND_METABOLIC_PROCESS
- 8:                        GOBP_POSITIVE_REGULATION_OF_PROTEIN_METABOLIC_PROCESS
- 9:                     GOBP_POSITIVE_REGULATION_OF_PROTEIN_MODIFICATION_PROCESS
-10:                            GOBP_POSITIVE_REGULATION_OF_RNA_METABOLIC_PROCESS
-11:                                              GOBP_CALCIUM_MEDIATED_SIGNALING
-12:               GOBP_POSITIVE_REGULATION_OF_TRANSCRIPTION_BY_RNA_POLYMERASE_II
-13:                                     GOBP_SECOND_MESSENGER_MEDIATED_SIGNALING
-14:                                           GOBP_AMEBOIDAL_TYPE_CELL_MIGRATION
-15:                                                  GOBP_ORGANELLE_LOCALIZATION
-           pval      padj
-          &lt;num&gt;     &lt;num&gt;
- 1: 0.007001439 0.6610074
- 2: 0.007001439 0.6610074
- 3: 0.010168572 0.6610074
- 4: 0.013271691 0.6610074
- 5: 0.017014561 0.6610074
- 6: 0.022596899 0.6610074
- 7: 0.022596899 0.6610074
- 8: 0.022596899 0.6610074
- 9: 0.022596899 0.6610074
-10: 0.022596899 0.6610074
-11: 0.023183384 0.6610074
-12: 0.023183384 0.6610074
-13: 0.023183384 0.6610074
-14: 0.029631436 0.6610074
-15: 0.029631436 0.6610074</code></pre>
-</div>
-</div>
-<p>Looking at the pvalue and adjusted p-value these results are not very robust. This is probably due to the small sample size of only 28 genes.</p>
-</section>
-<section id="mutations" class="level2">
-<h2 class="anchored" data-anchor-id="mutations">Mutations</h2>
-<p>The same analysis, but now with the number of mutations</p>
+<p>Some rows in the data_mutation object are duplicates that differ only in the “consequence” column. Given that the consequence is not going to be studied, these duplicate rows will be removed.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>gene_mutation_count <span class="ot">&lt;-</span> mutations <span class="sc">|&gt;</span> </span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Tumor_Sample_Barcode&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&quot;Glioma&quot;</span>)<span class="sc">|&gt;</span> </span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Hugo_Symbol, <span class="at">sort =</span> <span class="cn">TRUE</span>)<span class="sc">|&gt;</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Hugo_Symbol&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>gene_mutation_stats <span class="ot">&lt;-</span> gene_mutation_count<span class="sc">$</span>n</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gene_mutation_stats) <span class="ot">=</span> gene_mutation_count<span class="sc">$</span>ensembl_gene</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Remove the duplicates</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>data_mutation <span class="ot">&lt;-</span> data_mutation <span class="sc">|&gt;</span> </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(<span class="fu">across</span>(<span class="sc">-</span>consequence),</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>           <span class="at">.keep_all =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Rename some columns to keep the same format.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_m <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> gene_mutation_stats,<span class="at">minSize =</span> <span class="dv">15</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam, : There are ties in the preranked stats (92.59% of the list).
-The order of those tied genes will be arbitrary, which may produce unexpected results.</code></pre>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Rename the ID column and the gene column</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>data_mutation <span class="ot">&lt;-</span> data_mutation <span class="sc">|&gt;</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">SAMPLE_ID =</span> Tumor_Sample_Barcode,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">GENE =</span> Hugo_Symbol)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize,
-gseaParam, : All values in the stats vector are greater than zero and scoreType
-is &quot;std&quot;, maybe you should switch to scoreType = &quot;pos&quot;.</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_m <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_gene_m, padj)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pathway_scoring_gene_m<span class="sc">|&gt;</span> <span class="fu">select</span>(pathway, pval, padj), <span class="at">n =</span> <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                     pathway         pval
-                                                      &lt;char&gt;        &lt;num&gt;
- 1:                      GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT 5.491737e-07
- 2:        GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS 2.837533e-06
- 3:   GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION 3.273150e-06
- 4:                          GOBP_BLOOD_VESSEL_MORPHOGENESIS 9.954081e-06
- 5:                    GOBP_CELL_CYCLE_G1_S_PHASE_TRANSITION 9.024741e-06
- 6:                 GOBP_MITOTIC_CELL_CYCLE_PHASE_TRANSITION 8.718596e-06
- 7:      GOBP_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION 9.904091e-06
- 8:                                    GOBP_TUBE_DEVELOPMENT 6.532622e-06
- 9: GOBP_REGULATION_OF_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY 1.803888e-05
-10:                 GOBP_REGULATION_OF_CELLULAR_LOCALIZATION 2.004660e-05
-11:         GOBP_NEGATIVE_REGULATION_OF_CELL_DIFFERENTIATION 3.065017e-05
-12:           GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY 2.913805e-05
-13:                  GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS 3.671492e-05
-14:                                          GOBP_CELL_AGING 3.471949e-05
-15:                                    GOBP_HEAD_DEVELOPMENT 4.920856e-05
-            padj
-           &lt;num&gt;
- 1: 0.0002712918
- 2: 0.0005389787
- 3: 0.0005389787
- 4: 0.0006146645
- 5: 0.0006146645
- 6: 0.0006146645
- 7: 0.0006146645
- 8: 0.0006146645
- 9: 0.0009901339
-10: 0.0009903023
-11: 0.0012617652
-12: 0.0012617652
-13: 0.0012955123
-14: 0.0012955123
-15: 0.0015193143</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_m <span class="sc">|&gt;</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(padj <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 133</code></pre>
-</div>
-</div>
-<p>These results are more reliable than the ones of the structural variances. The most significant pathways also seem logical as they show that pathways are targeted by mutations which influence cell death and also cell cycle processes. This is very common in tumors.</p>
-</section>
-<section id="comparison-of-results" class="level2">
-<h2 class="anchored" data-anchor-id="comparison-of-results">Comparison of results:</h2>
+<p>Select the relevant columns from the data_mutation dataset and merge both datasets by SAMPLE_ID.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>overlap <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  pathway_scoring_gene_sv <span class="sc">|&gt;</span> <span class="fu">head</span>(<span class="at">n=</span><span class="dv">100</span>),</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  pathway_scoring_gene_m <span class="sc">|&gt;</span>  <span class="fu">head</span>(<span class="at">n=</span><span class="dv">100</span>), <span class="at">by =</span> <span class="st">&#39;pathway&#39;</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pathway, pval.x, pval.y)</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>overlap</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                   pathway      pval.x
-                                                    &lt;char&gt;       &lt;num&gt;
-1:                   GOBP_POSITIVE_REGULATION_OF_SIGNALING 0.007001439
-2: GOBP_REGULATION_OF_MULTICELLULAR_ORGANISMAL_DEVELOPMENT 0.075801749
-3:                GOBP_REGULATION_OF_CELLULAR_LOCALIZATION 0.077972710
-         pval.y
-          &lt;num&gt;
-1: 0.0040527472
-2: 0.0024603865
-3: 0.0000200466</code></pre>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Select the columns of interest</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>data_mutation <span class="ot">&lt;-</span> data_mutation <span class="sc">|&gt;</span> </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SAMPLE_ID,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>         GENE,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>         Variant_Classification)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co">#Merge both objects in a new one</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>combined_data <span class="ot">&lt;-</span> <span class="fu">left_join</span>(gene_panel_matrix,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                           data_mutation,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                           <span class="at">by =</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</div>
-<p>This compares the 100 most mutated pathways form both analysis. Some interesting Pathways are shown here, for example the behaviour pathways, as it is common that brain cancer patients show changes in behaviour.</p>
-</section>
-</section>
-<section id="fsc-with-gene-mutation-per-sample" class="level1">
-<h1>FSC with gene mutation per sample</h1>
-<p>This is the same analysis as before, but here it is counted in how many samples the gene is mutated. This can alter some counts, if a sample contains multiple mutation per gene.</p>
-<section id="sv-1" class="level2">
-<h2 class="anchored" data-anchor-id="sv-1">SV</h2>
+<p>Organize the data by grouping it by <strong>SAMPLE_ID</strong>, ensuring that each row corresponds to a single sample with a tibble listing the mutated genes. Then, calculate the number of mutations per patient.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>clinical_clean <span class="ot">&lt;-</span> patient_sample <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">c</span>(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>sample_sv_count <span class="ot">&lt;-</span> sv <span class="sc">|&gt;</span> </span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">select</span>(<span class="fu">c</span>(Sample_Id, Site1_Hugo_Symbol, Site1_Chromosome, Site2_Hugo_Symbol, Site2_Chromosome, Class, SV_Length))<span class="sc">|&gt;</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Sample_Id&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&#39;Glioma&#39;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(<span class="st">&quot;Site1_Hugo_Symbol&quot;</span>, <span class="st">&quot;Site2_Hugo_Symbol&quot;</span>), <span class="at">names_to =</span> <span class="st">&quot;Position&quot;</span>, <span class="at">values_to =</span> <span class="st">&quot;Gene_Name&quot;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Gene_Name))<span class="sc">|&gt;</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Sample_Id, Gene_Name)<span class="sc">|&gt;</span></span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Gene_Name, <span class="at">sort =</span> <span class="cn">TRUE</span>)<span class="sc">|&gt;</span></span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Gene_Name&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>sample_sv_stats <span class="ot">&lt;-</span> sample_sv_count<span class="sc">$</span>n</span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(sample_sv_stats) <span class="ot">=</span> sample_sv_count<span class="sc">$</span>ensembl_gene</span>
-<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_sv <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> sample_sv_stats,<span class="at">minSize =</span> <span class="dv">0</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Group the data by the Sample ID and count the number of mutations per patient</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>combined_data <span class="ot">&lt;-</span> combined_data <span class="sc">|&gt;</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(SAMPLE_ID) <span class="sc">|&gt;</span> </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">IMPACT_version =</span> <span class="fu">first</span>(IMPACT_version),</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">n_mutation =</span> <span class="fu">n</span>(),</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">mutations =</span> <span class="fu">list</span>(<span class="fu">select</span>(<span class="fu">cur_data</span>(),</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>                            GENE,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>                            Variant_Classification))        </span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam, : There are ties in the preranked stats (89.29% of the list).
-The order of those tied genes will be arbitrary, which may produce unexpected results.</code></pre>
+<pre><code>Warning: There was 1 warning in `summarise()`.
+ℹ In argument: `mutations = list(select(cur_data(), GENE,
+  Variant_Classification))`.
+ℹ In group 1: `SAMPLE_ID = &quot;P-0000057-T01-IM3&quot;`.
+Caused by warning:
+! `cur_data()` was deprecated in dplyr 1.1.0.
+ℹ Please use `pick()` instead.</code></pre>
 </div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize,
-gseaParam, : All values in the stats vector are greater than zero and scoreType
-is &quot;std&quot;, maybe you should switch to scoreType = &quot;pos&quot;.</code></pre>
-</div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in fgseaMultilevel(pathways = BP_list, stats = sample_sv_stats, : For
-some of the pathways the P-values were likely overestimated. For such pathways
-log2err is set to NA.</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_sv <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_sample_sv, pval)</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pathway_scoring_sample_sv<span class="sc">|&gt;</span> <span class="fu">select</span>(pathway, pval, padj), <span class="at">n =</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>combined_data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                                                                         pathway
-                                                                          &lt;char&gt;
- 1:                GOBP_POSITIVE_REGULATION_OF_INTRACELLULAR_SIGNAL_TRANSDUCTION
- 2:                                        GOBP_POSITIVE_REGULATION_OF_SIGNALING
- 3:                    GOBP_POSITIVE_REGULATION_OF_CELLULAR_BIOSYNTHETIC_PROCESS
- 4: GOBP_POSITIVE_REGULATION_OF_NUCLEOBASE_CONTAINING_COMPOUND_METABOLIC_PROCESS
- 5:                        GOBP_POSITIVE_REGULATION_OF_PROTEIN_METABOLIC_PROCESS
- 6:                     GOBP_POSITIVE_REGULATION_OF_PROTEIN_MODIFICATION_PROCESS
- 7:                            GOBP_POSITIVE_REGULATION_OF_RNA_METABOLIC_PROCESS
- 8:                                              GOBP_CALCIUM_MEDIATED_SIGNALING
- 9:               GOBP_POSITIVE_REGULATION_OF_TRANSCRIPTION_BY_RNA_POLYMERASE_II
-10:                                     GOBP_SECOND_MESSENGER_MEDIATED_SIGNALING
-11:                     GOBP_POSITIVE_REGULATION_OF_PHOSPHORUS_METABOLIC_PROCESS
-12:                         GOBP_REGULATION_OF_INTRACELLULAR_SIGNAL_TRANSDUCTION
-13:                              GOBP_REGULATION_OF_PHOSPHORUS_METABOLIC_PROCESS
-14:                                                  GOBP_NERVOUS_SYSTEM_PROCESS
-15:                       GOBP_PROTEIN_MODIFICATION_BY_SMALL_PROTEIN_CONJUGATION
-          pval      padj
-         &lt;num&gt;     &lt;num&gt;
- 1: 0.02213574 0.7769157
- 2: 0.02213574 0.7769157
- 3: 0.02293824 0.7769157
- 4: 0.02293824 0.7769157
- 5: 0.02293824 0.7769157
- 6: 0.02293824 0.7769157
- 7: 0.02293824 0.7769157
- 8: 0.02586902 0.7769157
- 9: 0.02586902 0.7769157
-10: 0.02586902 0.7769157
-11: 0.04603349 0.7769157
-12: 0.04621849 0.7769157
-13: 0.04621849 0.7769157
-14: 0.05182073 0.7769157
-15: 0.05508629 0.7769157</code></pre>
+<pre><code># A tibble: 1,661 × 4
+   SAMPLE_ID         IMPACT_version n_mutation mutations        
+   &lt;chr&gt;             &lt;chr&gt;               &lt;int&gt; &lt;list&gt;           
+ 1 P-0000057-T01-IM3 IMPACT_v3               5 &lt;tibble [5 × 2]&gt; 
+ 2 P-0000062-T01-IM3 IMPACT_v3               6 &lt;tibble [6 × 2]&gt; 
+ 3 P-0000063-T01-IM3 IMPACT_v3              13 &lt;tibble [13 × 2]&gt;
+ 4 P-0000071-T01-IM3 IMPACT_v3              10 &lt;tibble [10 × 2]&gt;
+ 5 P-0000082-T01-IM3 IMPACT_v3              12 &lt;tibble [12 × 2]&gt;
+ 6 P-0000088-T01-IM3 IMPACT_v3              12 &lt;tibble [12 × 2]&gt;
+ 7 P-0000103-T01-IM3 IMPACT_v3               6 &lt;tibble [6 × 2]&gt; 
+ 8 P-0000121-T01-IM3 IMPACT_v3               3 &lt;tibble [3 × 2]&gt; 
+ 9 P-0000165-T01-IM3 IMPACT_v3               5 &lt;tibble [5 × 2]&gt; 
+10 P-0000184-T01-IM3 IMPACT_v3               8 &lt;tibble [8 × 2]&gt; 
+# ℹ 1,651 more rows</code></pre>
 </div>
+</div>
+<p>Calculate the percentage of each mutation for each IMPACT version. Group the less represented mutations into broader categories to improve the final plots clarity.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#Create a new object with the percentages of each type of mutation per</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co">#IMPACT version</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>percentage_type <span class="ot">&lt;-</span> combined_data <span class="sc">|&gt;</span> </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(IMPACT_version,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>         mutations) <span class="sc">|&gt;</span> </span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">#It is necessary to temporary unnest to work with the nested tibble data</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(mutations)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="co">#Group some mutation types to reduce the number of different categories</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>percentage_type <span class="ot">&lt;-</span> percentage_type <span class="sc">|&gt;</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Combine Frame shift del and ins into &quot;Frame_Shift_Mutation&quot;</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Variant_Classification =</span> <span class="fu">case_when</span>(</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    Variant_Classification <span class="sc">%in%</span> <span class="fu">c</span>(</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;Frame_Shift_Del&quot;</span>,</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>      <span class="st">&quot;Frame_Shift_Ins&quot;</span>) <span class="sc">~</span> <span class="st">&quot;Frame_Shift_Mutation&quot;</span>,</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="cn">TRUE</span> <span class="sc">~</span> Variant_Classification)) <span class="sc">|&gt;</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Group the less represented mutations into &quot;Other&quot;</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Variant_Classification =</span> <span class="fu">ifelse</span>(</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    Variant_Classification <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">&quot;Frame_Shift_Mutation&quot;</span>,</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">&quot;Missense_Mutation&quot;</span>,</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">&quot;Nonsense_Mutation&quot;</span>,</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">&quot;Splice_Site&quot;</span>),</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>    Variant_Classification,</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Other&quot;</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">|&gt;</span> </span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>  <span class="co">#Calculate the percentage</span></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(IMPACT_version,</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>        Variant_Classification) <span class="sc">|&gt;</span> </span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(IMPACT_version) <span class="sc">|&gt;</span> </span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">percentage =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n) <span class="sc">*</span> <span class="dv">100</span>)</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a><span class="co">#Order the categories for a better representation</span></span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>percentage_type <span class="ot">&lt;-</span> percentage_type <span class="sc">|&gt;</span> </span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Variant_Classification =</span> <span class="fu">factor</span>(Variant_Classification,</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>                                         <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">&quot;Missense_Mutation&quot;</span>,</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>                                                    <span class="st">&quot;Nonsense_Mutation&quot;</span>,</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>                                                    <span class="st">&quot;Frame_Shift_Mutation&quot;</span>,</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>                                                    <span class="st">&quot;Splice_Site&quot;</span>,</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>                                                    <span class="st">&quot;Other&quot;</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="mutations-1" class="level2">
-<h2 class="anchored" data-anchor-id="mutations-1">Mutations</h2>
+<section id="data-representation" class="level2">
+<h2 class="anchored" data-anchor-id="data-representation">Data representation</h2>
+<section id="number-of-mutations-per-impact-version" class="level3">
+<h3 class="anchored" data-anchor-id="number-of-mutations-per-impact-version">Number of mutations per IMPACT version</h3>
+<p>A representation of the number of mutations detected by the IMPACT version is done in order to assess whether the latest versions of IMPACT demonstrate improved capacity for identifying new mutations.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>mutation_gene_sample <span class="ot">&lt;-</span> mutations <span class="sc">|&gt;</span> </span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean <span class="sc">|&gt;</span> <span class="fu">select</span>(SAMPLE_ID, CANCER_TYPE), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Tumor_Sample_Barcode&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&#39;Glioma&#39;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Tumor_Sample_Barcode, Hugo_Symbol) <span class="sc">|&gt;</span> </span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">|&gt;</span> </span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Hugo_Symbol, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Hugo_Symbol&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>gene_mutation_stats <span class="ot">&lt;-</span> mutation_gene_sample<span class="sc">$</span>n</span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gene_mutation_stats) <span class="ot">=</span> mutation_gene_sample<span class="sc">$</span>ensembl_gene</span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_m <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> gene_mutation_stats,<span class="at">minSize =</span> <span class="dv">15</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam, : There are ties in the preranked stats (93.7% of the list).
-The order of those tied genes will be arbitrary, which may produce unexpected results.</code></pre>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> combined_data,</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x =</span> IMPACT_version,</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">y =</span> n_mutation,</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">fill =</span> IMPACT_version)) <span class="sc">+</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="co">#It is necessary to do the log10 of the y values to prevent outliers from</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="co">#hiding the main distribution</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_log10</span>() <span class="sc">+</span></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;none&quot;</span>) <span class="sc">+</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">&quot;viridis&quot;</span>,</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>                     <span class="at">discrete =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Number of mutations per IMPACT version (log scale)&quot;</span>,</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Mutations (log10)&quot;</span>,</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">&quot;IMPACT version&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><svg id="svg_a450110fa9a223af96f7" role="img" width="672" height="360" viewBox="0 0 504 360">
+<defs>
+<g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-0">
+<path d="M 2.28125 -4.53125 L 2.28125 0 L 3.046875 0 L 3.046875 -6.359375 L 2.546875 -6.359375 C 2.265625 -5.390625 2.09375 -5.25 0.890625 -5.09375 L 0.890625 -4.53125 Z M 2.28125 -4.53125 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-1">
+<path d="M 2.421875 -6.359375 C 1.84375 -6.359375 1.3125 -6.09375 0.984375 -5.671875 C 0.578125 -5.109375 0.375 -4.25 0.375 -3.078125 C 0.375 -0.9375 1.078125 0.203125 2.421875 0.203125 C 3.734375 0.203125 4.453125 -0.9375 4.453125 -3.03125 C 4.453125 -4.25 4.265625 -5.078125 3.859375 -5.671875 C 3.53125 -6.109375 3.015625 -6.359375 2.421875 -6.359375 Z M 2.421875 -5.671875 C 3.25 -5.671875 3.671875 -4.828125 3.671875 -3.09375 C 3.671875 -1.28125 3.265625 -0.4375 2.40625 -0.4375 C 1.578125 -0.4375 1.171875 -1.3125 1.171875 -3.0625 C 1.171875 -4.828125 1.578125 -5.671875 2.421875 -5.671875 Z M 2.421875 -5.671875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-2">
+<path d="M 1.703125 -6.40625 L 0.875 -6.40625 L 0.875 0 L 1.703125 0 Z M 1.703125 -6.40625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-3">
+<path d="M 4.109375 0 L 5.921875 -5.375 L 5.921875 0 L 6.6875 0 L 6.6875 -6.40625 L 5.5625 -6.40625 L 3.6875 -0.828125 L 1.796875 -6.40625 L 0.65625 -6.40625 L 0.65625 0 L 1.4375 0 L 1.4375 -5.375 L 3.25 0 Z M 4.109375 0 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-4">
+<path d="M 1.625 -2.71875 L 3.640625 -2.71875 C 4.140625 -2.71875 4.53125 -2.875 4.875 -3.171875 C 5.265625 -3.53125 5.421875 -3.9375 5.421875 -4.53125 C 5.421875 -5.734375 4.71875 -6.40625 3.453125 -6.40625 L 0.796875 -6.40625 L 0.796875 0 L 1.625 0 Z M 1.625 -3.4375 L 1.625 -5.6875 L 3.328125 -5.6875 C 4.109375 -5.6875 4.578125 -5.265625 4.578125 -4.5625 C 4.578125 -3.859375 4.109375 -3.4375 3.328125 -3.4375 Z M 1.625 -3.4375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-5">
+<path d="M 4.171875 -1.921875 L 4.828125 0 L 5.75 0 L 3.5 -6.40625 L 2.4375 -6.40625 L 0.15625 0 L 1.015625 0 L 1.703125 -1.921875 Z M 3.9375 -2.609375 L 1.90625 -2.609375 L 2.953125 -5.53125 Z M 3.9375 -2.609375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-6">
+<path d="M 5.828125 -4.421875 C 5.5625 -5.828125 4.765625 -6.515625 3.359375 -6.515625 C 2.484375 -6.515625 1.796875 -6.25 1.3125 -5.71875 C 0.734375 -5.078125 0.421875 -4.171875 0.421875 -3.125 C 0.421875 -2.078125 0.75 -1.171875 1.34375 -0.546875 C 1.84375 -0.03125 2.484375 0.203125 3.3125 0.203125 C 4.875 0.203125 5.765625 -0.640625 5.953125 -2.34375 L 5.109375 -2.34375 C 5.046875 -1.90625 4.953125 -1.59375 4.828125 -1.34375 C 4.5625 -0.8125 4.015625 -0.515625 3.328125 -0.515625 C 2.046875 -0.515625 1.234375 -1.546875 1.234375 -3.140625 C 1.234375 -4.78125 2 -5.796875 3.25 -5.796875 C 3.78125 -5.796875 4.25 -5.640625 4.515625 -5.390625 C 4.765625 -5.171875 4.890625 -4.90625 4.984375 -4.421875 Z M 5.828125 -4.421875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-7">
+<path d="M 3.109375 -5.6875 L 5.21875 -5.6875 L 5.21875 -6.40625 L 0.1875 -6.40625 L 0.1875 -5.6875 L 2.296875 -5.6875 L 2.296875 0 L 3.109375 0 Z M 3.109375 -5.6875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-8">
+<path d="M 5.078125 1.109375 L -0.1875 1.109375 L -0.1875 1.546875 L 5.078125 1.546875 Z M 5.078125 1.109375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-9">
+<path d="M 2.5 0 L 4.28125 -4.609375 L 3.453125 -4.609375 L 2.140625 -0.875 L 0.921875 -4.609375 L 0.09375 -4.609375 L 1.703125 0 Z M 2.5 0 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-10">
+<path d="M 1.9375 -2.921875 L 2.359375 -2.921875 C 3.203125 -2.921875 3.65625 -2.53125 3.65625 -1.765625 C 3.65625 -0.96875 3.171875 -0.484375 2.375 -0.484375 C 1.515625 -0.484375 1.109375 -0.921875 1.0625 -1.84375 L 0.28125 -1.84375 C 0.3125 -1.34375 0.40625 -1 0.546875 -0.71875 C 0.875 -0.109375 1.484375 0.203125 2.34375 0.203125 C 3.625 0.203125 4.453125 -0.578125 4.453125 -1.78125 C 4.453125 -2.59375 4.140625 -3.03125 3.390625 -3.296875 C 3.96875 -3.53125 4.265625 -3.96875 4.265625 -4.609375 C 4.265625 -5.703125 3.546875 -6.359375 2.359375 -6.359375 C 1.109375 -6.359375 0.4375 -5.65625 0.40625 -4.3125 L 1.1875 -4.3125 C 1.203125 -4.703125 1.234375 -4.921875 1.328125 -5.109375 C 1.5 -5.46875 1.890625 -5.6875 2.375 -5.6875 C 3.0625 -5.6875 3.46875 -5.265625 3.46875 -4.578125 C 3.46875 -4.140625 3.3125 -3.859375 2.96875 -3.71875 C 2.765625 -3.625 2.484375 -3.59375 1.9375 -3.578125 Z M 1.9375 -2.921875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-11">
+<path d="M 4.1875 -6.234375 L 0.96875 -6.234375 L 0.5 -2.84375 L 1.21875 -2.84375 C 1.578125 -3.265625 1.875 -3.421875 2.359375 -3.421875 C 3.203125 -3.421875 3.71875 -2.84375 3.71875 -1.921875 C 3.71875 -1.03125 3.203125 -0.484375 2.359375 -0.484375 C 1.6875 -0.484375 1.265625 -0.828125 1.078125 -1.53125 L 0.3125 -1.53125 C 0.40625 -1.015625 0.5 -0.78125 0.6875 -0.546875 C 1.03125 -0.078125 1.671875 0.203125 2.375 0.203125 C 3.640625 0.203125 4.515625 -0.71875 4.515625 -2.03125 C 4.515625 -3.265625 3.6875 -4.109375 2.5 -4.109375 C 2.0625 -4.109375 1.703125 -4 1.34375 -3.734375 L 1.59375 -5.46875 L 4.1875 -5.46875 Z M 4.1875 -6.234375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-0-12">
+<path d="M 4.375 -4.703125 C 4.234375 -5.75 3.5625 -6.359375 2.609375 -6.359375 C 1.921875 -6.359375 1.3125 -6.03125 0.9375 -5.453125 C 0.546875 -4.828125 0.375 -4.0625 0.375 -2.90625 C 0.375 -1.828125 0.53125 -1.15625 0.90625 -0.59375 C 1.234375 -0.078125 1.78125 0.203125 2.46875 0.203125 C 3.65625 0.203125 4.515625 -0.6875 4.515625 -1.921875 C 4.515625 -3.09375 3.71875 -3.921875 2.609375 -3.921875 C 1.984375 -3.921875 1.5 -3.6875 1.171875 -3.234375 C 1.171875 -4.796875 1.671875 -5.671875 2.5625 -5.671875 C 3.109375 -5.671875 3.484375 -5.328125 3.609375 -4.703125 Z M 2.5 -3.234375 C 3.25 -3.234375 3.71875 -2.703125 3.71875 -1.859375 C 3.71875 -1.0625 3.1875 -0.484375 2.484375 -0.484375 C 1.765625 -0.484375 1.21875 -1.09375 1.21875 -1.90625 C 1.21875 -2.6875 1.734375 -3.234375 2.5 -3.234375 Z M 2.5 -3.234375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-0">
+<path d="M 2.140625 -8.015625 L 1.09375 -8.015625 L 1.09375 0 L 2.140625 0 Z M 2.140625 -8.015625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-1">
+<path d="M 5.140625 0 L 7.40625 -6.71875 L 7.40625 0 L 8.375 0 L 8.375 -8.015625 L 6.953125 -8.015625 L 4.625 -1.03125 L 2.25 -8.015625 L 0.828125 -8.015625 L 0.828125 0 L 1.796875 0 L 1.796875 -6.71875 L 4.0625 0 Z M 5.140625 0 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-2">
+<path d="M 2.03125 -3.40625 L 4.546875 -3.40625 C 5.171875 -3.40625 5.671875 -3.59375 6.09375 -3.96875 C 6.578125 -4.40625 6.78125 -4.921875 6.78125 -5.671875 C 6.78125 -7.171875 5.890625 -8.015625 4.3125 -8.015625 L 1 -8.015625 L 1 0 L 2.03125 0 Z M 2.03125 -4.296875 L 2.03125 -7.109375 L 4.15625 -7.109375 C 5.140625 -7.109375 5.71875 -6.59375 5.71875 -5.703125 C 5.71875 -4.828125 5.140625 -4.296875 4.15625 -4.296875 Z M 2.03125 -4.296875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-3">
+<path d="M 5.21875 -2.40625 L 6.03125 0 L 7.1875 0 L 4.359375 -8.015625 L 3.046875 -8.015625 L 0.1875 0 L 1.28125 0 L 2.125 -2.40625 Z M 4.921875 -3.265625 L 2.375 -3.265625 L 3.703125 -6.921875 Z M 4.921875 -3.265625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-4">
+<path d="M 7.28125 -5.53125 C 6.96875 -7.296875 5.953125 -8.15625 4.1875 -8.15625 C 3.109375 -8.15625 2.25 -7.8125 1.65625 -7.15625 C 0.921875 -6.359375 0.53125 -5.21875 0.53125 -3.921875 C 0.53125 -2.59375 0.9375 -1.46875 1.6875 -0.6875 C 2.3125 -0.046875 3.109375 0.25 4.140625 0.25 C 6.109375 0.25 7.203125 -0.796875 7.453125 -2.921875 L 6.390625 -2.921875 C 6.296875 -2.375 6.1875 -2 6.03125 -1.6875 C 5.703125 -1.015625 5.015625 -0.65625 4.15625 -0.65625 C 2.5625 -0.65625 1.546875 -1.921875 1.546875 -3.921875 C 1.546875 -5.984375 2.515625 -7.25 4.0625 -7.25 C 4.71875 -7.25 5.328125 -7.0625 5.65625 -6.75 C 5.953125 -6.46875 6.109375 -6.140625 6.234375 -5.53125 Z M 7.28125 -5.53125 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-5">
+<path d="M 3.890625 -7.109375 L 6.515625 -7.109375 L 6.515625 -8.015625 L 0.234375 -8.015625 L 0.234375 -7.109375 L 2.875 -7.109375 L 2.875 0 L 3.890625 0 Z M 3.890625 -7.109375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-6">
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-7">
+<path d="M 3.140625 0 L 5.34375 -5.765625 L 4.3125 -5.765625 L 2.6875 -1.09375 L 1.140625 -5.765625 L 0.109375 -5.765625 L 2.140625 0 Z M 3.140625 0 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-8">
+<path d="M 5.640625 -2.578125 C 5.640625 -3.453125 5.578125 -3.984375 5.40625 -4.40625 C 5.03125 -5.359375 4.15625 -5.921875 3.078125 -5.921875 C 1.46875 -5.921875 0.4375 -4.703125 0.4375 -2.8125 C 0.4375 -0.90625 1.4375 0.25 3.0625 0.25 C 4.375 0.25 5.296875 -0.5 5.515625 -1.75 L 4.59375 -1.75 C 4.34375 -0.984375 3.828125 -0.59375 3.09375 -0.59375 C 2.515625 -0.59375 2.015625 -0.859375 1.703125 -1.34375 C 1.484375 -1.671875 1.40625 -2 1.390625 -2.578125 Z M 1.421875 -3.328125 C 1.5 -4.390625 2.140625 -5.078125 3.0625 -5.078125 C 4 -5.078125 4.65625 -4.359375 4.65625 -3.328125 Z M 1.421875 -3.328125 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-9">
+<path d="M 0.765625 -5.765625 L 0.765625 0 L 1.6875 0 L 1.6875 -2.984375 C 1.6875 -4.375 2.265625 -5 3.53125 -4.96875 L 3.53125 -5.890625 C 3.375 -5.921875 3.28125 -5.921875 3.171875 -5.921875 C 2.578125 -5.921875 2.140625 -5.578125 1.609375 -4.71875 L 1.609375 -5.765625 Z M 0.765625 -5.765625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-10">
+<path d="M 4.8125 -4.15625 C 4.8125 -5.296875 4.0625 -5.921875 2.734375 -5.921875 C 1.390625 -5.921875 0.515625 -5.234375 0.515625 -4.171875 C 0.515625 -3.265625 0.984375 -2.84375 2.34375 -2.515625 L 3.203125 -2.296875 C 3.84375 -2.140625 4.09375 -1.90625 4.09375 -1.5 C 4.09375 -0.953125 3.546875 -0.59375 2.75 -0.59375 C 2.25 -0.59375 1.84375 -0.734375 1.609375 -0.984375 C 1.46875 -1.140625 1.390625 -1.3125 1.34375 -1.71875 L 0.375 -1.71875 C 0.421875 -0.390625 1.171875 0.25 2.671875 0.25 C 4.125 0.25 5.046875 -0.46875 5.046875 -1.578125 C 5.046875 -2.4375 4.5625 -2.90625 3.421875 -3.171875 L 2.546875 -3.390625 C 1.796875 -3.5625 1.46875 -3.8125 1.46875 -4.21875 C 1.46875 -4.75 1.953125 -5.078125 2.6875 -5.078125 C 3.4375 -5.078125 3.828125 -4.765625 3.84375 -4.15625 Z M 4.8125 -4.15625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-11">
+<path d="M 1.65625 -5.765625 L 0.734375 -5.765625 L 0.734375 0 L 1.65625 0 Z M 1.65625 -8.015625 L 0.71875 -8.015625 L 0.71875 -6.859375 L 1.65625 -6.859375 Z M 1.65625 -8.015625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-12">
+<path d="M 2.984375 -5.921875 C 1.359375 -5.921875 0.390625 -4.78125 0.390625 -2.84375 C 0.390625 -0.890625 1.359375 0.25 3 0.25 C 4.625 0.25 5.609375 -0.90625 5.609375 -2.796875 C 5.609375 -4.796875 4.65625 -5.921875 2.984375 -5.921875 Z M 3 -5.078125 C 4.03125 -5.078125 4.65625 -4.234375 4.65625 -2.8125 C 4.65625 -1.4375 4.015625 -0.59375 3 -0.59375 C 1.984375 -0.59375 1.359375 -1.4375 1.359375 -2.84375 C 1.359375 -4.234375 1.984375 -5.078125 3 -5.078125 Z M 3 -5.078125 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-1-13">
+<path d="M 0.765625 -5.765625 L 0.765625 0 L 1.6875 0 L 1.6875 -3.171875 C 1.6875 -4.359375 2.3125 -5.125 3.25 -5.125 C 3.984375 -5.125 4.4375 -4.6875 4.4375 -4 L 4.4375 0 L 5.359375 0 L 5.359375 -4.359375 C 5.359375 -5.3125 4.640625 -5.921875 3.53125 -5.921875 C 2.671875 -5.921875 2.125 -5.59375 1.609375 -4.796875 L 1.609375 -5.765625 Z M 0.765625 -5.765625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-0">
+<path d="M 0 -5.140625 L -6.71875 -7.40625 L 0 -7.40625 L 0 -8.375 L -8.015625 -8.375 L -8.015625 -6.953125 L -1.03125 -4.625 L -8.015625 -2.25 L -8.015625 -0.828125 L 0 -0.828125 L 0 -1.796875 L -6.71875 -1.796875 L 0 -4.0625 Z M 0 -5.140625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-1">
+<path d="M 0 -5.296875 L -5.765625 -5.296875 L -5.765625 -4.390625 L -2.5 -4.390625 C -1.3125 -4.390625 -0.546875 -3.765625 -0.546875 -2.8125 C -0.546875 -2.09375 -0.984375 -1.625 -1.6875 -1.625 L -5.765625 -1.625 L -5.765625 -0.71875 L -1.3125 -0.71875 C -0.359375 -0.71875 0.25 -1.4375 0.25 -2.546875 C 0.25 -3.40625 -0.046875 -3.9375 -0.796875 -4.484375 L 0 -4.484375 Z M 0 -5.296875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-2">
+<path d="M -5.765625 -2.796875 L -5.765625 -1.84375 L -7.34375 -1.84375 L -7.34375 -0.9375 L -5.765625 -0.9375 L -5.765625 -0.15625 L -5.015625 -0.15625 L -5.015625 -0.9375 L -0.65625 -0.9375 C -0.0625 -0.9375 0.25 -1.328125 0.25 -2.046875 C 0.25 -2.28125 0.234375 -2.484375 0.171875 -2.796875 L -0.59375 -2.796875 C -0.5625 -2.65625 -0.546875 -2.546875 -0.546875 -2.359375 C -0.546875 -1.953125 -0.65625 -1.84375 -1.0625 -1.84375 L -5.015625 -1.84375 L -5.015625 -2.796875 Z M -5.765625 -2.796875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-3">
+<path d="M -0.53125 -5.890625 C -0.515625 -5.78125 -0.515625 -5.734375 -0.515625 -5.6875 C -0.515625 -5.375 -0.6875 -5.1875 -0.96875 -5.1875 L -4.359375 -5.1875 C -5.375 -5.1875 -5.921875 -4.4375 -5.921875 -3.03125 C -5.921875 -2.171875 -5.6875 -1.5 -5.265625 -1.109375 C -4.96875 -0.84375 -4.625 -0.734375 -4.0625 -0.71875 L -4.0625 -1.640625 C -4.765625 -1.71875 -5.078125 -2.140625 -5.078125 -2.984375 C -5.078125 -3.828125 -4.78125 -4.28125 -4.21875 -4.28125 L -3.984375 -4.28125 C -3.59375 -4.265625 -3.4375 -4.0625 -3.34375 -3.328125 C -3.171875 -2.03125 -3.140625 -1.828125 -2.984375 -1.46875 C -2.703125 -0.796875 -2.203125 -0.46875 -1.453125 -0.46875 C -0.40625 -0.46875 0.25 -1.1875 0.25 -2.359375 C 0.25 -3.078125 0 -3.65625 -0.59375 -4.3125 C 0 -4.375 0.25 -4.65625 0.25 -5.265625 C 0.25 -5.453125 0.234375 -5.578125 0.15625 -5.890625 Z M -1.8125 -4.28125 C -1.5 -4.28125 -1.3125 -4.1875 -1.0625 -3.921875 C -0.71875 -3.546875 -0.546875 -3.09375 -0.546875 -2.546875 C -0.546875 -1.84375 -0.890625 -1.421875 -1.46875 -1.421875 C -2.078125 -1.421875 -2.390625 -1.8125 -2.53125 -2.8125 C -2.65625 -3.78125 -2.703125 -3.96875 -2.84375 -4.28125 Z M -1.8125 -4.28125 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-4">
+<path d="M -5.765625 -1.65625 L -5.765625 -0.734375 L 0 -0.734375 L 0 -1.65625 Z M -8.015625 -1.65625 L -8.015625 -0.71875 L -6.859375 -0.71875 L -6.859375 -1.65625 Z M -8.015625 -1.65625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-5">
+<path d="M -5.921875 -2.984375 C -5.921875 -1.359375 -4.78125 -0.390625 -2.84375 -0.390625 C -0.890625 -0.390625 0.25 -1.359375 0.25 -3 C 0.25 -4.625 -0.90625 -5.609375 -2.796875 -5.609375 C -4.796875 -5.609375 -5.921875 -4.65625 -5.921875 -2.984375 Z M -5.078125 -3 C -5.078125 -4.03125 -4.234375 -4.65625 -2.8125 -4.65625 C -1.4375 -4.65625 -0.59375 -4.015625 -0.59375 -3 C -0.59375 -1.984375 -1.4375 -1.359375 -2.84375 -1.359375 C -4.234375 -1.359375 -5.078125 -1.984375 -5.078125 -3 Z M -5.078125 -3 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-6">
+<path d="M -5.765625 -0.765625 L 0 -0.765625 L 0 -1.6875 L -3.171875 -1.6875 C -4.359375 -1.6875 -5.125 -2.3125 -5.125 -3.25 C -5.125 -3.984375 -4.6875 -4.4375 -4 -4.4375 L 0 -4.4375 L 0 -5.359375 L -4.359375 -5.359375 C -5.3125 -5.359375 -5.921875 -4.640625 -5.921875 -3.53125 C -5.921875 -2.671875 -5.59375 -2.125 -4.796875 -1.609375 L -5.765625 -1.609375 Z M -5.765625 -0.765625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-7">
+<path d="M -4.15625 -4.8125 C -5.296875 -4.8125 -5.921875 -4.0625 -5.921875 -2.734375 C -5.921875 -1.390625 -5.234375 -0.515625 -4.171875 -0.515625 C -3.265625 -0.515625 -2.84375 -0.984375 -2.515625 -2.34375 L -2.296875 -3.203125 C -2.140625 -3.84375 -1.90625 -4.09375 -1.5 -4.09375 C -0.953125 -4.09375 -0.59375 -3.546875 -0.59375 -2.75 C -0.59375 -2.25 -0.734375 -1.84375 -0.984375 -1.609375 C -1.140625 -1.46875 -1.3125 -1.390625 -1.71875 -1.34375 L -1.71875 -0.375 C -0.390625 -0.421875 0.25 -1.171875 0.25 -2.671875 C 0.25 -4.125 -0.46875 -5.046875 -1.578125 -5.046875 C -2.4375 -5.046875 -2.90625 -4.5625 -3.171875 -3.421875 L -3.390625 -2.546875 C -3.5625 -1.796875 -3.8125 -1.46875 -4.21875 -1.46875 C -4.75 -1.46875 -5.078125 -1.953125 -5.078125 -2.6875 C -5.078125 -3.4375 -4.765625 -3.828125 -4.15625 -3.84375 Z M -4.15625 -4.8125 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-8">
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-9">
+<path d="M -8.015625 -2.59375 C -6.578125 -1.5 -4.578125 -0.796875 -2.84375 -0.796875 C -1.109375 -0.796875 0.890625 -1.5 2.328125 -2.59375 L 2.328125 -3.203125 C 0.765625 -2.234375 -1.09375 -1.6875 -2.84375 -1.6875 C -4.59375 -1.6875 -6.453125 -2.234375 -8.015625 -3.203125 Z M -8.015625 -2.59375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-10">
+<path d="M -8.015625 -1.671875 L -8.015625 -0.75 L 0 -0.75 L 0 -1.671875 Z M -8.015625 -1.671875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-11">
+<path d="M -5.765625 -4.4375 L -4.921875 -4.4375 C -5.625 -3.984375 -5.921875 -3.46875 -5.921875 -2.75 C -5.921875 -1.359375 -4.625 -0.390625 -2.78125 -0.390625 C -1.8125 -0.390625 -1.109375 -0.609375 -0.53125 -1.109375 C -0.015625 -1.546875 0.25 -2.09375 0.25 -2.6875 C 0.25 -3.375 -0.0625 -3.875 -0.78125 -4.359375 L -0.484375 -4.359375 C 1.0625 -4.359375 1.625 -3.921875 1.625 -2.78125 C 1.625 -2 1.3125 -1.59375 0.65625 -1.5 L 0.65625 -0.578125 C 1.734375 -0.65625 2.390625 -1.5 2.390625 -2.765625 C 2.390625 -3.609375 2.125 -4.3125 1.65625 -4.6875 C 1.125 -5.125 0.40625 -5.296875 -0.953125 -5.296875 L -5.765625 -5.296875 Z M -5.078125 -2.84375 C -5.078125 -3.8125 -4.265625 -4.359375 -2.8125 -4.359375 C -1.40625 -4.359375 -0.59375 -3.796875 -0.59375 -2.84375 C -0.59375 -1.890625 -1.421875 -1.34375 -2.84375 -1.34375 C -4.25 -1.34375 -5.078125 -1.890625 -5.078125 -2.84375 Z M -5.078125 -2.84375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-12">
+<path d="M -5.671875 -2.84375 L 0 -2.84375 L 0 -3.8125 L -7.953125 -3.8125 L -7.953125 -3.171875 C -6.734375 -2.84375 -6.5625 -2.625 -6.375 -1.125 L -5.671875 -1.125 Z M -5.671875 -2.84375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-13">
+<path d="M -7.953125 -3.03125 C -7.953125 -2.296875 -7.625 -1.640625 -7.078125 -1.234375 C -6.375 -0.71875 -5.328125 -0.46875 -3.84375 -0.46875 C -1.171875 -0.46875 0.25 -1.359375 0.25 -3.03125 C 0.25 -4.671875 -1.171875 -5.578125 -3.78125 -5.578125 C -5.328125 -5.578125 -6.359375 -5.328125 -7.078125 -4.8125 C -7.640625 -4.40625 -7.953125 -3.765625 -7.953125 -3.03125 Z M -7.09375 -3.03125 C -7.09375 -4.0625 -6.03125 -4.59375 -3.875 -4.59375 C -1.609375 -4.59375 -0.546875 -4.078125 -0.546875 -3 C -0.546875 -1.984375 -1.65625 -1.46875 -3.84375 -1.46875 C -6.03125 -1.46875 -7.09375 -1.984375 -7.09375 -3.03125 Z M -7.09375 -3.03125 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-2-14">
+<path d="M 2.328125 -1.015625 C 0.890625 -2.125 -1.109375 -2.8125 -2.84375 -2.8125 C -4.578125 -2.8125 -6.578125 -2.125 -8.015625 -1.015625 L -8.015625 -0.421875 C -6.453125 -1.390625 -4.59375 -1.921875 -2.84375 -1.921875 C -1.09375 -1.921875 0.765625 -1.390625 2.328125 -0.421875 Z M 2.328125 -1.015625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-0">
+<path d="M 8.53125 -9.625 L 7.375 -9.625 L 7.375 -1.75 L 2.34375 -9.625 L 1 -9.625 L 1 0 L 2.171875 0 L 2.171875 -7.796875 L 7.140625 0 L 8.53125 0 Z M 8.53125 -9.625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-1">
+<path d="M 6.359375 0 L 6.359375 -6.921875 L 5.265625 -6.921875 L 5.265625 -3 C 5.265625 -1.578125 4.53125 -0.65625 3.375 -0.65625 C 2.515625 -0.65625 1.953125 -1.1875 1.953125 -2.015625 L 1.953125 -6.921875 L 0.859375 -6.921875 L 0.859375 -1.578125 C 0.859375 -0.4375 1.71875 0.296875 3.0625 0.296875 C 4.078125 0.296875 4.734375 -0.046875 5.375 -0.96875 L 5.375 0 Z M 6.359375 0 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-2">
+<path d="M 0.921875 -6.921875 L 0.921875 0 L 2.03125 0 L 2.03125 -4.34375 C 2.03125 -5.34375 2.765625 -6.15625 3.65625 -6.15625 C 4.46875 -6.15625 4.9375 -5.65625 4.9375 -4.765625 L 4.9375 0 L 6.046875 0 L 6.046875 -4.34375 C 6.046875 -5.34375 6.765625 -6.15625 7.671875 -6.15625 C 8.46875 -6.15625 8.953125 -5.640625 8.953125 -4.765625 L 8.953125 0 L 10.0625 0 L 10.0625 -5.1875 C 10.0625 -6.4375 9.34375 -7.109375 8.046875 -7.109375 C 7.125 -7.109375 6.578125 -6.84375 5.921875 -6.0625 C 5.515625 -6.796875 4.96875 -7.109375 4.0625 -7.109375 C 3.140625 -7.109375 2.515625 -6.765625 1.9375 -5.9375 L 1.9375 -6.921875 Z M 0.921875 -6.921875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-3">
+<path d="M 0.71875 -9.625 L 0.71875 0 L 1.703125 0 L 1.703125 -0.890625 C 2.234375 -0.078125 2.9375 0.296875 3.890625 0.296875 C 5.71875 0.296875 6.90625 -1.1875 6.90625 -3.484375 C 6.90625 -5.734375 5.78125 -7.109375 3.953125 -7.109375 C 3 -7.109375 2.328125 -6.765625 1.8125 -5.984375 L 1.8125 -9.625 Z M 3.734375 -6.09375 C 4.96875 -6.09375 5.75 -5.015625 5.75 -3.359375 C 5.75 -1.796875 4.9375 -0.71875 3.734375 -0.71875 C 2.5625 -0.71875 1.8125 -1.78125 1.8125 -3.40625 C 1.8125 -5.03125 2.5625 -6.09375 3.734375 -6.09375 Z M 3.734375 -6.09375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-4">
+<path d="M 6.765625 -3.09375 C 6.765625 -4.140625 6.6875 -4.78125 6.5 -5.296875 C 6.046875 -6.4375 4.984375 -7.109375 3.703125 -7.109375 C 1.765625 -7.109375 0.53125 -5.65625 0.53125 -3.359375 C 0.53125 -1.078125 1.71875 0.296875 3.671875 0.296875 C 5.25 0.296875 6.34375 -0.59375 6.625 -2.09375 L 5.515625 -2.09375 C 5.21875 -1.1875 4.59375 -0.71875 3.703125 -0.71875 C 3.015625 -0.71875 2.421875 -1.03125 2.046875 -1.609375 C 1.78125 -2 1.6875 -2.40625 1.671875 -3.09375 Z M 1.703125 -3.984375 C 1.796875 -5.265625 2.578125 -6.09375 3.6875 -6.09375 C 4.8125 -6.09375 5.578125 -5.234375 5.578125 -3.984375 Z M 1.703125 -3.984375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-5">
+<path d="M 0.90625 -6.921875 L 0.90625 0 L 2.015625 0 L 2.015625 -3.59375 C 2.03125 -5.25 2.71875 -6 4.234375 -5.953125 L 4.234375 -7.078125 C 4.046875 -7.109375 3.953125 -7.109375 3.8125 -7.109375 C 3.109375 -7.109375 2.5625 -6.6875 1.921875 -5.671875 L 1.921875 -6.921875 Z M 0.90625 -6.921875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-6">
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-7">
+<path d="M 3.59375 -7.109375 C 1.640625 -7.109375 0.46875 -5.734375 0.46875 -3.40625 C 0.46875 -1.0625 1.640625 0.296875 3.609375 0.296875 C 5.5625 0.296875 6.734375 -1.078125 6.734375 -3.359375 C 6.734375 -5.75 5.59375 -7.109375 3.59375 -7.109375 Z M 3.609375 -6.09375 C 4.84375 -6.09375 5.578125 -5.078125 5.578125 -3.359375 C 5.578125 -1.734375 4.8125 -0.71875 3.609375 -0.71875 C 2.375 -0.71875 1.625 -1.734375 1.625 -3.40625 C 1.625 -5.078125 2.375 -6.09375 3.609375 -6.09375 Z M 3.609375 -6.09375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-8">
+<path d="M 3.40625 -6.921875 L 2.25 -6.921875 L 2.25 -8 C 2.25 -8.46875 2.515625 -8.703125 3.03125 -8.703125 C 3.109375 -8.703125 3.15625 -8.703125 3.40625 -8.6875 L 3.40625 -9.59375 C 3.15625 -9.65625 3.015625 -9.671875 2.78125 -9.671875 C 1.765625 -9.671875 1.15625 -9.078125 1.15625 -8.09375 L 1.15625 -6.921875 L 0.234375 -6.921875 L 0.234375 -6.015625 L 1.15625 -6.015625 L 1.15625 0 L 2.25 0 L 2.25 -6.015625 L 3.40625 -6.015625 Z M 3.40625 -6.921875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-9">
+<path d="M 3.359375 -6.921875 L 2.21875 -6.921875 L 2.21875 -8.8125 L 1.125 -8.8125 L 1.125 -6.921875 L 0.1875 -6.921875 L 0.1875 -6.015625 L 1.125 -6.015625 L 1.125 -0.796875 C 1.125 -0.078125 1.59375 0.296875 2.453125 0.296875 C 2.75 0.296875 2.984375 0.28125 3.359375 0.21875 L 3.359375 -0.71875 C 3.1875 -0.671875 3.046875 -0.65625 2.828125 -0.65625 C 2.34375 -0.65625 2.21875 -0.796875 2.21875 -1.28125 L 2.21875 -6.015625 L 3.359375 -6.015625 Z M 3.359375 -6.921875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-10">
+<path d="M 7.0625 -0.640625 C 6.9375 -0.625 6.890625 -0.625 6.828125 -0.625 C 6.4375 -0.625 6.234375 -0.8125 6.234375 -1.15625 L 6.234375 -5.234375 C 6.234375 -6.453125 5.328125 -7.109375 3.625 -7.109375 C 2.609375 -7.109375 1.8125 -6.828125 1.328125 -6.3125 C 1.015625 -5.953125 0.890625 -5.5625 0.859375 -4.875 L 1.96875 -4.875 C 2.0625 -5.71875 2.5625 -6.09375 3.59375 -6.09375 C 4.59375 -6.09375 5.140625 -5.734375 5.140625 -5.0625 L 5.140625 -4.78125 C 5.125 -4.296875 4.890625 -4.125 3.984375 -4.015625 C 2.421875 -3.8125 2.1875 -3.765625 1.765625 -3.59375 C 0.96875 -3.25 0.546875 -2.640625 0.546875 -1.75 C 0.546875 -0.484375 1.421875 0.296875 2.828125 0.296875 C 3.703125 0.296875 4.390625 0 5.171875 -0.71875 C 5.25 0 5.59375 0.296875 6.3125 0.296875 C 6.546875 0.296875 6.6875 0.28125 7.0625 0.1875 Z M 5.140625 -2.171875 C 5.140625 -1.8125 5.03125 -1.578125 4.703125 -1.28125 C 4.25 -0.875 3.703125 -0.65625 3.0625 -0.65625 C 2.203125 -0.65625 1.703125 -1.0625 1.703125 -1.765625 C 1.703125 -2.5 2.171875 -2.859375 3.359375 -3.03125 C 4.546875 -3.1875 4.765625 -3.25 5.140625 -3.421875 Z M 5.140625 -2.171875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-11">
+<path d="M 1.984375 -6.921875 L 0.890625 -6.921875 L 0.890625 0 L 1.984375 0 Z M 1.984375 -9.625 L 0.875 -9.625 L 0.875 -8.234375 L 1.984375 -8.234375 Z M 1.984375 -9.625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-12">
+<path d="M 0.921875 -6.921875 L 0.921875 0 L 2.03125 0 L 2.03125 -3.8125 C 2.03125 -5.234375 2.765625 -6.15625 3.90625 -6.15625 C 4.78125 -6.15625 5.328125 -5.625 5.328125 -4.796875 L 5.328125 0 L 6.4375 0 L 6.4375 -5.234375 C 6.4375 -6.375 5.578125 -7.109375 4.234375 -7.109375 C 3.203125 -7.109375 2.546875 -6.71875 1.9375 -5.75 L 1.9375 -6.921875 Z M 0.921875 -6.921875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-13">
+<path d="M 5.78125 -4.984375 C 5.765625 -6.34375 4.875 -7.109375 3.28125 -7.109375 C 1.65625 -7.109375 0.625 -6.28125 0.625 -5 C 0.625 -3.921875 1.171875 -3.40625 2.8125 -3.015625 L 3.84375 -2.765625 C 4.609375 -2.578125 4.90625 -2.296875 4.90625 -1.8125 C 4.90625 -1.15625 4.265625 -0.71875 3.296875 -0.71875 C 2.703125 -0.71875 2.203125 -0.890625 1.921875 -1.171875 C 1.75 -1.375 1.671875 -1.578125 1.609375 -2.0625 L 0.453125 -2.0625 C 0.5 -0.46875 1.40625 0.296875 3.203125 0.296875 C 4.953125 0.296875 6.0625 -0.546875 6.0625 -1.890625 C 6.0625 -2.921875 5.484375 -3.484375 4.109375 -3.8125 L 3.046875 -4.0625 C 2.15625 -4.28125 1.765625 -4.5625 1.765625 -5.0625 C 1.765625 -5.703125 2.34375 -6.09375 3.234375 -6.09375 C 4.125 -6.09375 4.59375 -5.71875 4.625 -4.984375 Z M 5.78125 -4.984375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-14">
+<path d="M 0.71875 2.875 L 1.828125 2.875 L 1.828125 -0.71875 C 2.40625 -0.015625 3.046875 0.296875 3.953125 0.296875 C 5.75 0.296875 6.90625 -1.140625 6.90625 -3.34375 C 6.90625 -5.671875 5.765625 -7.109375 3.9375 -7.109375 C 3 -7.109375 2.25 -6.6875 1.734375 -5.875 L 1.734375 -6.921875 L 0.71875 -6.921875 Z M 3.75 -6.09375 C 4.96875 -6.09375 5.75 -5.015625 5.75 -3.359375 C 5.75 -1.796875 4.953125 -0.71875 3.75 -0.71875 C 2.578125 -0.71875 1.828125 -1.78125 1.828125 -3.40625 C 1.828125 -5.03125 2.578125 -6.09375 3.75 -6.09375 Z M 3.75 -6.09375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-15">
+<path d="M 2.5625 -9.625 L 1.328125 -9.625 L 1.328125 0 L 2.5625 0 Z M 2.5625 -9.625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-16">
+<path d="M 6.171875 0 L 8.890625 -8.0625 L 8.890625 0 L 10.046875 0 L 10.046875 -9.625 L 8.34375 -9.625 L 5.546875 -1.234375 L 2.6875 -9.625 L 0.984375 -9.625 L 0.984375 0 L 2.15625 0 L 2.15625 -8.0625 L 4.890625 0 Z M 6.171875 0 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-17">
+<path d="M 2.421875 -4.078125 L 5.453125 -4.078125 C 6.203125 -4.078125 6.796875 -4.296875 7.3125 -4.765625 C 7.890625 -5.296875 8.140625 -5.921875 8.140625 -6.796875 C 8.140625 -8.609375 7.078125 -9.625 5.171875 -9.625 L 1.203125 -9.625 L 1.203125 0 L 2.421875 0 Z M 2.421875 -5.15625 L 2.421875 -8.546875 L 4.984375 -8.546875 C 6.171875 -8.546875 6.859375 -7.90625 6.859375 -6.859375 C 6.859375 -5.796875 6.171875 -5.15625 4.984375 -5.15625 Z M 2.421875 -5.15625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-18">
+<path d="M 6.265625 -2.890625 L 7.25 0 L 8.625 0 L 5.234375 -9.625 L 3.65625 -9.625 L 0.21875 0 L 1.53125 0 L 2.546875 -2.890625 Z M 5.921875 -3.921875 L 2.859375 -3.921875 L 4.4375 -8.3125 Z M 5.921875 -3.921875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-19">
+<path d="M 8.734375 -6.640625 C 8.359375 -8.75 7.140625 -9.78125 5.03125 -9.78125 C 3.734375 -9.78125 2.6875 -9.375 1.984375 -8.578125 C 1.109375 -7.625 0.640625 -6.265625 0.640625 -4.703125 C 0.640625 -3.109375 1.125 -1.75 2.015625 -0.8125 C 2.765625 -0.046875 3.71875 0.296875 4.984375 0.296875 C 7.328125 0.296875 8.640625 -0.96875 8.9375 -3.515625 L 7.671875 -3.515625 C 7.5625 -2.859375 7.4375 -2.40625 7.234375 -2.015625 C 6.84375 -1.234375 6.015625 -0.78125 4.984375 -0.78125 C 3.078125 -0.78125 1.859375 -2.3125 1.859375 -4.71875 C 1.859375 -7.1875 3.015625 -8.703125 4.890625 -8.703125 C 5.671875 -8.703125 6.390625 -8.46875 6.78125 -8.09375 C 7.140625 -7.765625 7.34375 -7.375 7.484375 -6.640625 Z M 8.734375 -6.640625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-20">
+<path d="M 4.671875 -8.546875 L 7.828125 -8.546875 L 7.828125 -9.625 L 0.28125 -9.625 L 0.28125 -8.546875 L 3.453125 -8.546875 L 3.453125 0 L 4.671875 0 Z M 4.671875 -8.546875 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-21">
+<path d="M 3.765625 0 L 6.421875 -6.921875 L 5.171875 -6.921875 L 3.21875 -1.3125 L 1.375 -6.921875 L 0.125 -6.921875 L 2.5625 0 Z M 3.765625 0 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-22">
+<path d="M 3.109375 -9.625 C 1.796875 -7.890625 0.96875 -5.5 0.96875 -3.421875 C 0.96875 -1.328125 1.796875 1.0625 3.109375 2.796875 L 3.84375 2.796875 C 2.6875 0.90625 2.03125 -1.3125 2.03125 -3.421875 C 2.03125 -5.515625 2.6875 -7.75 3.84375 -9.625 Z M 3.109375 -9.625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-23">
+<path d="M 2 -9.625 L 0.890625 -9.625 L 0.890625 0 L 2 0 Z M 2 -9.625 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-24">
+<path d="M 5.328125 -6.921875 L 5.328125 -5.921875 C 4.78125 -6.75 4.171875 -7.109375 3.296875 -7.109375 C 1.625 -7.109375 0.46875 -5.5625 0.46875 -3.34375 C 0.46875 -2.171875 0.734375 -1.328125 1.328125 -0.640625 C 1.84375 -0.03125 2.515625 0.296875 3.21875 0.296875 C 4.046875 0.296875 4.640625 -0.0625 5.234375 -0.9375 L 5.234375 -0.578125 C 5.234375 1.265625 4.71875 1.953125 3.34375 1.953125 C 2.40625 1.953125 1.921875 1.578125 1.8125 0.796875 L 0.6875 0.796875 C 0.796875 2.078125 1.8125 2.875 3.3125 2.875 C 4.328125 2.875 5.171875 2.546875 5.625 2 C 6.15625 1.34375 6.34375 0.484375 6.34375 -1.140625 L 6.34375 -6.921875 Z M 3.40625 -6.09375 C 4.5625 -6.09375 5.234375 -5.125 5.234375 -3.359375 C 5.234375 -1.6875 4.5625 -0.71875 3.40625 -0.71875 C 2.265625 -0.71875 1.609375 -1.703125 1.609375 -3.40625 C 1.609375 -5.09375 2.265625 -6.09375 3.40625 -6.09375 Z M 3.40625 -6.09375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-25">
+<path d="M 6.21875 -4.59375 C 6.171875 -5.265625 6.015625 -5.703125 5.75 -6.09375 C 5.28125 -6.734375 4.453125 -7.109375 3.484375 -7.109375 C 1.609375 -7.109375 0.40625 -5.640625 0.40625 -3.34375 C 0.40625 -1.109375 1.59375 0.296875 3.46875 0.296875 C 5.125 0.296875 6.171875 -0.6875 6.296875 -2.375 L 5.1875 -2.375 C 5 -1.265625 4.4375 -0.71875 3.5 -0.71875 C 2.28125 -0.71875 1.5625 -1.703125 1.5625 -3.34375 C 1.5625 -5.0625 2.265625 -6.09375 3.46875 -6.09375 C 4.390625 -6.09375 4.984375 -5.5625 5.109375 -4.59375 Z M 6.21875 -4.59375 " />
+</g>
+<g id="svg_a450110fa9a223af96f7_glyph-3-26">
+<path d="M 1.234375 2.796875 C 2.546875 1.0625 3.375 -1.328125 3.375 -3.40625 C 3.375 -5.5 2.546875 -7.890625 1.234375 -9.625 L 0.5 -9.625 C 1.65625 -7.734375 2.3125 -5.515625 2.3125 -3.40625 C 2.3125 -1.3125 1.65625 0.921875 0.5 2.796875 Z M 1.234375 2.796875 " />
+</g>
+</g>
+<clipPath id="svg_a450110fa9a223af96f7_clip-0">
+<path clip-rule="nonzero" d="M 38.246094 254 L 498.519531 254 L 498.519531 256 L 38.246094 256 Z M 38.246094 254 " />
+</clipPath>
+<clipPath id="svg_a450110fa9a223af96f7_clip-1">
+<path clip-rule="nonzero" d="M 38.246094 135 L 498.519531 135 L 498.519531 137 L 38.246094 137 Z M 38.246094 135 " />
+</clipPath>
+<clipPath id="svg_a450110fa9a223af96f7_clip-2">
+<path clip-rule="nonzero" d="M 38.246094 313 L 498.519531 313 L 498.519531 315 L 38.246094 315 Z M 38.246094 313 " />
+</clipPath>
+<clipPath id="svg_a450110fa9a223af96f7_clip-3">
+<path clip-rule="nonzero" d="M 38.246094 194 L 498.519531 194 L 498.519531 196 L 38.246094 196 Z M 38.246094 194 " />
+</clipPath>
+<clipPath id="svg_a450110fa9a223af96f7_clip-4">
+<path clip-rule="nonzero" d="M 38.246094 75 L 498.519531 75 L 498.519531 77 L 38.246094 77 Z M 38.246094 75 " />
+</clipPath>
+<clipPath id="svg_a450110fa9a223af96f7_clip-5">
+<path clip-rule="nonzero" d="M 124 23.460938 L 126 23.460938 L 126 328.101562 L 124 328.101562 Z M 124 23.460938 " />
+</clipPath>
+<clipPath id="svg_a450110fa9a223af96f7_clip-6">
+<path clip-rule="nonzero" d="M 267 23.460938 L 269 23.460938 L 269 328.101562 L 267 328.101562 Z M 267 23.460938 " />
+</clipPath>
+<clipPath id="svg_a450110fa9a223af96f7_clip-7">
+<path clip-rule="nonzero" d="M 411 23.460938 L 413 23.460938 L 413 328.101562 L 411 328.101562 Z M 411 23.460938 " />
+</clipPath>
+</defs>
+<rect x="-50.4" y="-36" width="604.8" height="432" fill="rgb(100%, 100%, 100%)" fill-opacity="1" />
+<g clip-path="url(#svg_a450110fa9a223af96f7_clip-0)">
+<path fill="none" stroke-width="0.533489" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 254.78125 L 498.519531 254.78125 " />
+</g>
+<g clip-path="url(#svg_a450110fa9a223af96f7_clip-1)">
+<path fill="none" stroke-width="0.533489" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 135.835938 L 498.519531 135.835938 " />
+</g>
+<g clip-path="url(#svg_a450110fa9a223af96f7_clip-2)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 314.25 L 498.519531 314.25 " />
+</g>
+<g clip-path="url(#svg_a450110fa9a223af96f7_clip-3)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 195.308594 L 498.519531 195.308594 " />
+</g>
+<g clip-path="url(#svg_a450110fa9a223af96f7_clip-4)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 76.363281 L 498.519531 76.363281 " />
+</g>
+<g clip-path="url(#svg_a450110fa9a223af96f7_clip-5)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 124.546875 328.097656 L 124.546875 23.460938 " />
+</g>
+<g clip-path="url(#svg_a450110fa9a223af96f7_clip-6)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 268.382812 328.097656 L 268.382812 23.460938 " />
+</g>
+<g clip-path="url(#svg_a450110fa9a223af96f7_clip-7)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 412.21875 328.097656 L 412.21875 23.460938 " />
+</g>
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 126.503906 51.125 C 126.503906 53.734375 122.59375 53.734375 122.59375 51.125 C 122.59375 48.519531 126.503906 48.519531 126.503906 51.125 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 126.503906 81.808594 C 126.503906 84.414062 122.59375 84.414062 122.59375 81.808594 C 122.59375 79.203125 126.503906 79.203125 126.503906 81.808594 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 126.503906 95.53125 C 126.503906 98.140625 122.59375 98.140625 122.59375 95.53125 C 122.59375 92.925781 126.503906 92.925781 126.503906 95.53125 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 126.503906 52.085938 C 126.503906 54.691406 122.59375 54.691406 122.59375 52.085938 C 122.59375 49.480469 126.503906 49.480469 126.503906 52.085938 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 126.503906 70.050781 C 126.503906 72.65625 122.59375 72.65625 122.59375 70.050781 C 122.59375 67.445312 126.503906 67.445312 126.503906 70.050781 " />
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 124.546875 198.03125 L 124.546875 113.214844 " />
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 124.546875 257.5 L 124.546875 314.25 " />
+<path fill-rule="nonzero" fill="rgb(26.666667%, 0.392157%, 32.941176%)" fill-opacity="0.501961" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 70.609375 198.03125 L 70.609375 257.5 L 178.484375 257.5 L 178.484375 198.03125 Z M 70.609375 198.03125 " />
+<path fill="none" stroke-width="2.133957" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 70.609375 231.113281 L 178.484375 231.113281 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 80.113281 C 270.339844 82.71875 266.429688 82.71875 266.429688 80.113281 C 266.429688 77.507812 270.339844 77.507812 270.339844 80.113281 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 37.304688 C 270.339844 39.914062 266.429688 39.914062 266.429688 37.304688 C 266.429688 34.699219 270.339844 34.699219 270.339844 37.304688 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 74.339844 C 270.339844 76.945312 266.429688 76.945312 266.429688 74.339844 C 266.429688 71.734375 270.339844 71.734375 270.339844 74.339844 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 79.5625 C 270.339844 82.167969 266.429688 82.167969 266.429688 79.5625 C 266.429688 76.953125 270.339844 76.953125 270.339844 79.5625 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 54.734375 C 270.339844 57.34375 266.429688 57.34375 266.429688 54.734375 C 266.429688 52.128906 270.339844 52.128906 270.339844 54.734375 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 81.238281 C 270.339844 83.84375 266.429688 83.84375 266.429688 81.238281 C 266.429688 78.628906 270.339844 78.628906 270.339844 81.238281 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 53.394531 C 270.339844 56 266.429688 56 266.429688 53.394531 C 266.429688 50.789062 270.339844 50.789062 270.339844 53.394531 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 84.15625 C 270.339844 86.761719 266.429688 86.761719 266.429688 84.15625 C 266.429688 81.550781 270.339844 81.550781 270.339844 84.15625 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 75.34375 C 270.339844 77.949219 266.429688 77.949219 266.429688 75.34375 C 266.429688 72.734375 270.339844 72.734375 270.339844 75.34375 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 86.617188 C 270.339844 89.222656 266.429688 89.222656 266.429688 86.617188 C 266.429688 84.011719 270.339844 84.011719 270.339844 86.617188 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 38.78125 C 270.339844 41.390625 266.429688 41.390625 266.429688 38.78125 C 266.429688 36.175781 270.339844 36.175781 270.339844 38.78125 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 77.9375 C 270.339844 80.542969 266.429688 80.542969 266.429688 77.9375 C 266.429688 75.332031 270.339844 75.332031 270.339844 77.9375 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 270.339844 50.183594 C 270.339844 52.792969 266.429688 52.792969 266.429688 50.183594 C 266.429688 47.578125 270.339844 47.578125 270.339844 50.183594 " />
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 268.382812 190.386719 L 268.382812 90.542969 " />
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 268.382812 257.5 L 268.382812 314.25 " />
+<path fill-rule="nonzero" fill="rgb(12.941176%, 56.470588%, 54.901961%)" fill-opacity="0.501961" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 214.445312 190.386719 L 214.445312 257.5 L 322.320312 257.5 L 322.320312 190.386719 Z M 214.445312 190.386719 " />
+<path fill="none" stroke-width="2.133957" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 214.445312 221.695312 L 322.320312 221.695312 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 414.175781 81.238281 C 414.175781 83.84375 410.265625 83.84375 410.265625 81.238281 C 410.265625 78.628906 414.175781 78.628906 414.175781 81.238281 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 414.175781 88.542969 C 414.175781 91.148438 410.265625 91.148438 410.265625 88.542969 C 410.265625 85.933594 414.175781 85.933594 414.175781 88.542969 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 414.175781 69.597656 C 414.175781 72.203125 410.265625 72.203125 410.265625 69.597656 C 410.265625 66.988281 414.175781 66.988281 414.175781 69.597656 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 414.175781 64.425781 C 414.175781 67.03125 410.265625 67.03125 410.265625 64.425781 C 410.265625 61.820312 414.175781 61.820312 414.175781 64.425781 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 414.175781 74.339844 C 414.175781 76.945312 410.265625 76.945312 410.265625 74.339844 C 410.265625 71.734375 414.175781 71.734375 414.175781 74.339844 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 414.175781 73.355469 C 414.175781 75.960938 410.265625 75.960938 410.265625 73.355469 C 410.265625 70.75 414.175781 70.75 414.175781 73.355469 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 414.175781 77.9375 C 414.175781 80.542969 410.265625 80.542969 410.265625 77.9375 C 410.265625 75.332031 414.175781 75.332031 414.175781 77.9375 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 414.175781 75.34375 C 414.175781 77.949219 410.265625 77.949219 410.265625 75.34375 C 410.265625 72.734375 414.175781 72.734375 414.175781 75.34375 " />
+<path fill-rule="nonzero" fill="rgb(20%, 20%, 20%)" fill-opacity="0.501961" stroke-width="0.708661" stroke-linecap="round" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="0.501961" stroke-miterlimit="10" d="M 414.175781 88.542969 C 414.175781 91.148438 410.265625 91.148438 410.265625 88.542969 C 410.265625 85.933594 414.175781 85.933594 414.175781 88.542969 " />
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 412.21875 174.363281 L 412.21875 90.542969 " />
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 412.21875 231.113281 L 412.21875 314.25 " />
+<path fill-rule="nonzero" fill="rgb(99.215686%, 90.588235%, 14.509804%)" fill-opacity="0.501961" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 358.28125 174.363281 L 358.28125 231.113281 L 466.15625 231.113281 L 466.15625 174.363281 Z M 358.28125 174.363281 " />
+<path fill="none" stroke-width="2.133957" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(20%, 20%, 20%)" stroke-opacity="1" stroke-miterlimit="10" d="M 358.28125 213.734375 L 466.15625 213.734375 " />
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-0" x="28.421875" y="317.460938" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-0" x="23.53125" y="198.515625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-1" x="28.42405" y="198.515625" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-0" x="18.636719" y="79.574219" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-1" x="23.529519" y="79.574219" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-1" x="28.422319" y="79.574219" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-2" x="100.832031" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-3" x="103.278431" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-4" x="110.608831" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-5" x="116.478431" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-6" x="122.348031" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-7" x="128.701631" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-8" x="134.078431" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-9" x="138.971231" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-10" x="143.371231" y="339.445312" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-2" x="244.667969" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-3" x="247.114369" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-4" x="254.444769" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-5" x="260.314369" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-6" x="266.183969" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-7" x="272.537569" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-8" x="277.914369" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-9" x="282.807169" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-11" x="287.207169" y="339.445312" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-2" x="388.503906" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-3" x="390.950306" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-4" x="398.280706" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-5" x="404.150306" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-6" x="410.019906" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-7" x="416.373506" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-8" x="421.750306" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-9" x="426.643106" y="339.445312" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-0-12" x="431.043106" y="339.445312" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-0" x="228.347656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-1" x="231.405656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-2" x="240.568656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-3" x="247.905656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-4" x="255.242656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-5" x="263.184656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-6" x="269.905656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-7" x="272.963656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-8" x="278.463656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-9" x="284.579656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-10" x="288.242656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-11" x="293.742656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-12" x="296.184656" y="352.121094" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-1-13" x="302.300656" y="352.121094" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-0" x="13.5" y="218.265625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-1" x="13.5" y="209.102625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-2" x="13.5" y="202.986625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-3" x="13.5" y="199.928625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-2" x="13.5" y="193.812625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-4" x="13.5" y="190.754625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-5" x="13.5" y="188.312625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-6" x="13.5" y="182.196625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-7" x="13.5" y="176.080625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-8" x="13.5" y="170.580625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-9" x="13.5" y="167.522625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-10" x="13.5" y="163.859625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-5" x="13.5" y="161.417625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-11" x="13.5" y="155.301625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-12" x="13.5" y="149.185625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-13" x="13.5" y="143.069625" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-2-14" x="13.5" y="136.953625" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-0" x="38.246094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-1" x="47.776494" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-2" x="55.115694" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-3" x="66.111294" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-4" x="73.450494" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-5" x="80.789694" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-6" x="85.185294" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-7" x="88.854894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-8" x="96.194094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-6" x="99.863694" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-2" x="103.533294" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-1" x="114.528894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-9" x="121.868094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-10" x="125.537694" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-9" x="132.876894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-11" x="136.546494" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-7" x="139.476894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-12" x="146.816094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-13" x="154.155294" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-6" x="160.755294" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-14" x="164.424894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-4" x="171.764094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-5" x="179.103294" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-6" x="183.498894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-15" x="187.168494" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-16" x="190.838094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-17" x="201.833694" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-18" x="210.638094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-19" x="219.442494" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-20" x="228.972894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-6" x="237.038094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-21" x="240.707694" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-4" x="247.307694" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-5" x="254.646894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-13" x="259.042494" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-11" x="265.642494" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-7" x="268.572894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-12" x="275.912094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-6" x="283.251294" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-22" x="286.920894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-23" x="291.316494" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-7" x="294.246894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-24" x="301.586094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-6" x="308.925294" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-13" x="312.594894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-25" x="319.194894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-10" x="325.794894" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-23" x="333.134094" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-4" x="336.064494" y="15.101562" />
+<use xlink:href="#svg_a450110fa9a223af96f7_glyph-3-26" x="343.403694" y="15.101562" />
+</g>
+</svg></p>
+</figure>
 </div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize,
-gseaParam, : All values in the stats vector are greater than zero and scoreType
-is &quot;std&quot;, maybe you should switch to scoreType = &quot;pos&quot;.</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_m <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_sample_m, padj)</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pathway_scoring_sample_m <span class="sc">|&gt;</span> <span class="fu">select</span>(pathway, pval, padj), <span class="at">n=</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                                                     pathway         pval
-                                                      &lt;char&gt;        &lt;num&gt;
- 1:        GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS 1.949624e-07
- 2:                      GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT 1.257783e-06
- 3:                 GOBP_MITOTIC_CELL_CYCLE_PHASE_TRANSITION 3.404844e-06
- 4:           GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY 1.403093e-06
- 5:                 GOBP_REGULATION_OF_CELLULAR_LOCALIZATION 2.093417e-06
- 6:      GOBP_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION 3.014255e-06
- 7:   GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION 3.411694e-06
- 8:                                    GOBP_TUBE_DEVELOPMENT 3.009503e-06
- 9:                    GOBP_CELL_CYCLE_G1_S_PHASE_TRANSITION 1.168314e-05
-10:                          GOBP_BLOOD_VESSEL_MORPHOGENESIS 1.441036e-05
-11:                  GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS 1.638441e-05
-12:                                          GOBP_CELL_AGING 1.683047e-05
-13: GOBP_REGULATION_OF_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY 1.862581e-05
-14:                         GOBP_APOPTOTIC_SIGNALING_PATHWAY 2.142695e-05
-15:         GOBP_NEGATIVE_REGULATION_OF_CELL_DIFFERENTIATION 3.848488e-05
-            padj
-           &lt;num&gt;
- 1: 9.631143e-05
- 2: 2.106721e-04
- 3: 2.106721e-04
- 4: 2.106721e-04
- 5: 2.106721e-04
- 6: 2.106721e-04
- 7: 2.106721e-04
- 8: 2.106721e-04
- 9: 6.412748e-04
-10: 6.928545e-04
-11: 6.928545e-04
-12: 6.928545e-04
-13: 7.077807e-04
-14: 7.560653e-04
-15: 1.267435e-03</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_m <span class="sc">|&gt;</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(padj <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] 123</code></pre>
 </div>
 </div>
-<p>The comparison of the both counting versions, result in very similar outputs.</p>
-</section>
-</section>
-<section id="comparisons-of-counting-methods" class="level1">
-<h1>Comparisons of counting Methods</h1>
+<p>As shown in the plot, the overall number of mutations detected increases with higher IMPACT versions, reflecting that a greater number of studied genes corresponds to a higher number of detected mutations. The medians of detected mutations are the following:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>overlap <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  pathway_scoring_gene_m <span class="sc">|&gt;</span> <span class="fu">filter</span>(padj <span class="sc">&lt;</span><span class="fl">0.05</span>),</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  pathway_scoring_sample_m <span class="sc">|&gt;</span>  <span class="fu">filter</span>(padj <span class="sc">&lt;</span> <span class="fl">0.05</span>), <span class="at">by =</span> <span class="st">&#39;pathway&#39;</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pathway, pval.x, pval.y)</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>overlap</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> combined_data <span class="sc">|&gt;</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(IMPACT_version) <span class="sc">|&gt;</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mut_median =</span> <span class="fu">median</span>(n_mutation))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>results</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                                                                          pathway
-                                                                           &lt;char&gt;
-  1:                                          GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT
-  2:                            GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS
-  3:                       GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION
-  4:                                              GOBP_BLOOD_VESSEL_MORPHOGENESIS
-  5:                                        GOBP_CELL_CYCLE_G1_S_PHASE_TRANSITION
- ---                                                                             
-106:                                                GOBP_DEVELOPMENTAL_MATURATION
-107:                                    GOBP_ORGANOPHOSPHATE_BIOSYNTHETIC_PROCESS
-108:                                                   GOBP_RESPONSE_TO_METAL_ION
-109:                                        GOBP_SMALL_MOLECULE_METABOLIC_PROCESS
-110: GOBP_CELL_SURFACE_RECEPTOR_SIGNALING_PATHWAY_INVOLVED_IN_CELL_CELL_SIGNALING
-           pval.x       pval.y
-            &lt;num&gt;        &lt;num&gt;
-  1: 5.491737e-07 1.257783e-06
-  2: 2.837533e-06 1.949624e-07
-  3: 3.273150e-06 3.411694e-06
-  4: 9.954081e-06 1.441036e-05
-  5: 9.024741e-06 1.168314e-05
- ---                          
-106: 9.753704e-03 2.880518e-03
-107: 9.907303e-03 3.507560e-03
-108: 1.030462e-02 6.383554e-03
-109: 1.061101e-02 7.751362e-03
-110: 1.225427e-02 5.054781e-03</code></pre>
+<pre><code># A tibble: 3 × 2
+  IMPACT_version mut_median
+  &lt;chr&gt;               &lt;int&gt;
+1 IMPACT_v3               5
+2 IMPACT_v5               6
+3 IMPACT_v6               7</code></pre>
 </div>
 </div>
+</section>
+<section id="distribution-of-mutation-type-by-impact-version" class="level3">
+<h3 class="anchored" data-anchor-id="distribution-of-mutation-type-by-impact-version">Distribution of mutation type by IMPACT version</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> percentage_type,</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">mapping =</span> <span class="fu">aes</span>(<span class="at">x =</span> IMPACT_version,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">y =</span> percentage,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">fill =</span> Variant_Classification)) <span class="sc">+</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">alpha =</span> <span class="fl">0.8</span>) <span class="sc">+</span> </span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span> </span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.grid.major.x =</span> <span class="fu">element_blank</span>()) <span class="sc">+</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">&quot;viridis&quot;</span>,</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>                     <span class="at">discrete =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&quot;Distribution of mutation type by IMPACT version&quot;</span>,</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&quot;Percentage&quot;</span>,</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">&quot;IMPACT version&quot;</span>,</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>       <span class="at">fill =</span> <span class="st">&quot;Mutation type&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><svg id="svg_e07e7ede367b8cec7984" role="img" width="672" height="360" viewBox="0 0 504 360">
+<defs>
+<g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-0">
+<path d="M 2.421875 -6.359375 C 1.84375 -6.359375 1.3125 -6.09375 0.984375 -5.671875 C 0.578125 -5.109375 0.375 -4.25 0.375 -3.078125 C 0.375 -0.9375 1.078125 0.203125 2.421875 0.203125 C 3.734375 0.203125 4.453125 -0.9375 4.453125 -3.03125 C 4.453125 -4.25 4.265625 -5.078125 3.859375 -5.671875 C 3.53125 -6.109375 3.015625 -6.359375 2.421875 -6.359375 Z M 2.421875 -5.671875 C 3.25 -5.671875 3.671875 -4.828125 3.671875 -3.09375 C 3.671875 -1.28125 3.265625 -0.4375 2.40625 -0.4375 C 1.578125 -0.4375 1.171875 -1.3125 1.171875 -3.0625 C 1.171875 -4.828125 1.578125 -5.671875 2.421875 -5.671875 Z M 2.421875 -5.671875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-1">
+<path d="M 4.453125 -0.765625 L 1.171875 -0.765625 C 1.25 -1.296875 1.53125 -1.625 2.296875 -2.09375 L 3.171875 -2.59375 C 4.046875 -3.0625 4.5 -3.71875 4.5 -4.5 C 4.5 -5.03125 4.28125 -5.53125 3.921875 -5.875 C 3.546875 -6.203125 3.09375 -6.359375 2.5 -6.359375 C 1.703125 -6.359375 1.125 -6.078125 0.78125 -5.53125 C 0.546875 -5.203125 0.453125 -4.796875 0.4375 -4.15625 L 1.21875 -4.15625 C 1.234375 -4.59375 1.296875 -4.84375 1.40625 -5.0625 C 1.59375 -5.4375 2 -5.6875 2.46875 -5.6875 C 3.171875 -5.6875 3.703125 -5.171875 3.703125 -4.484375 C 3.703125 -3.96875 3.40625 -3.53125 2.859375 -3.21875 L 2.046875 -2.75 C 0.75 -2 0.375 -1.40625 0.296875 -0.015625 L 4.453125 -0.015625 Z M 4.453125 -0.765625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-2">
+<path d="M 4.1875 -6.234375 L 0.96875 -6.234375 L 0.5 -2.84375 L 1.21875 -2.84375 C 1.578125 -3.265625 1.875 -3.421875 2.359375 -3.421875 C 3.203125 -3.421875 3.71875 -2.84375 3.71875 -1.921875 C 3.71875 -1.03125 3.203125 -0.484375 2.359375 -0.484375 C 1.6875 -0.484375 1.265625 -0.828125 1.078125 -1.53125 L 0.3125 -1.53125 C 0.40625 -1.015625 0.5 -0.78125 0.6875 -0.546875 C 1.03125 -0.078125 1.671875 0.203125 2.375 0.203125 C 3.640625 0.203125 4.515625 -0.71875 4.515625 -2.03125 C 4.515625 -3.265625 3.6875 -4.109375 2.5 -4.109375 C 2.0625 -4.109375 1.703125 -4 1.34375 -3.734375 L 1.59375 -5.46875 L 4.1875 -5.46875 Z M 4.1875 -6.234375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-3">
+<path d="M 4.578125 -6.234375 L 0.40625 -6.234375 L 0.40625 -5.46875 L 3.78125 -5.46875 C 2.28125 -3.359375 1.6875 -2.046875 1.21875 0 L 2.046875 0 C 2.390625 -2 3.171875 -3.71875 4.578125 -5.59375 Z M 4.578125 -6.234375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-4">
+<path d="M 2.28125 -4.53125 L 2.28125 0 L 3.046875 0 L 3.046875 -6.359375 L 2.546875 -6.359375 C 2.265625 -5.390625 2.09375 -5.25 0.890625 -5.09375 L 0.890625 -4.53125 Z M 2.28125 -4.53125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-5">
+<path d="M 1.703125 -6.40625 L 0.875 -6.40625 L 0.875 0 L 1.703125 0 Z M 1.703125 -6.40625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-6">
+<path d="M 4.109375 0 L 5.921875 -5.375 L 5.921875 0 L 6.6875 0 L 6.6875 -6.40625 L 5.5625 -6.40625 L 3.6875 -0.828125 L 1.796875 -6.40625 L 0.65625 -6.40625 L 0.65625 0 L 1.4375 0 L 1.4375 -5.375 L 3.25 0 Z M 4.109375 0 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-7">
+<path d="M 1.625 -2.71875 L 3.640625 -2.71875 C 4.140625 -2.71875 4.53125 -2.875 4.875 -3.171875 C 5.265625 -3.53125 5.421875 -3.9375 5.421875 -4.53125 C 5.421875 -5.734375 4.71875 -6.40625 3.453125 -6.40625 L 0.796875 -6.40625 L 0.796875 0 L 1.625 0 Z M 1.625 -3.4375 L 1.625 -5.6875 L 3.328125 -5.6875 C 4.109375 -5.6875 4.578125 -5.265625 4.578125 -4.5625 C 4.578125 -3.859375 4.109375 -3.4375 3.328125 -3.4375 Z M 1.625 -3.4375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-8">
+<path d="M 4.171875 -1.921875 L 4.828125 0 L 5.75 0 L 3.5 -6.40625 L 2.4375 -6.40625 L 0.15625 0 L 1.015625 0 L 1.703125 -1.921875 Z M 3.9375 -2.609375 L 1.90625 -2.609375 L 2.953125 -5.53125 Z M 3.9375 -2.609375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-9">
+<path d="M 5.828125 -4.421875 C 5.5625 -5.828125 4.765625 -6.515625 3.359375 -6.515625 C 2.484375 -6.515625 1.796875 -6.25 1.3125 -5.71875 C 0.734375 -5.078125 0.421875 -4.171875 0.421875 -3.125 C 0.421875 -2.078125 0.75 -1.171875 1.34375 -0.546875 C 1.84375 -0.03125 2.484375 0.203125 3.3125 0.203125 C 4.875 0.203125 5.765625 -0.640625 5.953125 -2.34375 L 5.109375 -2.34375 C 5.046875 -1.90625 4.953125 -1.59375 4.828125 -1.34375 C 4.5625 -0.8125 4.015625 -0.515625 3.328125 -0.515625 C 2.046875 -0.515625 1.234375 -1.546875 1.234375 -3.140625 C 1.234375 -4.78125 2 -5.796875 3.25 -5.796875 C 3.78125 -5.796875 4.25 -5.640625 4.515625 -5.390625 C 4.765625 -5.171875 4.890625 -4.90625 4.984375 -4.421875 Z M 5.828125 -4.421875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-10">
+<path d="M 3.109375 -5.6875 L 5.21875 -5.6875 L 5.21875 -6.40625 L 0.1875 -6.40625 L 0.1875 -5.6875 L 2.296875 -5.6875 L 2.296875 0 L 3.109375 0 Z M 3.109375 -5.6875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-11">
+<path d="M 5.078125 1.109375 L -0.1875 1.109375 L -0.1875 1.546875 L 5.078125 1.546875 Z M 5.078125 1.109375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-12">
+<path d="M 2.5 0 L 4.28125 -4.609375 L 3.453125 -4.609375 L 2.140625 -0.875 L 0.921875 -4.609375 L 0.09375 -4.609375 L 1.703125 0 Z M 2.5 0 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-13">
+<path d="M 1.9375 -2.921875 L 2.359375 -2.921875 C 3.203125 -2.921875 3.65625 -2.53125 3.65625 -1.765625 C 3.65625 -0.96875 3.171875 -0.484375 2.375 -0.484375 C 1.515625 -0.484375 1.109375 -0.921875 1.0625 -1.84375 L 0.28125 -1.84375 C 0.3125 -1.34375 0.40625 -1 0.546875 -0.71875 C 0.875 -0.109375 1.484375 0.203125 2.34375 0.203125 C 3.625 0.203125 4.453125 -0.578125 4.453125 -1.78125 C 4.453125 -2.59375 4.140625 -3.03125 3.390625 -3.296875 C 3.96875 -3.53125 4.265625 -3.96875 4.265625 -4.609375 C 4.265625 -5.703125 3.546875 -6.359375 2.359375 -6.359375 C 1.109375 -6.359375 0.4375 -5.65625 0.40625 -4.3125 L 1.1875 -4.3125 C 1.203125 -4.703125 1.234375 -4.921875 1.328125 -5.109375 C 1.5 -5.46875 1.890625 -5.6875 2.375 -5.6875 C 3.0625 -5.6875 3.46875 -5.265625 3.46875 -4.578125 C 3.46875 -4.140625 3.3125 -3.859375 2.96875 -3.71875 C 2.765625 -3.625 2.484375 -3.59375 1.9375 -3.578125 Z M 1.9375 -2.921875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-14">
+<path d="M 4.375 -4.703125 C 4.234375 -5.75 3.5625 -6.359375 2.609375 -6.359375 C 1.921875 -6.359375 1.3125 -6.03125 0.9375 -5.453125 C 0.546875 -4.828125 0.375 -4.0625 0.375 -2.90625 C 0.375 -1.828125 0.53125 -1.15625 0.90625 -0.59375 C 1.234375 -0.078125 1.78125 0.203125 2.46875 0.203125 C 3.65625 0.203125 4.515625 -0.6875 4.515625 -1.921875 C 4.515625 -3.09375 3.71875 -3.921875 2.609375 -3.921875 C 1.984375 -3.921875 1.5 -3.6875 1.171875 -3.234375 C 1.171875 -4.796875 1.671875 -5.671875 2.5625 -5.671875 C 3.109375 -5.671875 3.484375 -5.328125 3.609375 -4.703125 Z M 2.5 -3.234375 C 3.25 -3.234375 3.71875 -2.703125 3.71875 -1.859375 C 3.71875 -1.0625 3.1875 -0.484375 2.484375 -0.484375 C 1.765625 -0.484375 1.21875 -1.09375 1.21875 -1.90625 C 1.21875 -2.6875 1.734375 -3.234375 2.5 -3.234375 Z M 2.5 -3.234375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-15">
+<path d="M 1.3125 -4.609375 L 0.59375 -4.609375 L 0.59375 0 L 1.3125 0 Z M 1.3125 -6.40625 L 0.578125 -6.40625 L 0.578125 -5.484375 L 1.3125 -5.484375 Z M 1.3125 -6.40625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-16">
+<path d="M 3.859375 -3.328125 C 3.84375 -4.234375 3.25 -4.734375 2.1875 -4.734375 C 1.109375 -4.734375 0.40625 -4.1875 0.40625 -3.328125 C 0.40625 -2.609375 0.78125 -2.265625 1.875 -2 L 2.5625 -1.84375 C 3.0625 -1.71875 3.265625 -1.53125 3.265625 -1.203125 C 3.265625 -0.765625 2.84375 -0.46875 2.203125 -0.46875 C 1.796875 -0.46875 1.46875 -0.59375 1.28125 -0.78125 C 1.171875 -0.921875 1.125 -1.046875 1.078125 -1.375 L 0.296875 -1.375 C 0.328125 -0.3125 0.9375 0.203125 2.140625 0.203125 C 3.296875 0.203125 4.03125 -0.375 4.03125 -1.265625 C 4.03125 -1.9375 3.65625 -2.328125 2.734375 -2.546875 L 2.03125 -2.703125 C 1.4375 -2.84375 1.171875 -3.046875 1.171875 -3.375 C 1.171875 -3.796875 1.5625 -4.0625 2.15625 -4.0625 C 2.75 -4.0625 3.0625 -3.8125 3.078125 -3.328125 Z M 3.859375 -3.328125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-17">
+<path d="M 4.515625 -2.0625 C 4.515625 -2.765625 4.453125 -3.1875 4.328125 -3.53125 C 4.03125 -4.28125 3.328125 -4.734375 2.46875 -4.734375 C 1.171875 -4.734375 0.359375 -3.765625 0.359375 -2.25 C 0.359375 -0.71875 1.140625 0.203125 2.453125 0.203125 C 3.5 0.203125 4.234375 -0.390625 4.421875 -1.40625 L 3.671875 -1.40625 C 3.46875 -0.796875 3.0625 -0.46875 2.46875 -0.46875 C 2 -0.46875 1.609375 -0.6875 1.359375 -1.078125 C 1.1875 -1.34375 1.125 -1.59375 1.125 -2.0625 Z M 1.140625 -2.65625 C 1.203125 -3.515625 1.71875 -4.0625 2.453125 -4.0625 C 3.203125 -4.0625 3.71875 -3.484375 3.71875 -2.65625 Z M 1.140625 -2.65625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-18">
+<path d="M 0.609375 -4.609375 L 0.609375 0 L 1.359375 0 L 1.359375 -2.546875 C 1.359375 -3.484375 1.84375 -4.09375 2.609375 -4.09375 C 3.1875 -4.09375 3.546875 -3.75 3.546875 -3.1875 L 3.546875 0 L 4.28125 0 L 4.28125 -3.484375 C 4.28125 -4.25 3.71875 -4.734375 2.828125 -4.734375 C 2.140625 -4.734375 1.703125 -4.484375 1.296875 -3.828125 L 1.296875 -4.609375 Z M 0.609375 -4.609375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-19">
+<path d="M 4.234375 0 L 4.234375 -4.609375 L 3.515625 -4.609375 L 3.515625 -2 C 3.515625 -1.0625 3.015625 -0.4375 2.25 -0.4375 C 1.671875 -0.4375 1.296875 -0.796875 1.296875 -1.34375 L 1.296875 -4.609375 L 0.578125 -4.609375 L 0.578125 -1.0625 C 0.578125 -0.296875 1.140625 0.203125 2.046875 0.203125 C 2.71875 0.203125 3.15625 -0.03125 3.578125 -0.640625 L 3.578125 0 Z M 4.234375 0 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-20">
+<path d="M 2.234375 -4.609375 L 1.484375 -4.609375 L 1.484375 -5.875 L 0.75 -5.875 L 0.75 -4.609375 L 0.125 -4.609375 L 0.125 -4.015625 L 0.75 -4.015625 L 0.75 -0.53125 C 0.75 -0.046875 1.0625 0.203125 1.640625 0.203125 C 1.828125 0.203125 1.984375 0.1875 2.234375 0.140625 L 2.234375 -0.46875 C 2.125 -0.453125 2.03125 -0.4375 1.875 -0.4375 C 1.5625 -0.4375 1.484375 -0.53125 1.484375 -0.859375 L 1.484375 -4.015625 L 2.234375 -4.015625 Z M 2.234375 -4.609375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-21">
+<path d="M 4.703125 -0.4375 C 4.625 -0.40625 4.59375 -0.40625 4.546875 -0.40625 C 4.296875 -0.40625 4.15625 -0.546875 4.15625 -0.78125 L 4.15625 -3.484375 C 4.15625 -4.296875 3.546875 -4.734375 2.421875 -4.734375 C 1.734375 -4.734375 1.203125 -4.546875 0.890625 -4.203125 C 0.671875 -3.96875 0.59375 -3.703125 0.578125 -3.25 L 1.3125 -3.25 C 1.375 -3.8125 1.703125 -4.0625 2.390625 -4.0625 C 3.0625 -4.0625 3.421875 -3.8125 3.421875 -3.375 L 3.421875 -3.1875 C 3.40625 -2.875 3.25 -2.75 2.65625 -2.671875 C 1.625 -2.546875 1.453125 -2.5 1.171875 -2.390625 C 0.640625 -2.15625 0.375 -1.765625 0.375 -1.15625 C 0.375 -0.328125 0.953125 0.203125 1.875 0.203125 C 2.46875 0.203125 2.921875 0 3.453125 -0.46875 C 3.5 0 3.734375 0.203125 4.203125 0.203125 C 4.359375 0.203125 4.453125 0.1875 4.703125 0.125 Z M 3.421875 -1.453125 C 3.421875 -1.203125 3.359375 -1.0625 3.125 -0.859375 C 2.828125 -0.578125 2.46875 -0.4375 2.046875 -0.4375 C 1.46875 -0.4375 1.140625 -0.71875 1.140625 -1.171875 C 1.140625 -1.65625 1.453125 -1.90625 2.25 -2.015625 C 3.03125 -2.125 3.171875 -2.15625 3.421875 -2.28125 Z M 3.421875 -1.453125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-22">
+<path d="M 2.390625 -4.734375 C 1.09375 -4.734375 0.3125 -3.8125 0.3125 -2.265625 C 0.3125 -0.71875 1.09375 0.203125 2.40625 0.203125 C 3.703125 0.203125 4.484375 -0.71875 4.484375 -2.234375 C 4.484375 -3.828125 3.734375 -4.734375 2.390625 -4.734375 Z M 2.40625 -4.0625 C 3.234375 -4.0625 3.71875 -3.390625 3.71875 -2.25 C 3.71875 -1.15625 3.203125 -0.46875 2.40625 -0.46875 C 1.578125 -0.46875 1.078125 -1.15625 1.078125 -2.265625 C 1.078125 -3.390625 1.578125 -4.0625 2.40625 -4.0625 Z M 2.40625 -4.0625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-23">
+<path d="M 5.6875 -6.40625 L 4.90625 -6.40625 L 4.90625 -1.171875 L 1.5625 -6.40625 L 0.671875 -6.40625 L 0.671875 0 L 1.4375 0 L 1.4375 -5.203125 L 4.765625 0 L 5.6875 0 Z M 5.6875 -6.40625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-24">
+<path d="M 1.609375 -2.921875 L 4.671875 -2.921875 L 4.671875 -3.640625 L 1.609375 -3.640625 L 1.609375 -5.6875 L 5.09375 -5.6875 L 5.09375 -6.40625 L 0.796875 -6.40625 L 0.796875 0 L 1.609375 0 Z M 1.609375 -2.921875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-25">
+<path d="M 0.609375 -4.609375 L 0.609375 0 L 1.34375 0 L 1.34375 -2.390625 C 1.359375 -3.5 1.8125 -4 2.828125 -3.96875 L 2.828125 -4.71875 C 2.703125 -4.734375 2.625 -4.734375 2.546875 -4.734375 C 2.0625 -4.734375 1.703125 -4.453125 1.28125 -3.78125 L 1.28125 -4.609375 Z M 0.609375 -4.609375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-26">
+<path d="M 0.609375 -4.609375 L 0.609375 0 L 1.359375 0 L 1.359375 -2.890625 C 1.359375 -3.5625 1.84375 -4.09375 2.4375 -4.09375 C 2.984375 -4.09375 3.296875 -3.765625 3.296875 -3.171875 L 3.296875 0 L 4.03125 0 L 4.03125 -2.890625 C 4.03125 -3.5625 4.515625 -4.09375 5.109375 -4.09375 C 5.640625 -4.09375 5.96875 -3.75 5.96875 -3.171875 L 5.96875 0 L 6.703125 0 L 6.703125 -3.453125 C 6.703125 -4.28125 6.234375 -4.734375 5.359375 -4.734375 C 4.75 -4.734375 4.375 -4.5625 3.953125 -4.03125 C 3.671875 -4.53125 3.3125 -4.734375 2.703125 -4.734375 C 2.09375 -4.734375 1.6875 -4.515625 1.296875 -3.953125 L 1.296875 -4.609375 Z M 0.609375 -4.609375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-27">
+<path d="M 5.25 -4.53125 C 5.25 -4.96875 5.21875 -5.09375 5.078125 -5.390625 C 4.71875 -6.125 3.96875 -6.515625 2.890625 -6.515625 C 1.484375 -6.515625 0.609375 -5.796875 0.609375 -4.640625 C 0.609375 -3.859375 1.03125 -3.359375 1.875 -3.140625 L 3.46875 -2.71875 C 4.28125 -2.5 4.640625 -2.1875 4.640625 -1.6875 C 4.640625 -1.34375 4.453125 -0.984375 4.1875 -0.796875 C 3.9375 -0.609375 3.53125 -0.515625 3.015625 -0.515625 C 2.3125 -0.515625 1.84375 -0.6875 1.53125 -1.0625 C 1.296875 -1.34375 1.1875 -1.640625 1.203125 -2.046875 L 0.421875 -2.046875 C 0.4375 -1.453125 0.546875 -1.0625 0.796875 -0.71875 C 1.234375 -0.109375 1.984375 0.203125 2.953125 0.203125 C 3.71875 0.203125 4.34375 0.03125 4.765625 -0.296875 C 5.1875 -0.640625 5.46875 -1.203125 5.46875 -1.765625 C 5.46875 -2.546875 4.96875 -3.125 4.09375 -3.375 L 2.484375 -3.796875 C 1.71875 -4.015625 1.4375 -4.25 1.4375 -4.75 C 1.4375 -5.40625 2 -5.828125 2.875 -5.828125 C 3.890625 -5.828125 4.453125 -5.375 4.46875 -4.53125 Z M 5.25 -4.53125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-28">
+<path d="M 0.609375 -6.40625 L 0.609375 0 L 1.34375 0 L 1.34375 -2.546875 C 1.34375 -3.484375 1.84375 -4.09375 2.59375 -4.09375 C 2.84375 -4.09375 3.0625 -4.03125 3.25 -3.890625 C 3.453125 -3.734375 3.546875 -3.515625 3.546875 -3.1875 L 3.546875 0 L 4.28125 0 L 4.28125 -3.484375 C 4.28125 -4.25 3.71875 -4.734375 2.828125 -4.734375 C 2.171875 -4.734375 1.78125 -4.546875 1.34375 -3.96875 L 1.34375 -6.40625 Z M 0.609375 -6.40625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-29">
+<path d="M 2.265625 -4.609375 L 1.5 -4.609375 L 1.5 -5.328125 C 1.5 -5.640625 1.671875 -5.796875 2.015625 -5.796875 C 2.078125 -5.796875 2.109375 -5.796875 2.265625 -5.78125 L 2.265625 -6.390625 C 2.109375 -6.4375 2 -6.4375 1.859375 -6.4375 C 1.171875 -6.4375 0.78125 -6.046875 0.78125 -5.390625 L 0.78125 -4.609375 L 0.15625 -4.609375 L 0.15625 -4.015625 L 0.78125 -4.015625 L 0.78125 0 L 1.5 0 L 1.5 -4.015625 L 2.265625 -4.015625 Z M 2.265625 -4.609375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-30">
+<path d="M 0.46875 1.921875 L 1.21875 1.921875 L 1.21875 -0.484375 C 1.59375 -0.015625 2.03125 0.203125 2.625 0.203125 C 3.828125 0.203125 4.59375 -0.75 4.59375 -2.21875 C 4.59375 -3.78125 3.84375 -4.734375 2.625 -4.734375 C 2 -4.734375 1.5 -4.453125 1.15625 -3.921875 L 1.15625 -4.609375 L 0.46875 -4.609375 Z M 2.5 -4.0625 C 3.3125 -4.0625 3.828125 -3.34375 3.828125 -2.25 C 3.828125 -1.203125 3.296875 -0.484375 2.5 -0.484375 C 1.71875 -0.484375 1.21875 -1.1875 1.21875 -2.265625 C 1.21875 -3.359375 1.71875 -4.0625 2.5 -4.0625 Z M 2.5 -4.0625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-31">
+<path d="M 1.34375 -6.40625 L 0.59375 -6.40625 L 0.59375 0 L 1.34375 0 Z M 1.34375 -6.40625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-32">
+<path d="M 4.140625 -3.0625 C 4.109375 -3.515625 4.015625 -3.796875 3.828125 -4.0625 C 3.515625 -4.484375 2.96875 -4.734375 2.328125 -4.734375 C 1.078125 -4.734375 0.265625 -3.75 0.265625 -2.21875 C 0.265625 -0.734375 1.0625 0.203125 2.3125 0.203125 C 3.40625 0.203125 4.109375 -0.453125 4.203125 -1.578125 L 3.453125 -1.578125 C 3.328125 -0.84375 2.953125 -0.46875 2.328125 -0.46875 C 1.515625 -0.46875 1.03125 -1.140625 1.03125 -2.21875 C 1.03125 -3.375 1.515625 -4.0625 2.3125 -4.0625 C 2.921875 -4.0625 3.3125 -3.703125 3.40625 -3.0625 Z M 4.140625 -3.0625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-0-33">
+<path d="M 3.421875 -6.515625 C 1.578125 -6.515625 0.328125 -5.15625 0.328125 -3.15625 C 0.328125 -1.140625 1.578125 0.203125 3.4375 0.203125 C 4.21875 0.203125 4.90625 -0.03125 5.421875 -0.46875 C 6.109375 -1.0625 6.53125 -2.0625 6.53125 -3.109375 C 6.53125 -5.171875 5.296875 -6.515625 3.421875 -6.515625 Z M 3.421875 -5.796875 C 4.8125 -5.796875 5.703125 -4.75 5.703125 -3.125 C 5.703125 -1.578125 4.78125 -0.515625 3.4375 -0.515625 C 2.0625 -0.515625 1.15625 -1.578125 1.15625 -3.15625 C 1.15625 -4.734375 2.0625 -5.796875 3.421875 -5.796875 Z M 3.421875 -5.796875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-0">
+<path d="M 2.140625 -8.015625 L 1.09375 -8.015625 L 1.09375 0 L 2.140625 0 Z M 2.140625 -8.015625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-1">
+<path d="M 5.140625 0 L 7.40625 -6.71875 L 7.40625 0 L 8.375 0 L 8.375 -8.015625 L 6.953125 -8.015625 L 4.625 -1.03125 L 2.25 -8.015625 L 0.828125 -8.015625 L 0.828125 0 L 1.796875 0 L 1.796875 -6.71875 L 4.0625 0 Z M 5.140625 0 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-2">
+<path d="M 2.03125 -3.40625 L 4.546875 -3.40625 C 5.171875 -3.40625 5.671875 -3.59375 6.09375 -3.96875 C 6.578125 -4.40625 6.78125 -4.921875 6.78125 -5.671875 C 6.78125 -7.171875 5.890625 -8.015625 4.3125 -8.015625 L 1 -8.015625 L 1 0 L 2.03125 0 Z M 2.03125 -4.296875 L 2.03125 -7.109375 L 4.15625 -7.109375 C 5.140625 -7.109375 5.71875 -6.59375 5.71875 -5.703125 C 5.71875 -4.828125 5.140625 -4.296875 4.15625 -4.296875 Z M 2.03125 -4.296875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-3">
+<path d="M 5.21875 -2.40625 L 6.03125 0 L 7.1875 0 L 4.359375 -8.015625 L 3.046875 -8.015625 L 0.1875 0 L 1.28125 0 L 2.125 -2.40625 Z M 4.921875 -3.265625 L 2.375 -3.265625 L 3.703125 -6.921875 Z M 4.921875 -3.265625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-4">
+<path d="M 7.28125 -5.53125 C 6.96875 -7.296875 5.953125 -8.15625 4.1875 -8.15625 C 3.109375 -8.15625 2.25 -7.8125 1.65625 -7.15625 C 0.921875 -6.359375 0.53125 -5.21875 0.53125 -3.921875 C 0.53125 -2.59375 0.9375 -1.46875 1.6875 -0.6875 C 2.3125 -0.046875 3.109375 0.25 4.140625 0.25 C 6.109375 0.25 7.203125 -0.796875 7.453125 -2.921875 L 6.390625 -2.921875 C 6.296875 -2.375 6.1875 -2 6.03125 -1.6875 C 5.703125 -1.015625 5.015625 -0.65625 4.15625 -0.65625 C 2.5625 -0.65625 1.546875 -1.921875 1.546875 -3.921875 C 1.546875 -5.984375 2.515625 -7.25 4.0625 -7.25 C 4.71875 -7.25 5.328125 -7.0625 5.65625 -6.75 C 5.953125 -6.46875 6.109375 -6.140625 6.234375 -5.53125 Z M 7.28125 -5.53125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-5">
+<path d="M 3.890625 -7.109375 L 6.515625 -7.109375 L 6.515625 -8.015625 L 0.234375 -8.015625 L 0.234375 -7.109375 L 2.875 -7.109375 L 2.875 0 L 3.890625 0 Z M 3.890625 -7.109375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-6">
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-7">
+<path d="M 3.140625 0 L 5.34375 -5.765625 L 4.3125 -5.765625 L 2.6875 -1.09375 L 1.140625 -5.765625 L 0.109375 -5.765625 L 2.140625 0 Z M 3.140625 0 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-8">
+<path d="M 5.640625 -2.578125 C 5.640625 -3.453125 5.578125 -3.984375 5.40625 -4.40625 C 5.03125 -5.359375 4.15625 -5.921875 3.078125 -5.921875 C 1.46875 -5.921875 0.4375 -4.703125 0.4375 -2.8125 C 0.4375 -0.90625 1.4375 0.25 3.0625 0.25 C 4.375 0.25 5.296875 -0.5 5.515625 -1.75 L 4.59375 -1.75 C 4.34375 -0.984375 3.828125 -0.59375 3.09375 -0.59375 C 2.515625 -0.59375 2.015625 -0.859375 1.703125 -1.34375 C 1.484375 -1.671875 1.40625 -2 1.390625 -2.578125 Z M 1.421875 -3.328125 C 1.5 -4.390625 2.140625 -5.078125 3.0625 -5.078125 C 4 -5.078125 4.65625 -4.359375 4.65625 -3.328125 Z M 1.421875 -3.328125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-9">
+<path d="M 0.765625 -5.765625 L 0.765625 0 L 1.6875 0 L 1.6875 -2.984375 C 1.6875 -4.375 2.265625 -5 3.53125 -4.96875 L 3.53125 -5.890625 C 3.375 -5.921875 3.28125 -5.921875 3.171875 -5.921875 C 2.578125 -5.921875 2.140625 -5.578125 1.609375 -4.71875 L 1.609375 -5.765625 Z M 0.765625 -5.765625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-10">
+<path d="M 4.8125 -4.15625 C 4.8125 -5.296875 4.0625 -5.921875 2.734375 -5.921875 C 1.390625 -5.921875 0.515625 -5.234375 0.515625 -4.171875 C 0.515625 -3.265625 0.984375 -2.84375 2.34375 -2.515625 L 3.203125 -2.296875 C 3.84375 -2.140625 4.09375 -1.90625 4.09375 -1.5 C 4.09375 -0.953125 3.546875 -0.59375 2.75 -0.59375 C 2.25 -0.59375 1.84375 -0.734375 1.609375 -0.984375 C 1.46875 -1.140625 1.390625 -1.3125 1.34375 -1.71875 L 0.375 -1.71875 C 0.421875 -0.390625 1.171875 0.25 2.671875 0.25 C 4.125 0.25 5.046875 -0.46875 5.046875 -1.578125 C 5.046875 -2.4375 4.5625 -2.90625 3.421875 -3.171875 L 2.546875 -3.390625 C 1.796875 -3.5625 1.46875 -3.8125 1.46875 -4.21875 C 1.46875 -4.75 1.953125 -5.078125 2.6875 -5.078125 C 3.4375 -5.078125 3.828125 -4.765625 3.84375 -4.15625 Z M 4.8125 -4.15625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-11">
+<path d="M 1.65625 -5.765625 L 0.734375 -5.765625 L 0.734375 0 L 1.65625 0 Z M 1.65625 -8.015625 L 0.71875 -8.015625 L 0.71875 -6.859375 L 1.65625 -6.859375 Z M 1.65625 -8.015625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-12">
+<path d="M 2.984375 -5.921875 C 1.359375 -5.921875 0.390625 -4.78125 0.390625 -2.84375 C 0.390625 -0.890625 1.359375 0.25 3 0.25 C 4.625 0.25 5.609375 -0.90625 5.609375 -2.796875 C 5.609375 -4.796875 4.65625 -5.921875 2.984375 -5.921875 Z M 3 -5.078125 C 4.03125 -5.078125 4.65625 -4.234375 4.65625 -2.8125 C 4.65625 -1.4375 4.015625 -0.59375 3 -0.59375 C 1.984375 -0.59375 1.359375 -1.4375 1.359375 -2.84375 C 1.359375 -4.234375 1.984375 -5.078125 3 -5.078125 Z M 3 -5.078125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-13">
+<path d="M 0.765625 -5.765625 L 0.765625 0 L 1.6875 0 L 1.6875 -3.171875 C 1.6875 -4.359375 2.3125 -5.125 3.25 -5.125 C 3.984375 -5.125 4.4375 -4.6875 4.4375 -4 L 4.4375 0 L 5.359375 0 L 5.359375 -4.359375 C 5.359375 -5.3125 4.640625 -5.921875 3.53125 -5.921875 C 2.671875 -5.921875 2.125 -5.59375 1.609375 -4.796875 L 1.609375 -5.765625 Z M 0.765625 -5.765625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-14">
+<path d="M 5.296875 0 L 5.296875 -5.765625 L 4.390625 -5.765625 L 4.390625 -2.5 C 4.390625 -1.3125 3.765625 -0.546875 2.8125 -0.546875 C 2.09375 -0.546875 1.625 -0.984375 1.625 -1.6875 L 1.625 -5.765625 L 0.71875 -5.765625 L 0.71875 -1.3125 C 0.71875 -0.359375 1.4375 0.25 2.546875 0.25 C 3.40625 0.25 3.9375 -0.046875 4.484375 -0.796875 L 4.484375 0 Z M 5.296875 0 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-15">
+<path d="M 2.796875 -5.765625 L 1.84375 -5.765625 L 1.84375 -7.34375 L 0.9375 -7.34375 L 0.9375 -5.765625 L 0.15625 -5.765625 L 0.15625 -5.015625 L 0.9375 -5.015625 L 0.9375 -0.65625 C 0.9375 -0.0625 1.328125 0.25 2.046875 0.25 C 2.28125 0.25 2.484375 0.234375 2.796875 0.171875 L 2.796875 -0.59375 C 2.65625 -0.5625 2.546875 -0.546875 2.359375 -0.546875 C 1.953125 -0.546875 1.84375 -0.65625 1.84375 -1.0625 L 1.84375 -5.015625 L 2.796875 -5.015625 Z M 2.796875 -5.765625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-16">
+<path d="M 5.890625 -0.53125 C 5.78125 -0.515625 5.734375 -0.515625 5.6875 -0.515625 C 5.375 -0.515625 5.1875 -0.6875 5.1875 -0.96875 L 5.1875 -4.359375 C 5.1875 -5.375 4.4375 -5.921875 3.03125 -5.921875 C 2.171875 -5.921875 1.5 -5.6875 1.109375 -5.265625 C 0.84375 -4.96875 0.734375 -4.625 0.71875 -4.0625 L 1.640625 -4.0625 C 1.71875 -4.765625 2.140625 -5.078125 2.984375 -5.078125 C 3.828125 -5.078125 4.28125 -4.78125 4.28125 -4.21875 L 4.28125 -3.984375 C 4.265625 -3.59375 4.0625 -3.4375 3.328125 -3.34375 C 2.03125 -3.171875 1.828125 -3.140625 1.46875 -2.984375 C 0.796875 -2.703125 0.46875 -2.203125 0.46875 -1.453125 C 0.46875 -0.40625 1.1875 0.25 2.359375 0.25 C 3.078125 0.25 3.65625 0 4.3125 -0.59375 C 4.375 0 4.65625 0.25 5.265625 0.25 C 5.453125 0.25 5.578125 0.234375 5.890625 0.15625 Z M 4.28125 -1.8125 C 4.28125 -1.5 4.1875 -1.3125 3.921875 -1.0625 C 3.546875 -0.71875 3.09375 -0.546875 2.546875 -0.546875 C 1.84375 -0.546875 1.421875 -0.890625 1.421875 -1.46875 C 1.421875 -2.078125 1.8125 -2.390625 2.8125 -2.53125 C 3.78125 -2.65625 3.96875 -2.703125 4.28125 -2.84375 Z M 4.28125 -1.8125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-17">
+<path d="M 4.265625 -5.765625 L 2.671875 -1.28125 L 1.203125 -5.765625 L 0.21875 -5.765625 L 2.171875 0.015625 L 1.8125 0.9375 C 1.65625 1.34375 1.46875 1.5 1.078125 1.5 C 0.921875 1.5 0.796875 1.46875 0.59375 1.4375 L 0.59375 2.25 C 0.78125 2.359375 0.96875 2.390625 1.203125 2.390625 C 1.5 2.390625 1.828125 2.296875 2.0625 2.125 C 2.359375 1.90625 2.515625 1.671875 2.6875 1.203125 L 5.265625 -5.765625 Z M 4.265625 -5.765625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-1-18">
+<path d="M 0.59375 2.390625 L 1.515625 2.390625 L 1.515625 -0.609375 C 2 -0.015625 2.546875 0.25 3.28125 0.25 C 4.78125 0.25 5.75 -0.953125 5.75 -2.78125 C 5.75 -4.71875 4.8125 -5.921875 3.28125 -5.921875 C 2.5 -5.921875 1.875 -5.578125 1.4375 -4.890625 L 1.4375 -5.765625 L 0.59375 -5.765625 Z M 3.125 -5.078125 C 4.140625 -5.078125 4.796875 -4.1875 4.796875 -2.8125 C 4.796875 -1.5 4.125 -0.609375 3.125 -0.609375 C 2.140625 -0.609375 1.515625 -1.484375 1.515625 -2.84375 C 1.515625 -4.1875 2.140625 -5.078125 3.125 -5.078125 Z M 3.125 -5.078125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-2-0">
+<path d="M -3.40625 -2.03125 L -3.40625 -4.546875 C -3.40625 -5.171875 -3.59375 -5.671875 -3.96875 -6.09375 C -4.40625 -6.578125 -4.921875 -6.78125 -5.671875 -6.78125 C -7.171875 -6.78125 -8.015625 -5.890625 -8.015625 -4.3125 L -8.015625 -1 L 0 -1 L 0 -2.03125 Z M -4.296875 -2.03125 L -7.109375 -2.03125 L -7.109375 -4.15625 C -7.109375 -5.140625 -6.59375 -5.71875 -5.703125 -5.71875 C -4.828125 -5.71875 -4.296875 -5.140625 -4.296875 -4.15625 Z M -4.296875 -2.03125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-2-1">
+<path d="M -2.578125 -5.640625 C -3.453125 -5.640625 -3.984375 -5.578125 -4.40625 -5.40625 C -5.359375 -5.03125 -5.921875 -4.15625 -5.921875 -3.078125 C -5.921875 -1.46875 -4.703125 -0.4375 -2.8125 -0.4375 C -0.90625 -0.4375 0.25 -1.4375 0.25 -3.0625 C 0.25 -4.375 -0.5 -5.296875 -1.75 -5.515625 L -1.75 -4.59375 C -0.984375 -4.34375 -0.59375 -3.828125 -0.59375 -3.09375 C -0.59375 -2.515625 -0.859375 -2.015625 -1.34375 -1.703125 C -1.671875 -1.484375 -2 -1.40625 -2.578125 -1.390625 Z M -3.328125 -1.421875 C -4.390625 -1.5 -5.078125 -2.140625 -5.078125 -3.0625 C -5.078125 -4 -4.359375 -4.65625 -3.328125 -4.65625 Z M -3.328125 -1.421875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-2-2">
+<path d="M -5.765625 -0.765625 L 0 -0.765625 L 0 -1.6875 L -2.984375 -1.6875 C -4.375 -1.6875 -5 -2.265625 -4.96875 -3.53125 L -5.890625 -3.53125 C -5.921875 -3.375 -5.921875 -3.28125 -5.921875 -3.171875 C -5.921875 -2.578125 -5.578125 -2.140625 -4.71875 -1.609375 L -5.765625 -1.609375 Z M -5.765625 -0.765625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-2-3">
+<path d="M -3.828125 -5.1875 C -4.390625 -5.140625 -4.75 -5.015625 -5.078125 -4.796875 C -5.609375 -4.40625 -5.921875 -3.703125 -5.921875 -2.90625 C -5.921875 -1.34375 -4.703125 -0.34375 -2.78125 -0.34375 C -0.921875 -0.34375 0.25 -1.328125 0.25 -2.890625 C 0.25 -4.265625 -0.578125 -5.140625 -1.984375 -5.25 L -1.984375 -4.328125 C -1.0625 -4.171875 -0.59375 -3.703125 -0.59375 -2.921875 C -0.59375 -1.90625 -1.421875 -1.296875 -2.78125 -1.296875 C -4.21875 -1.296875 -5.078125 -1.890625 -5.078125 -2.890625 C -5.078125 -3.65625 -4.625 -4.140625 -3.828125 -4.25 Z M -3.828125 -5.1875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-2-4">
+<path d="M -5.765625 -0.765625 L 0 -0.765625 L 0 -1.6875 L -3.171875 -1.6875 C -4.359375 -1.6875 -5.125 -2.3125 -5.125 -3.25 C -5.125 -3.984375 -4.6875 -4.4375 -4 -4.4375 L 0 -4.4375 L 0 -5.359375 L -4.359375 -5.359375 C -5.3125 -5.359375 -5.921875 -4.640625 -5.921875 -3.53125 C -5.921875 -2.671875 -5.59375 -2.125 -4.796875 -1.609375 L -5.765625 -1.609375 Z M -5.765625 -0.765625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-2-5">
+<path d="M -5.765625 -2.796875 L -5.765625 -1.84375 L -7.34375 -1.84375 L -7.34375 -0.9375 L -5.765625 -0.9375 L -5.765625 -0.15625 L -5.015625 -0.15625 L -5.015625 -0.9375 L -0.65625 -0.9375 C -0.0625 -0.9375 0.25 -1.328125 0.25 -2.046875 C 0.25 -2.28125 0.234375 -2.484375 0.171875 -2.796875 L -0.59375 -2.796875 C -0.5625 -2.65625 -0.546875 -2.546875 -0.546875 -2.359375 C -0.546875 -1.953125 -0.65625 -1.84375 -1.0625 -1.84375 L -5.015625 -1.84375 L -5.015625 -2.796875 Z M -5.765625 -2.796875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-2-6">
+<path d="M -0.53125 -5.890625 C -0.515625 -5.78125 -0.515625 -5.734375 -0.515625 -5.6875 C -0.515625 -5.375 -0.6875 -5.1875 -0.96875 -5.1875 L -4.359375 -5.1875 C -5.375 -5.1875 -5.921875 -4.4375 -5.921875 -3.03125 C -5.921875 -2.171875 -5.6875 -1.5 -5.265625 -1.109375 C -4.96875 -0.84375 -4.625 -0.734375 -4.0625 -0.71875 L -4.0625 -1.640625 C -4.765625 -1.71875 -5.078125 -2.140625 -5.078125 -2.984375 C -5.078125 -3.828125 -4.78125 -4.28125 -4.21875 -4.28125 L -3.984375 -4.28125 C -3.59375 -4.265625 -3.4375 -4.0625 -3.34375 -3.328125 C -3.171875 -2.03125 -3.140625 -1.828125 -2.984375 -1.46875 C -2.703125 -0.796875 -2.203125 -0.46875 -1.453125 -0.46875 C -0.40625 -0.46875 0.25 -1.1875 0.25 -2.359375 C 0.25 -3.078125 0 -3.65625 -0.59375 -4.3125 C 0 -4.375 0.25 -4.65625 0.25 -5.265625 C 0.25 -5.453125 0.234375 -5.578125 0.15625 -5.890625 Z M -1.8125 -4.28125 C -1.5 -4.28125 -1.3125 -4.1875 -1.0625 -3.921875 C -0.71875 -3.546875 -0.546875 -3.09375 -0.546875 -2.546875 C -0.546875 -1.84375 -0.890625 -1.421875 -1.46875 -1.421875 C -2.078125 -1.421875 -2.390625 -1.8125 -2.53125 -2.8125 C -2.65625 -3.78125 -2.703125 -3.96875 -2.84375 -4.28125 Z M -1.8125 -4.28125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-2-7">
+<path d="M -5.765625 -4.4375 L -4.921875 -4.4375 C -5.625 -3.984375 -5.921875 -3.46875 -5.921875 -2.75 C -5.921875 -1.359375 -4.625 -0.390625 -2.78125 -0.390625 C -1.8125 -0.390625 -1.109375 -0.609375 -0.53125 -1.109375 C -0.015625 -1.546875 0.25 -2.09375 0.25 -2.6875 C 0.25 -3.375 -0.0625 -3.875 -0.78125 -4.359375 L -0.484375 -4.359375 C 1.0625 -4.359375 1.625 -3.921875 1.625 -2.78125 C 1.625 -2 1.3125 -1.59375 0.65625 -1.5 L 0.65625 -0.578125 C 1.734375 -0.65625 2.390625 -1.5 2.390625 -2.765625 C 2.390625 -3.609375 2.125 -4.3125 1.65625 -4.6875 C 1.125 -5.125 0.40625 -5.296875 -0.953125 -5.296875 L -5.765625 -5.296875 Z M -5.078125 -2.84375 C -5.078125 -3.8125 -4.265625 -4.359375 -2.8125 -4.359375 C -1.40625 -4.359375 -0.59375 -3.796875 -0.59375 -2.84375 C -0.59375 -1.890625 -1.421875 -1.34375 -2.84375 -1.34375 C -4.25 -1.34375 -5.078125 -1.890625 -5.078125 -2.84375 Z M -5.078125 -2.84375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-0">
+<path d="M 1.171875 0 L 4.890625 0 C 7.3125 0 8.8125 -1.828125 8.8125 -4.8125 C 8.8125 -7.796875 7.328125 -9.625 4.890625 -9.625 L 1.171875 -9.625 Z M 2.40625 -1.078125 L 2.40625 -8.546875 L 4.671875 -8.546875 C 6.578125 -8.546875 7.578125 -7.265625 7.578125 -4.8125 C 7.578125 -2.359375 6.578125 -1.078125 4.671875 -1.078125 Z M 2.40625 -1.078125 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-1">
+<path d="M 1.984375 -6.921875 L 0.890625 -6.921875 L 0.890625 0 L 1.984375 0 Z M 1.984375 -9.625 L 0.875 -9.625 L 0.875 -8.234375 L 1.984375 -8.234375 Z M 1.984375 -9.625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-2">
+<path d="M 5.78125 -4.984375 C 5.765625 -6.34375 4.875 -7.109375 3.28125 -7.109375 C 1.65625 -7.109375 0.625 -6.28125 0.625 -5 C 0.625 -3.921875 1.171875 -3.40625 2.8125 -3.015625 L 3.84375 -2.765625 C 4.609375 -2.578125 4.90625 -2.296875 4.90625 -1.8125 C 4.90625 -1.15625 4.265625 -0.71875 3.296875 -0.71875 C 2.703125 -0.71875 2.203125 -0.890625 1.921875 -1.171875 C 1.75 -1.375 1.671875 -1.578125 1.609375 -2.0625 L 0.453125 -2.0625 C 0.5 -0.46875 1.40625 0.296875 3.203125 0.296875 C 4.953125 0.296875 6.0625 -0.546875 6.0625 -1.890625 C 6.0625 -2.921875 5.484375 -3.484375 4.109375 -3.8125 L 3.046875 -4.0625 C 2.15625 -4.28125 1.765625 -4.5625 1.765625 -5.0625 C 1.765625 -5.703125 2.34375 -6.09375 3.234375 -6.09375 C 4.125 -6.09375 4.59375 -5.71875 4.625 -4.984375 Z M 5.78125 -4.984375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-3">
+<path d="M 3.359375 -6.921875 L 2.21875 -6.921875 L 2.21875 -8.8125 L 1.125 -8.8125 L 1.125 -6.921875 L 0.1875 -6.921875 L 0.1875 -6.015625 L 1.125 -6.015625 L 1.125 -0.796875 C 1.125 -0.078125 1.59375 0.296875 2.453125 0.296875 C 2.75 0.296875 2.984375 0.28125 3.359375 0.21875 L 3.359375 -0.71875 C 3.1875 -0.671875 3.046875 -0.65625 2.828125 -0.65625 C 2.34375 -0.65625 2.21875 -0.796875 2.21875 -1.28125 L 2.21875 -6.015625 L 3.359375 -6.015625 Z M 3.359375 -6.921875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-4">
+<path d="M 0.90625 -6.921875 L 0.90625 0 L 2.015625 0 L 2.015625 -3.59375 C 2.03125 -5.25 2.71875 -6 4.234375 -5.953125 L 4.234375 -7.078125 C 4.046875 -7.109375 3.953125 -7.109375 3.8125 -7.109375 C 3.109375 -7.109375 2.5625 -6.6875 1.921875 -5.671875 L 1.921875 -6.921875 Z M 0.90625 -6.921875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-5">
+<path d="M 0.71875 -9.625 L 0.71875 0 L 1.703125 0 L 1.703125 -0.890625 C 2.234375 -0.078125 2.9375 0.296875 3.890625 0.296875 C 5.71875 0.296875 6.90625 -1.1875 6.90625 -3.484375 C 6.90625 -5.734375 5.78125 -7.109375 3.953125 -7.109375 C 3 -7.109375 2.328125 -6.765625 1.8125 -5.984375 L 1.8125 -9.625 Z M 3.734375 -6.09375 C 4.96875 -6.09375 5.75 -5.015625 5.75 -3.359375 C 5.75 -1.796875 4.9375 -0.71875 3.734375 -0.71875 C 2.5625 -0.71875 1.8125 -1.78125 1.8125 -3.40625 C 1.8125 -5.03125 2.5625 -6.09375 3.734375 -6.09375 Z M 3.734375 -6.09375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-6">
+<path d="M 6.359375 0 L 6.359375 -6.921875 L 5.265625 -6.921875 L 5.265625 -3 C 5.265625 -1.578125 4.53125 -0.65625 3.375 -0.65625 C 2.515625 -0.65625 1.953125 -1.1875 1.953125 -2.015625 L 1.953125 -6.921875 L 0.859375 -6.921875 L 0.859375 -1.578125 C 0.859375 -0.4375 1.71875 0.296875 3.0625 0.296875 C 4.078125 0.296875 4.734375 -0.046875 5.375 -0.96875 L 5.375 0 Z M 6.359375 0 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-7">
+<path d="M 3.59375 -7.109375 C 1.640625 -7.109375 0.46875 -5.734375 0.46875 -3.40625 C 0.46875 -1.0625 1.640625 0.296875 3.609375 0.296875 C 5.5625 0.296875 6.734375 -1.078125 6.734375 -3.359375 C 6.734375 -5.75 5.59375 -7.109375 3.59375 -7.109375 Z M 3.609375 -6.09375 C 4.84375 -6.09375 5.578125 -5.078125 5.578125 -3.359375 C 5.578125 -1.734375 4.8125 -0.71875 3.609375 -0.71875 C 2.375 -0.71875 1.625 -1.734375 1.625 -3.40625 C 1.625 -5.078125 2.375 -6.09375 3.609375 -6.09375 Z M 3.609375 -6.09375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-8">
+<path d="M 0.921875 -6.921875 L 0.921875 0 L 2.03125 0 L 2.03125 -3.8125 C 2.03125 -5.234375 2.765625 -6.15625 3.90625 -6.15625 C 4.78125 -6.15625 5.328125 -5.625 5.328125 -4.796875 L 5.328125 0 L 6.4375 0 L 6.4375 -5.234375 C 6.4375 -6.375 5.578125 -7.109375 4.234375 -7.109375 C 3.203125 -7.109375 2.546875 -6.71875 1.9375 -5.75 L 1.9375 -6.921875 Z M 0.921875 -6.921875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-9">
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-10">
+<path d="M 3.40625 -6.921875 L 2.25 -6.921875 L 2.25 -8 C 2.25 -8.46875 2.515625 -8.703125 3.03125 -8.703125 C 3.109375 -8.703125 3.15625 -8.703125 3.40625 -8.6875 L 3.40625 -9.59375 C 3.15625 -9.65625 3.015625 -9.671875 2.78125 -9.671875 C 1.765625 -9.671875 1.15625 -9.078125 1.15625 -8.09375 L 1.15625 -6.921875 L 0.234375 -6.921875 L 0.234375 -6.015625 L 1.15625 -6.015625 L 1.15625 0 L 2.25 0 L 2.25 -6.015625 L 3.40625 -6.015625 Z M 3.40625 -6.921875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-11">
+<path d="M 0.921875 -6.921875 L 0.921875 0 L 2.03125 0 L 2.03125 -4.34375 C 2.03125 -5.34375 2.765625 -6.15625 3.65625 -6.15625 C 4.46875 -6.15625 4.9375 -5.65625 4.9375 -4.765625 L 4.9375 0 L 6.046875 0 L 6.046875 -4.34375 C 6.046875 -5.34375 6.765625 -6.15625 7.671875 -6.15625 C 8.46875 -6.15625 8.953125 -5.640625 8.953125 -4.765625 L 8.953125 0 L 10.0625 0 L 10.0625 -5.1875 C 10.0625 -6.4375 9.34375 -7.109375 8.046875 -7.109375 C 7.125 -7.109375 6.578125 -6.84375 5.921875 -6.0625 C 5.515625 -6.796875 4.96875 -7.109375 4.0625 -7.109375 C 3.140625 -7.109375 2.515625 -6.765625 1.9375 -5.9375 L 1.9375 -6.921875 Z M 0.921875 -6.921875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-12">
+<path d="M 7.0625 -0.640625 C 6.9375 -0.625 6.890625 -0.625 6.828125 -0.625 C 6.4375 -0.625 6.234375 -0.8125 6.234375 -1.15625 L 6.234375 -5.234375 C 6.234375 -6.453125 5.328125 -7.109375 3.625 -7.109375 C 2.609375 -7.109375 1.8125 -6.828125 1.328125 -6.3125 C 1.015625 -5.953125 0.890625 -5.5625 0.859375 -4.875 L 1.96875 -4.875 C 2.0625 -5.71875 2.5625 -6.09375 3.59375 -6.09375 C 4.59375 -6.09375 5.140625 -5.734375 5.140625 -5.0625 L 5.140625 -4.78125 C 5.125 -4.296875 4.890625 -4.125 3.984375 -4.015625 C 2.421875 -3.8125 2.1875 -3.765625 1.765625 -3.59375 C 0.96875 -3.25 0.546875 -2.640625 0.546875 -1.75 C 0.546875 -0.484375 1.421875 0.296875 2.828125 0.296875 C 3.703125 0.296875 4.390625 0 5.171875 -0.71875 C 5.25 0 5.59375 0.296875 6.3125 0.296875 C 6.546875 0.296875 6.6875 0.28125 7.0625 0.1875 Z M 5.140625 -2.171875 C 5.140625 -1.8125 5.03125 -1.578125 4.703125 -1.28125 C 4.25 -0.875 3.703125 -0.65625 3.0625 -0.65625 C 2.203125 -0.65625 1.703125 -1.0625 1.703125 -1.765625 C 1.703125 -2.5 2.171875 -2.859375 3.359375 -3.03125 C 4.546875 -3.1875 4.765625 -3.25 5.140625 -3.421875 Z M 5.140625 -2.171875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-13">
+<path d="M 5.125 -6.921875 L 3.203125 -1.53125 L 1.4375 -6.921875 L 0.265625 -6.921875 L 2.59375 0.03125 L 2.171875 1.125 C 2 1.609375 1.75 1.796875 1.296875 1.796875 C 1.109375 1.796875 0.953125 1.765625 0.71875 1.71875 L 0.71875 2.703125 C 0.9375 2.828125 1.15625 2.875 1.453125 2.875 C 1.8125 2.875 2.1875 2.765625 2.484375 2.546875 C 2.828125 2.296875 3.03125 2 3.234375 1.453125 L 6.3125 -6.921875 Z M 5.125 -6.921875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-14">
+<path d="M 0.71875 2.875 L 1.828125 2.875 L 1.828125 -0.71875 C 2.40625 -0.015625 3.046875 0.296875 3.953125 0.296875 C 5.75 0.296875 6.90625 -1.140625 6.90625 -3.34375 C 6.90625 -5.671875 5.765625 -7.109375 3.9375 -7.109375 C 3 -7.109375 2.25 -6.6875 1.734375 -5.875 L 1.734375 -6.921875 L 0.71875 -6.921875 Z M 3.75 -6.09375 C 4.96875 -6.09375 5.75 -5.015625 5.75 -3.359375 C 5.75 -1.796875 4.953125 -0.71875 3.75 -0.71875 C 2.578125 -0.71875 1.828125 -1.78125 1.828125 -3.40625 C 1.828125 -5.03125 2.578125 -6.09375 3.75 -6.09375 Z M 3.75 -6.09375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-15">
+<path d="M 6.765625 -3.09375 C 6.765625 -4.140625 6.6875 -4.78125 6.5 -5.296875 C 6.046875 -6.4375 4.984375 -7.109375 3.703125 -7.109375 C 1.765625 -7.109375 0.53125 -5.65625 0.53125 -3.359375 C 0.53125 -1.078125 1.71875 0.296875 3.671875 0.296875 C 5.25 0.296875 6.34375 -0.59375 6.625 -2.09375 L 5.515625 -2.09375 C 5.21875 -1.1875 4.59375 -0.71875 3.703125 -0.71875 C 3.015625 -0.71875 2.421875 -1.03125 2.046875 -1.609375 C 1.78125 -2 1.6875 -2.40625 1.671875 -3.09375 Z M 1.703125 -3.984375 C 1.796875 -5.265625 2.578125 -6.09375 3.6875 -6.09375 C 4.8125 -6.09375 5.578125 -5.234375 5.578125 -3.984375 Z M 1.703125 -3.984375 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-16">
+<path d="M 2.5625 -9.625 L 1.328125 -9.625 L 1.328125 0 L 2.5625 0 Z M 2.5625 -9.625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-17">
+<path d="M 6.171875 0 L 8.890625 -8.0625 L 8.890625 0 L 10.046875 0 L 10.046875 -9.625 L 8.34375 -9.625 L 5.546875 -1.234375 L 2.6875 -9.625 L 0.984375 -9.625 L 0.984375 0 L 2.15625 0 L 2.15625 -8.0625 L 4.890625 0 Z M 6.171875 0 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-18">
+<path d="M 2.421875 -4.078125 L 5.453125 -4.078125 C 6.203125 -4.078125 6.796875 -4.296875 7.3125 -4.765625 C 7.890625 -5.296875 8.140625 -5.921875 8.140625 -6.796875 C 8.140625 -8.609375 7.078125 -9.625 5.171875 -9.625 L 1.203125 -9.625 L 1.203125 0 L 2.421875 0 Z M 2.421875 -5.15625 L 2.421875 -8.546875 L 4.984375 -8.546875 C 6.171875 -8.546875 6.859375 -7.90625 6.859375 -6.859375 C 6.859375 -5.796875 6.171875 -5.15625 4.984375 -5.15625 Z M 2.421875 -5.15625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-19">
+<path d="M 6.265625 -2.890625 L 7.25 0 L 8.625 0 L 5.234375 -9.625 L 3.65625 -9.625 L 0.21875 0 L 1.53125 0 L 2.546875 -2.890625 Z M 5.921875 -3.921875 L 2.859375 -3.921875 L 4.4375 -8.3125 Z M 5.921875 -3.921875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-20">
+<path d="M 8.734375 -6.640625 C 8.359375 -8.75 7.140625 -9.78125 5.03125 -9.78125 C 3.734375 -9.78125 2.6875 -9.375 1.984375 -8.578125 C 1.109375 -7.625 0.640625 -6.265625 0.640625 -4.703125 C 0.640625 -3.109375 1.125 -1.75 2.015625 -0.8125 C 2.765625 -0.046875 3.71875 0.296875 4.984375 0.296875 C 7.328125 0.296875 8.640625 -0.96875 8.9375 -3.515625 L 7.671875 -3.515625 C 7.5625 -2.859375 7.4375 -2.40625 7.234375 -2.015625 C 6.84375 -1.234375 6.015625 -0.78125 4.984375 -0.78125 C 3.078125 -0.78125 1.859375 -2.3125 1.859375 -4.71875 C 1.859375 -7.1875 3.015625 -8.703125 4.890625 -8.703125 C 5.671875 -8.703125 6.390625 -8.46875 6.78125 -8.09375 C 7.140625 -7.765625 7.34375 -7.375 7.484375 -6.640625 Z M 8.734375 -6.640625 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-21">
+<path d="M 4.671875 -8.546875 L 7.828125 -8.546875 L 7.828125 -9.625 L 0.28125 -9.625 L 0.28125 -8.546875 L 3.453125 -8.546875 L 3.453125 0 L 4.671875 0 Z M 4.671875 -8.546875 " />
+</g>
+<g id="svg_e07e7ede367b8cec7984_glyph-3-22">
+<path d="M 3.765625 0 L 6.421875 -6.921875 L 5.171875 -6.921875 L 3.21875 -1.3125 L 1.375 -6.921875 L 0.125 -6.921875 L 2.5625 0 Z M 3.765625 0 " />
+</g>
+</g>
+<clipPath id="svg_e07e7ede367b8cec7984_clip-0">
+<path clip-rule="nonzero" d="M 38.246094 279 L 367.277344 279 L 367.277344 280 L 38.246094 280 Z M 38.246094 279 " />
+</clipPath>
+<clipPath id="svg_e07e7ede367b8cec7984_clip-1">
+<path clip-rule="nonzero" d="M 38.246094 210 L 367.277344 210 L 367.277344 211 L 38.246094 211 Z M 38.246094 210 " />
+</clipPath>
+<clipPath id="svg_e07e7ede367b8cec7984_clip-2">
+<path clip-rule="nonzero" d="M 38.246094 140 L 367.277344 140 L 367.277344 142 L 38.246094 142 Z M 38.246094 140 " />
+</clipPath>
+<clipPath id="svg_e07e7ede367b8cec7984_clip-3">
+<path clip-rule="nonzero" d="M 38.246094 71 L 367.277344 71 L 367.277344 73 L 38.246094 73 Z M 38.246094 71 " />
+</clipPath>
+<clipPath id="svg_e07e7ede367b8cec7984_clip-4">
+<path clip-rule="nonzero" d="M 38.246094 313 L 367.277344 313 L 367.277344 315 L 38.246094 315 Z M 38.246094 313 " />
+</clipPath>
+<clipPath id="svg_e07e7ede367b8cec7984_clip-5">
+<path clip-rule="nonzero" d="M 38.246094 244 L 367.277344 244 L 367.277344 246 L 38.246094 246 Z M 38.246094 244 " />
+</clipPath>
+<clipPath id="svg_e07e7ede367b8cec7984_clip-6">
+<path clip-rule="nonzero" d="M 38.246094 175 L 367.277344 175 L 367.277344 177 L 38.246094 177 Z M 38.246094 175 " />
+</clipPath>
+<clipPath id="svg_e07e7ede367b8cec7984_clip-7">
+<path clip-rule="nonzero" d="M 38.246094 106 L 367.277344 106 L 367.277344 108 L 38.246094 108 Z M 38.246094 106 " />
+</clipPath>
+<clipPath id="svg_e07e7ede367b8cec7984_clip-8">
+<path clip-rule="nonzero" d="M 38.246094 36 L 367.277344 36 L 367.277344 38 L 38.246094 38 Z M 38.246094 36 " />
+</clipPath>
+</defs>
+<rect x="-50.4" y="-36" width="604.8" height="432" fill="rgb(100%, 100%, 100%)" fill-opacity="1" />
+<g clip-path="url(#svg_e07e7ede367b8cec7984_clip-0)">
+<path fill="none" stroke-width="0.533489" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 279.632812 L 367.277344 279.632812 " />
+</g>
+<g clip-path="url(#svg_e07e7ede367b8cec7984_clip-1)">
+<path fill="none" stroke-width="0.533489" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 210.398438 L 367.277344 210.398438 " />
+</g>
+<g clip-path="url(#svg_e07e7ede367b8cec7984_clip-2)">
+<path fill="none" stroke-width="0.533489" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 141.160156 L 367.277344 141.160156 " />
+</g>
+<g clip-path="url(#svg_e07e7ede367b8cec7984_clip-3)">
+<path fill="none" stroke-width="0.533489" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 71.925781 L 367.277344 71.925781 " />
+</g>
+<g clip-path="url(#svg_e07e7ede367b8cec7984_clip-4)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 314.25 L 367.277344 314.25 " />
+</g>
+<g clip-path="url(#svg_e07e7ede367b8cec7984_clip-5)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 245.015625 L 367.277344 245.015625 " />
+</g>
+<g clip-path="url(#svg_e07e7ede367b8cec7984_clip-6)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 175.777344 L 367.277344 175.777344 " />
+</g>
+<g clip-path="url(#svg_e07e7ede367b8cec7984_clip-7)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 106.542969 L 367.277344 106.542969 " />
+</g>
+<g clip-path="url(#svg_e07e7ede367b8cec7984_clip-8)">
+<path fill="none" stroke-width="1.066978" stroke-linecap="butt" stroke-linejoin="round" stroke="rgb(92.156863%, 92.156863%, 92.156863%)" stroke-opacity="1" stroke-miterlimit="10" d="M 38.246094 37.304688 L 367.277344 37.304688 " />
+</g>
+<path fill-rule="nonzero" fill="rgb(12.941176%, 56.470588%, 54.901961%)" fill-opacity="0.8" d="M 53.667969 291.742188 L 146.207031 291.742188 L 146.207031 276.738281 L 53.667969 276.738281 Z M 53.667969 291.742188 " />
+<path fill-rule="nonzero" fill="rgb(26.666667%, 0.392157%, 32.941176%)" fill-opacity="0.8" d="M 53.667969 246.292969 L 146.207031 246.292969 L 146.207031 37.308594 L 53.667969 37.308594 Z M 53.667969 246.292969 " />
+<path fill-rule="nonzero" fill="rgb(23.137255%, 32.156863%, 54.509804%)" fill-opacity="0.8" d="M 53.667969 276.738281 L 146.207031 276.738281 L 146.207031 246.292969 L 53.667969 246.292969 Z M 53.667969 276.738281 " />
+<path fill-rule="nonzero" fill="rgb(99.215686%, 90.588235%, 14.509804%)" fill-opacity="0.8" d="M 53.667969 314.25 L 146.207031 314.25 L 146.207031 301.203125 L 53.667969 301.203125 Z M 53.667969 314.25 " />
+<path fill-rule="nonzero" fill="rgb(36.470588%, 78.431373%, 38.823529%)" fill-opacity="0.8" d="M 53.667969 301.203125 L 146.207031 301.203125 L 146.207031 291.742188 L 53.667969 291.742188 Z M 53.667969 301.203125 " />
+<path fill-rule="nonzero" fill="rgb(12.941176%, 56.470588%, 54.901961%)" fill-opacity="0.8" d="M 156.492188 293.691406 L 249.03125 293.691406 L 249.03125 267.277344 L 156.492188 267.277344 Z M 156.492188 293.691406 " />
+<path fill-rule="nonzero" fill="rgb(26.666667%, 0.392157%, 32.941176%)" fill-opacity="0.8" d="M 156.492188 242.089844 L 249.03125 242.089844 L 249.03125 37.308594 L 156.492188 37.308594 Z M 156.492188 242.089844 " />
+<path fill-rule="nonzero" fill="rgb(23.137255%, 32.156863%, 54.509804%)" fill-opacity="0.8" d="M 156.492188 267.277344 L 249.03125 267.277344 L 249.03125 242.089844 L 156.492188 242.089844 Z M 156.492188 267.277344 " />
+<path fill-rule="nonzero" fill="rgb(99.215686%, 90.588235%, 14.509804%)" fill-opacity="0.8" d="M 156.492188 314.25 L 249.03125 314.25 L 249.03125 302.546875 L 156.492188 302.546875 Z M 156.492188 314.25 " />
+<path fill-rule="nonzero" fill="rgb(36.470588%, 78.431373%, 38.823529%)" fill-opacity="0.8" d="M 156.492188 302.546875 L 249.03125 302.546875 L 249.03125 293.6875 L 156.492188 293.6875 Z M 156.492188 302.546875 " />
+<path fill-rule="nonzero" fill="rgb(12.941176%, 56.470588%, 54.901961%)" fill-opacity="0.8" d="M 259.3125 292.101562 L 351.851562 292.101562 L 351.851562 258.3125 L 259.3125 258.3125 Z M 259.3125 292.101562 " />
+<path fill-rule="nonzero" fill="rgb(26.666667%, 0.392157%, 32.941176%)" fill-opacity="0.8" d="M 259.3125 232.113281 L 351.851562 232.113281 L 351.851562 37.304688 L 259.3125 37.304688 Z M 259.3125 232.113281 " />
+<path fill-rule="nonzero" fill="rgb(23.137255%, 32.156863%, 54.509804%)" fill-opacity="0.8" d="M 259.3125 258.316406 L 351.851562 258.316406 L 351.851562 232.117188 L 259.3125 232.117188 Z M 259.3125 258.316406 " />
+<path fill-rule="nonzero" fill="rgb(99.215686%, 90.588235%, 14.509804%)" fill-opacity="0.8" d="M 259.3125 314.25 L 351.851562 314.25 L 351.851562 300.488281 L 259.3125 300.488281 Z M 259.3125 314.25 " />
+<path fill-rule="nonzero" fill="rgb(36.470588%, 78.431373%, 38.823529%)" fill-opacity="0.8" d="M 259.3125 300.492188 L 351.851562 300.492188 L 351.851562 292.105469 L 259.3125 292.105469 Z M 259.3125 300.492188 " />
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-0" x="28.421875" y="317.460938" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-1" x="23.53125" y="248.222656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-2" x="28.42405" y="248.222656" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-2" x="23.53125" y="178.988281" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-0" x="28.42405" y="178.988281" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-3" x="23.53125" y="109.75" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-2" x="28.42405" y="109.75" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-4" x="18.636719" y="40.515625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-0" x="23.529519" y="40.515625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-0" x="28.422319" y="40.515625" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-5" x="76.226562" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-6" x="78.672962" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-7" x="86.003362" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-8" x="91.872962" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-9" x="97.742563" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-10" x="104.096163" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-11" x="109.472963" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-12" x="114.365763" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-13" x="118.765763" y="339.445312" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-5" x="179.046875" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-6" x="181.493275" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-7" x="188.823675" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-8" x="194.693275" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-9" x="200.562875" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-10" x="206.916475" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-11" x="212.293275" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-12" x="217.186075" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-2" x="221.586075" y="339.445312" />
+</g>
+<g fill="rgb(30.196078%, 30.196078%, 30.196078%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-5" x="281.871094" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-6" x="284.317494" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-7" x="291.647894" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-8" x="297.517494" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-9" x="303.387094" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-10" x="309.740694" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-11" x="315.117494" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-12" x="320.010294" y="339.445312" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-14" x="324.410294" y="339.445312" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-0" x="162.726562" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-1" x="165.784562" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-2" x="174.947563" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-3" x="182.284562" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-4" x="189.621562" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-5" x="197.563562" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-6" x="204.284562" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-7" x="207.342562" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-8" x="212.842562" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-9" x="218.958562" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-10" x="222.621563" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-11" x="228.121563" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-12" x="230.563563" y="352.121094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-13" x="236.679563" y="352.121094" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-0" x="13.5" y="203.90625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-1" x="13.5" y="196.56925" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-2" x="13.5" y="190.45325" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-3" x="13.5" y="186.79025" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-1" x="13.5" y="181.29025" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-4" x="13.5" y="175.17425" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-5" x="13.5" y="169.05825" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-6" x="13.5" y="166.00025" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-7" x="13.5" y="159.88425" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-2-1" x="13.5" y="153.76825" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-1" x="383.714844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-14" x="392.877844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-15" x="398.993844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-16" x="402.051844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-15" x="408.167844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-11" x="411.225844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-12" x="413.667844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-13" x="419.783844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-6" x="425.899844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-15" x="428.957844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-17" x="432.015844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-18" x="437.515844" y="133.847656" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-1-8" x="443.631844" y="133.847656" />
+</g>
+<path fill-rule="nonzero" fill="rgb(26.666667%, 0.392157%, 32.941176%)" fill-opacity="0.8" d="M 384.425781 157.097656 L 400.289062 157.097656 L 400.289062 141.234375 L 384.425781 141.234375 Z M 384.425781 157.097656 " />
+<path fill-rule="nonzero" fill="rgb(23.137255%, 32.156863%, 54.509804%)" fill-opacity="0.8" d="M 384.425781 174.378906 L 400.289062 174.378906 L 400.289062 158.515625 L 384.425781 158.515625 Z M 384.425781 174.378906 " />
+<path fill-rule="nonzero" fill="rgb(12.941176%, 56.470588%, 54.901961%)" fill-opacity="0.8" d="M 384.425781 191.660156 L 400.289062 191.660156 L 400.289062 175.796875 L 384.425781 175.796875 Z M 384.425781 191.660156 " />
+<path fill-rule="nonzero" fill="rgb(36.470588%, 78.431373%, 38.823529%)" fill-opacity="0.8" d="M 384.425781 208.9375 L 400.289062 208.9375 L 400.289062 193.074219 L 384.425781 193.074219 Z M 384.425781 208.9375 " />
+<path fill-rule="nonzero" fill="rgb(99.215686%, 90.588235%, 14.509804%)" fill-opacity="0.8" d="M 384.425781 226.21875 L 400.289062 226.21875 L 400.289062 210.355469 L 384.425781 210.355469 Z M 384.425781 226.21875 " />
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-6" x="406.476562" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-15" x="413.806962" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-16" x="415.760562" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-16" x="420.160562" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-17" x="424.560562" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-18" x="429.453362" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-16" x="434.346162" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-17" x="438.746162" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-11" x="443.638962" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-6" x="448.531763" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-19" x="455.862163" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-20" x="460.754963" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-21" x="463.201363" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-20" x="468.094163" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-15" x="470.540563" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-22" x="472.494163" y="152.375" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-18" x="477.386963" y="152.375" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-23" x="406.476562" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-22" x="412.830163" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-18" x="417.722963" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-16" x="422.615763" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-17" x="427.015763" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-18" x="431.908563" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-16" x="436.801363" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-17" x="441.201363" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-11" x="446.094163" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-6" x="450.986963" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-19" x="458.317363" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-20" x="463.210163" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-21" x="465.656563" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-20" x="470.549363" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-15" x="472.995763" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-22" x="474.949363" y="169.65625" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-18" x="479.842163" y="169.65625" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-24" x="406.476562" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-25" x="411.853363" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-21" x="414.783763" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-26" x="419.676563" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-17" x="427.006963" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-11" x="431.899763" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-27" x="436.792563" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-28" x="442.662163" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-15" x="447.554963" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-29" x="449.508563" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-20" x="451.954963" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-11" x="454.401363" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-6" x="459.294163" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-19" x="466.624563" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-20" x="471.517363" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-21" x="473.963763" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-20" x="478.856563" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-15" x="481.302963" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-22" x="483.256563" y="186.933594" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-18" x="488.149363" y="186.933594" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-27" x="406.476562" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-30" x="412.346162" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-31" x="417.238963" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-15" x="419.192563" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-32" x="421.146163" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-17" x="425.546162" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-11" x="430.438963" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-27" x="435.331763" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-15" x="441.201363" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-20" x="443.154963" y="204.214844" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-17" x="445.601362" y="204.214844" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-33" x="406.476562" y="221.496094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-20" x="413.322963" y="221.496094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-28" x="415.769362" y="221.496094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-17" x="420.662163" y="221.496094" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-0-25" x="425.554963" y="221.496094" />
+</g>
+<g fill="rgb(0%, 0%, 0%)" fill-opacity="1">
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-0" x="38.246094" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-1" x="47.776494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-2" x="50.706894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-3" x="57.306894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-4" x="60.976494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-1" x="65.372094" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-5" x="68.302494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-6" x="75.641694" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-3" x="82.980894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-1" x="86.650494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-7" x="89.580894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-8" x="96.920094" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-9" x="104.259294" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-7" x="107.928894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-10" x="115.268094" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-9" x="118.937694" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-11" x="122.607294" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-6" x="133.602894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-3" x="140.942094" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-12" x="144.611694" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-3" x="151.950894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-1" x="155.620494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-7" x="158.550894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-8" x="165.890094" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-9" x="173.229294" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-3" x="176.898894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-13" x="180.568494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-14" x="187.168494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-15" x="194.507694" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-9" x="201.846894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-5" x="205.516494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-13" x="212.855694" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-9" x="219.455694" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-16" x="223.125294" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-17" x="226.794894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-18" x="237.790494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-19" x="246.594894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-20" x="255.399294" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-21" x="264.929694" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-9" x="272.994894" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-22" x="276.664494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-15" x="283.264494" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-4" x="290.603694" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-2" x="294.999294" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-1" x="301.599294" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-7" x="304.529694" y="15.101562" />
+<use xlink:href="#svg_e07e7ede367b8cec7984_glyph-3-8" x="311.868894" y="15.101562" />
+</g>
+</svg></p>
+</figure>
+</div>
+</div>
+</div>
+<p>While newer IMPACT versions detect more mutations overall, the distribution of mutation types remains largely unchanged. The most significant change is the proportion of Frameshift mutations, which increases with each IMPACT version.</p>
+<p>This indicates that version upgrades increase sensitivity without substantially altering the mutation distribution.</p>
+</section>
 </section>
 
 </main>

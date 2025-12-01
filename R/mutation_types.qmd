@@ -2,6 +2,7 @@
 title: "mutation_types"
 format: html
 editor: visual
+self-contained: true
 ---
 
 ## Load libraries

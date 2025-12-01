@@ -1,7 +1,8 @@
 ---
-title: "data_gene_panel_matrix_clean"
+title: "gene_panel_mutation"
 format: html
 editor: visual
+self-contained: true
 ---
 
 ## Load libraries:

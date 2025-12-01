@@ -1,10 +1,10 @@
 ---
 title: "Structural Variant analysis"
-format: html
+format: 
+  html:
+      self-contained: true
 editor: visual
 output-dir: "results"
-html:
-    self-contained: true
 ---
 
 ## Import library
@@ -55,7 +55,7 @@ clinical_with_sv <- data_patient_sample |>
 
 ```
 
-## Data description
+## Exploratory analysis
 
 ### **Distribution** of structural variant class
 
@@ -268,7 +268,7 @@ glioma_SV |>
 
 ```{r}
 glioma_SV |> 
-  ggplot(aes(x = Site2_Hugo_Symbol, fill = Site1_Hugo_Symbol)) +
+  ggplot(aes(x = Site2_Hugo_Symbol, fill = Site2_Hugo_Symbol)) +
   geom_bar(color = "black", alpha = 0.8) +
   coord_flip() +
    scale_fill_viridis(option = "viridis",
@@ -401,9 +401,9 @@ clinical_with_sv |>
 
 The lack of sequenced data for the SVs presents a severe limitation for this analysis.
 
-## Study of mutations for glioma samples (to put in another file)
+### Study of mutations for glioma samples
 
-### Import data
+Based on the previous findings, it would be interesting to look at the genes most impacted by pinpoint mutations in glioma. Does EGFR represent a large share of these genes?
 
 ```{r}
 

@@ -1,0 +1,9 @@
+.table-small {
+  transform: scale(0.4);         
+  transform-origin: top left;
+  width: 60% !important;
+}
+
+.text-red {
+  color: red;
+}

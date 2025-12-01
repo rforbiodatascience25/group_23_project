@@ -74,10 +74,9 @@ and Impact version
 -   GSEA (SV) & Mutations
 :::
 
-:::: table-small
-::: {.table-small style="transform:scale(0.30); transform-origin:top left; max-height:300px;"}
+::: table-small
 | Biological Process | pvalue | adjusted pvalue |
-|:---|---:|---:|
+|:-----------------------|-----------------------:|------------------------:|
 | [GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT]{style="color: red;"} | 1.874506e-06 | 0.0001852012 |
 | GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS | 3.918503e-07 | 0.0001852012 |
 | [GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 8.078272e-07 | 0.0001852012 |
@@ -94,7 +93,6 @@ and Impact version
 | GOBP_CELL_AGING | 3.013967e-05 | 0.0010634999 |
 | [GOBP_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 3.409266e-05 | 0.0011227849 |
 :::
-::::
 
 ## Discussion
 

@@ -1,16 +1,16 @@
 ---
 title: "data_mutations_analysis"
-format: html
+format: 
+  html:
+    self-contained: true
 ---
 
 # Library import
 
 ```{r}
-library(readr)
+library(here)
 library(tidyverse)
 library(ggplot2)
-library(dplyr)
-library(purrr)
 library(table1)
 ```
 
@@ -107,7 +107,7 @@ data_mutation_without_nas <- data_mutation_without_nas |>
 ## Explanation of the variables
 
 | Column name | What it is |
-|----|----|
+|------------------------------------|------------------------------------|
 | Hugo_Symbol | The **Name** of the gene. |
 | Entrez_Gene_Id | The gene's unique **ID number**. |
 | Chromosome | The specific chromosome where the mutation occurred |
@@ -317,9 +317,4 @@ data_mutation_without_nas_long |>
   geom_boxplot()
 ```
 
-# Export the cleaned data
-
-```{r}
-data_mutation_without_nas_long |>
-  write_tsv(file = here('data','data_mutation_cleaned'))
-```
+# 

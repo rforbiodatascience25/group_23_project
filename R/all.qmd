@@ -19,6 +19,7 @@ library(quarto)
 This script downloads the analysed dataset, unpacks it and will clean all data object which are necessary for the subsequent analysis.
 
 ```{r}
+#| message: false
 quarto::quarto_render(here("R", "Importing_raw_data.qmd"))
 ```
 
@@ -27,11 +28,12 @@ quarto::quarto_render(here("R", "Importing_raw_data.qmd"))
 In these scripts, the seperate data files are analysed for necessary cleaning and interesting patterns or correlations.
 
 ```{r}
+#| message: false
 quarto::quarto_render(here("R", "data_clinical_patient_analysis.qmd"))
 quarto::quarto_render(here("R", "data_clinical_sample_analysis.qmd"))
 quarto::quarto_render(here("R", "data_mutations_analysis.qmd"))
 quarto::quarto_render(here("R", "sv_class_analysis.qmd"))
-quarto::quarto_render(here("R", "gene_panel_mutations.qmd"))
+quarto::quarto_render(here("R", "gene_panel_mutation.qmd"))
 ```
 
 # Downstream Analysis
@@ -39,8 +41,19 @@ quarto::quarto_render(here("R", "gene_panel_mutations.qmd"))
 These scripts perform more particular Analysis to follow findings from the exploratory analysis.
 
 ```{r}
+#| message: false
 quarto::quarto_render(here("R", "Cox_Regression.qmd"))
 quarto::quarto_render(here("R", "gene_enrichment_analysis.qmd"))
 quarto::quarto_render(here("R", "mutation_types.qmd"))
 quarto::quarto_render(here("R", "Survival_rate_parameters"))
+```
+
+# Move HTML files to Results
+
+```{r}
+#| message: false
+if(!dir.exists(here("results"))) dir.create(here("results"))
+
+html_files <- list.files(here("R"), pattern = "\\.html$", full.names = TRUE)
+file.rename(from = html_files, to = file.path(here("results"), basename(html_files)))
 ```

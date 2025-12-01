@@ -1,17 +1,17 @@
 ---
 title: "Survival Analysis"
-format: html
+format: 
+  html:
+    self-contained: true
 editor: visual
 ---
 
 # Library import
 
 ```{r}
-library(readr)
+library(here)
 library(tidyverse)
 library(ggplot2)
-library(dplyr)
-library(purrr)
 library(survival)
 library(broom)
 library(survminer)
@@ -21,11 +21,9 @@ library(viridis)
 # Data import
 
 ```{r}
-clinical_sample <- read.delim(here("raw/tmb_mskcc_2018", "data_clinical_sample.txt"), sep = "\t", skip = 4, header = TRUE)
-
-mutations <- read.delim(here("data", "data_mutation_cleaned"), sep = "\t", header = TRUE)
-
-clinical_patient <- read.delim(here("data", "data_clinical_patients_clean.tsv"), sep = "\t", header = TRUE)
+#| message: false
+patient_sample <- read_tsv(file = here('data','patient_sample_gene_panel.tsv'))
+mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
 ```
 
 # Data wrangling
@@ -33,16 +31,7 @@ clinical_patient <- read.delim(here("data", "data_clinical_patients_clean.tsv"),
 Need sex, age, cancer type to be transformed to numerical categories for the statistical analysis.
 
 ```{r}
-new_clinical_sample <- clinical_sample |> 
-  select(c(1,2,3,4,11)) |> 
-  drop_na()
-
-clinical_patient <- clinical_patient |> 
-  rename(PATIENT_ID = Patient_ID)
-# if sex ~ 0 it's a male and sex ~ 1 it's a female
-
-df <- clinical_patient |> 
-  left_join(new_clinical_sample) |> 
+df <- patient_sample |>  
   mutate(TUMOR_PURITY = as.numeric(TUMOR_PURITY),
          CANCER_TYPE = as.factor(CANCER_TYPE)) |> 
   drop_na()
@@ -67,8 +56,8 @@ cancer_types
 First, we check if the cancer type has influence over the survival rate.
 
 ```{r}
-cox_model_baseline_glob <- coxph(Surv(Survival_Months, OS_status) ~ 1, data = df) 
-cox_model_cancer_types_glob <- coxph(Surv(Survival_Months, OS_status) ~ CANCER_TYPE, data = df) 
+cox_model_baseline_glob <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ 1, data = df) 
+cox_model_cancer_types_glob <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ CANCER_TYPE, data = df) 
 
 anova(cox_model_baseline_glob,cox_model_cancer_types_glob)
 ```
@@ -86,17 +75,13 @@ So all the cancer seems to be significant, appart from the "Colorectal cancer" a
 ```{r}
 df_gender <- df |>
   mutate(
-    Sex = factor(if_else(
-      Sex == 0, 
-      "Male", 
-      "Female",
-    )),
+    Sex = factor(SEX),
     Survival_Status = if_else(
-      OS_status == 0,
+      OS_STATUS == 0,
       "Living", # OS_status = 0
       "Deceased"   # OS_status = 1
     ),
-    Age_group = factor(Age_group, 
+    Age_group = factor(AGE_GROUP, 
                        levels = c(
                          "<30", 
                          "31-50", 
@@ -127,8 +112,8 @@ We see that there is almost no people with "Skin Cancer, Non-Melanoma" in the co
 Now lets check if the age_group and the gender have an impact on the survival.
 
 ```{r}
-cox_model_baseline_glob <- coxph(Surv(Survival_Months, OS_status) ~ 1, data = df_gender) 
-cox_model_age_gender_glob <- coxph(Surv(Survival_Months, OS_status) ~ Age_group + Sex, data = df_gender) 
+cox_model_baseline_glob <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ 1, data = df_gender) 
+cox_model_age_gender_glob <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ Age_group + Sex, data = df_gender) 
 
 anova(cox_model_baseline_glob,cox_model_age_gender_glob)
 ```
@@ -159,7 +144,7 @@ df_gender |>
 Indeed we can see on the above plot that the distribution is similar for all age groups, and that gender seems to impact as the distributions are different for male and female. Lets check in detail this difference.
 
 ```{r}
-cox_model_gender_glob <- coxph(Surv(Survival_Months, OS_status) ~ Sex, data = df_gender) 
+cox_model_gender_glob <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ Sex, data = df_gender) 
 
 summary(cox_model_gender_glob)
 ```
@@ -169,7 +154,7 @@ Male seems to be more likely to survive than females.
 ```{r}
 df_gender |> 
   ggplot(
-    aes(x = Survival_Months)
+    aes(x = OS_MONTHS)
   ) + 
   geom_density(aes(fill = Sex), alpha = 0.5) + 
   scale_fill_viridis(option = "viridis",
@@ -183,8 +168,8 @@ df_gender |>
 df_gender |> 
   ggplot(
     aes(x = Sex,
-        y = Survival_Months,
-        fill = Survival_Status
+        y = OS_MONTHS,
+        fill = OS_STATUS
           ) 
   ) +
   geom_boxplot(position = position_dodge(width = 0.8), linewidth = 0.8, alpha = 0.5) + 
@@ -233,9 +218,9 @@ Now, we will focus on Glioma.
 df_glioma <- df_gender |> 
   filter(CANCER_TYPE == "Glioma")
 
-cox_model_glioma_baseline <- coxph(Surv(Survival_Months, OS_status) ~ 1, data = df_glioma)
+cox_model_glioma_baseline <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ 1, data = df_glioma)
 
-cox_model_glioma_tumor_purity <- coxph(Surv(Survival_Months, OS_status) ~ TUMOR_PURITY, data = df_glioma) 
+cox_model_glioma_tumor_purity <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ TUMOR_PURITY, data = df_glioma) 
 
 anova(cox_model_glioma_baseline,cox_model_glioma_tumor_purity)
 ```
@@ -246,11 +231,11 @@ We see that the log-likelihood ratio are the same, thus the tumor purity doesn't
 df_glioma |> 
   ggplot(
     aes(x = TUMOR_PURITY,
-        y = Survival_Months
+        y = OS_MONTHS
           ) 
   ) +
   geom_point() +
-  facet_wrap(~as.factor(OS_status))+
+  facet_wrap(~as.factor(OS_STATUS))+
   labs(title = "Influence of the tumor purity on the survival months stratified 
        by the survival state") +
   theme_classic()
@@ -259,7 +244,7 @@ df_glioma |>
 And indeed, we can't see any trend on this graph, confirming that the tumor purity doesn't impact the survival rate. What about the Age group and the sex of the patient?
 
 ```{r}
-cox_model_glioma_age_gender <- coxph(Surv(Survival_Months, OS_status) ~ Age_group + Sex, data = df_glioma) 
+cox_model_glioma_age_gender <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ Age_group + Sex, data = df_glioma) 
 
 anova(cox_model_glioma_baseline,cox_model_glioma_age_gender)
 ```
@@ -275,7 +260,7 @@ Once again the only p-value below 0.05 here is for the gender, thus even though 
 ```{r}
 df_glioma |> 
   ggplot(
-    aes(x = Survival_Status,
+    aes(x = OS_STATUS,
         fill = Sex
           ) 
   ) +
@@ -293,7 +278,7 @@ df_glioma |>
 As for the study with all the cancer types, the distributions seem indeed to be the same for all age groups. Lets check if the gender influence is the same as before, i.e. that male have higher probability to survive.
 
 ```{r}
-cox_model_glioma_gender <- coxph(Surv(Survival_Months, OS_status) ~ Sex, data = df_glioma)
+cox_model_glioma_gender <- coxph(Surv(OS_MONTHS, OS_STATUS) ~ Sex, data = df_glioma)
 
 summary(cox_model_glioma_gender)
 ```
@@ -322,7 +307,7 @@ ggsurvplot(
 
 And indeed we see a bigger gap between the survival probabilities for Male and Female in case of Glioma.
 
-## Discussions 
+## Discussions
 
 Let's take a step back and talk about the age_group influence. It's a surprising results that age_group aren't significant, especially when you take into account that gliomas aren't curable for child, so this result might be biased by the sample size.
 
