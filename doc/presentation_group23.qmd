@@ -41,7 +41,10 @@ format:
     -   survfit(): fits the object to the Kaplan Meier estimator.
     -   data used: clinical_patients
     -   result: step curve, each step indicates the status of patients per unit time. It can be stratified to different parameters (sex, age, cancer..)
--   Cox Regression
+-   Cox Regression:
+    -   Hazard risk study from package: 'survival'
+    -   $\lambda(t,j) = \lambda_0(t).\exp(\sum \beta_i X_i)$, $\lambda$ survival probability for individual $j_i$ at time t, $X_i$ the explanatory variables
+    -   $\displaystyle \frac{\lambda(t,j_1)}{\lambda(t,j_2)} = \exp(\beta_i)$
 -   Gene Set Enrichment Analysis
     -   GO Data from Molecular Signature Database
     -   Ranked list based on numbers of mutated Samples per Gene
@@ -49,7 +52,7 @@ format:
 
 ## Results 1
 
--   Survival analysis - stratified by Cancer type ![](../results/figures/survival_cancer_type.png){.absolute top="170" left="30" width="400" height="400"}
+-   Survival analysis - stratified by Cancer type ![](../results/figures/surv_count_per_gender_per_cancer.png){.absolute top="170" left="30" width="400" height="400"} ![](../results/figures/survival_cancer_type.png){.absolute top="170" left="30" width="400" height="400"}
 
 -   Number of Mutations & SV per Cancer Type ![](../results/figures/SV_count_per_cancer.png){.absolute bottom="20" left="30" width="400" height="400"}
 
@@ -70,9 +73,11 @@ format:
 
 ## Results 4
 
--   Survival Correlation with Co-founders(especially gender)
+-   Survival Correlation with Co-founders(especially gender) ![](../results/figures/surv_plot_per_gender.png){.absolute top="170" left="30" width="400" height="400"}
+
 
 -   Survival analysis on gender(subset glioma) ![](../results/figures/survival_glioma_gender.png){.absolute top="170" left="30" width="400" height="400"}
+![](../results/figures/surv_plot_per_gender_for_glioma.png){.absolute top="170" left="30" width="400" height="400"}
 
 ## Results 5
 
