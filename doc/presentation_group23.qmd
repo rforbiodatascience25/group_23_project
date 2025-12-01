@@ -14,17 +14,26 @@ format:
 
 ## Introduction/Background
 
-Study(mailny investigating TMB), why was the study conducted?
+-   Study with 1661 patients/samples
 
-Looking at different cancers, they wanted to look if a specific component of cancers, TMB, could affect the survival and the success rate of treatment with Immune Checkpoint Inhibitors (ICI), such as PD1, PDL1 and CTLA4.
+-   Main objective: New predictive biomarkers for Immune Checkpoint Inhibitors (ICI)
 
-we focus on Mutations here
+-	  Examine the impact of Tumor Mutational Burden (TMB)
+
+-	  Higher TMB = Higher response?
 
 ## Materials
 
-Dataset, some statistics(maily cancer type)
+-   MSK-IMPACT -> Next Generation Sequencing
 
-and Impact version
+-   3 versions: IMPACT 3 (341 genes), IMPACT 5 (410 genes), IMPACT 6 (468 genes)
+
+-	  Higher count of mutations detected as more genes are analysed
+    -   data_clinical_patient.txt
+    -   data_clinical_sample.txt
+    -   data_gene_panel_matrix.txt
+    -   data_mutations.txt
+    -   data_sv.txt
 
 ## Methods
 
