@@ -2,131 +2,162 @@
 title: "Mutation Analysis of Various Cancer Types"
 format: 
   revealjs:
-    css: styles.css
     slide-number: true
-    tables:
-      width: 100%
-    tbl-cap-location: top
-    slide-level: 2
-    theme: default
+    width: 1600  # Wider format helps with side-by-side plots
+    height: 900
+    theme: simple
+    transition: fade
+    smaller: true # Automatically shrinks text slightly to fit
+    scrollable: true # Allows scrolling if content is too long
     embed-resources: true
 ---
 
 ## Introduction/Background
 
--   Study with 1661 patients/samples
--   Main objective: New predictive biomarkers for Immune Checkpoint Inhibitors (ICI)
--   Examine the impact of Tumor Mutational Burden (TMB)
--   Higher TMB = Higher response?
+::: columns
+::: {.column width="60%"}
+-   **Study Cohort:** 1661 patients/samples.
+-   **Objective:** Identify predictive biomarkers for Immune Checkpoint Inhibitors (ICI).
+-   **Hypothesis:** Does Tumor Mutational Burden (TMB) correlate with survival?
+    -   *Concept:* Higher TMB $\rightarrow$ Higher response?
+:::
+
+::: {.column width="40%"}
+<!-- You can add a schematic image here if you have one, or leave blank -->
+:::
+:::
 
 ## Materials
 
--   MSK-IMPACT -\> Next Generation Sequencing
--   3 versions: IMPACT 3 (341 genes), IMPACT 5 (410 genes), IMPACT 6 (468 genes)
--   Higher count of mutations detected as more genes are analysed
--   Datasets:
-    -   data_clinical_patient.txt
-    -   data_clinical_sample.txt
-    -   data_gene_panel_matrix.txt
-    -   data_mutations.txt
-    -   data_sv.txt
+::: columns
+::: {.column width="50%"}
+-   **Sequencing:** MSK-IMPACT (Next Generation Sequencing).
+-   **Panels Used:**
+    -   IMPACT 3 (341 genes)
+    -   IMPACT 5 (410 genes)
+    -   IMPACT 6 (468 genes)
+-   **Note:** Higher mutation counts detected as more genes are analyzed.
+:::
 
-![](../results/figures/mutation_count_IMPACT.png){.absolute top="170" left="30" width="400" height="400"}
+::: {.column width="50%"}
+![](../results/figures/mutation_count_IMPACT.png)
+:::
+:::
 
 ## Methods
 
--   Survival Analysis:
-    -   package : 'survival'
-    -   Surv(): function object, parameters: survival time + status (dead or alive) of each patient
-    -   survfit(): fits the object to the Kaplan Meier estimator.
-    -   data used: clinical_patients
-    -   result: step curve, each step indicates the status of patients per unit time. It can be stratified to different parameters (sex, age, cancer..)
--   Cox Regression:
-    -   Hazard risk study from package: 'survival'
-    -   $\lambda(t,j) = \lambda_0(t).\exp(\sum \beta_i X_i)$, $\lambda$ survival probability for individual $j_i$ at time t, $X_i$ the explanatory variables
-    -   $\displaystyle \frac{\lambda(t,j_1)}{\lambda(t,j_2)} = \exp(\beta_i)$
--   Gene Set Enrichment Analysis
-    -   GO Data from Molecular Signature Database
-    -   Ranked list based on numbers of mutated Samples per Gene
-    -   fgseaMultilevel() from fgsea package
+::: {.panel-tabset}
 
-## Results 1
+### Survival Analysis
+-   **Package:** `survival`
+-   **Function:** `Surv()`
+    -   Parameters: Survival time + Status (0=Living, 1=Deceased).
+-   **Estimator:** `survfit()` (Kaplan-Meier).
+-   **Data:** `clinical_patients`.
+-   **Output:** Step curve stratified by parameters (sex, age, cancer type).
 
--   Survival analysis - stratified by Cancer type ![](../results/figures/surv_count_per_gender_per_cancer.png){.absolute top="170" left="30" width="400" height="400"} ![](../results/figures/survival_cancer_type.png){.absolute top="170" left="30" width="400" height="400"}
+### Cox Regression
+-   **Package:** `survival`
+-   **Goal:** Hazard risk study.
+-   **Formula:** $\lambda(t,j) = \lambda_0(t) \cdot \exp(\sum \beta_i X_i)$
+    -   $\lambda$: Survival probability for individual $j$ at time $t$.
+    -   $X_i$: Explanatory variables.
+-   **Hazard Ratio:** $\displaystyle \frac{\lambda(t,j_1)}{\lambda(t,j_2)} = \exp(\beta_i)$
 
--   Number of SV per Cancer Type ![](../results/figures/SV_count_per_cancer.png){.absolute bottom="20" left="30" width="400" height="400"}
+### GSEA
+-   **Gene Set Enrichment Analysis**
+-   **Source:** GO Data from Molecular Signature Database.
+-   **Metric:** Ranked list based on numbers of mutated Samples per Gene.
+-   **Function:** `fgseaMultilevel()` from `fgsea` package.
 
--   Mutation Type per Cancer Type
-![](../results/figures/mutation_by_cancer.png){.absolute bottom="20" left="30" width="400" height="400"}
+:::
 
-## Results 2
+## Results: Overview
+
+**Survival Analysis & Mutation Types**
+
+::: {layout-ncol=3}
+![Survival by Gender](../results/figures/surv_count_per_gender_per_cancer.png)
+
+![Survival by Cancer Type](../results/figures/survival_cancer_type.png)
+
+![SV Count per Cancer](../results/figures/SV_count_per_cancer.png)
+:::
+
+## Results: Structural Variants (SV)
 
 ::: columns
-  
 ::: {.column width="50%"}
-
+### SV Length Distribution
 ![](../results/figures/SV_lengths_distribution.png)
 :::
-  
+
 ::: {.column width="50%"}
-
- ![](../results/figures/SV_count_per_gene.png)
+### SV Count per Gene
+![](../results/figures/SV_count_per_gene.png)
+:::
 :::
 
+## Results: Glioma Focus
+
+::: columns
+::: {.column width="60%"}
+-   **EGFR Mutations:** Glioma shows distinct patterns compared to other cancer types.
+-   **Overview:** High prevalence of specific structural variants in Glioma samples.
 :::
 
-## Results 3
-
--   EGFR per Cancer Type -\> Glioma ![](../results/figures/EGFR_count_per_cancer.png)
-
--   SV counts for glioma ![](../results/figures/SV_gene_in_glioma.png)
-
-- Mutation counts for glioma ![](../results/figures/Mutation_count_in_glioma.png)
-
-## Results 4
-
--   Survival Correlation with Co-founders(especially gender) ![](../results/figures/surv_plot_per_gender.png){.absolute top="170" left="30" width="400" height="400"}
-
-
--   Survival analysis on gender(subset glioma) ![](../results/figures/survival_glioma_gender.png){.absolute top="170" left="30" width="400" height="400"}
-![](../results/figures/surv_plot_per_gender_for_glioma.png){.absolute top="170" left="30" width="400" height="400"}
-
-## Results 5
-
-::: text-block
--   Gene SV+ Mutation from Glioma
-
--   GSEA (SV) & Mutations
+::: {.column width="40%"}
+![EGFR Count per Cancer Type](../results/figures/EGFR_count_per_cancer.png)
 :::
+:::
+
+## Results: Confounders in Glioma
+
+::: {.panel-tabset}
+
+### Gender Effect (Global)
+![](../results/figures/surv_plot_per_gender.png){width=60%}
+
+### Glioma Subset (KM)
+![](../results/figures/survival_glioma_gender.png){width=60%}
+
+### Glioma Subset (Adjusted)
+![](../results/figures/surv_plot_per_gender_for_glioma.png){width=60%}
+
+:::
+
+## Results: GSEA (SV & Mutations)
+
+**Significant Pathways in Glioma**
 
 ::: table-small
 | Biological Process | pvalue | adjusted pvalue |
-|:-----------------------|-----------------------:|-----------------------:|
-| [GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT]{style="color: red;"} | 1.874506e-06 | 0.0001852012 |
-| GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS | 3.918503e-07 | 0.0001852012 |
-| [GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 8.078272e-07 | 0.0001852012 |
-| GOBP_REGULATION_OF_CELLULAR_LOCALIZATION | 1.656334e-06 | 0.0001852012 |
-| [GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION]{style="color: blue;"} | 1.381711e-06 | 0.0001852012 |
-| [GOBP_TUBE_DEVELOPMENT]{style="color: red;"} | 3.698399e-06 | 0.0003045015 |
-| GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS | 7.123257e-06 | 0.0003909877 |
-| [GOBP_CELL_CYCLE_G1_S_PHASE_TRANSITION]{style="color: blue;"} | 6.760265e-06 | 0.0003909877 |
-| [GOBP_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION]{style="color: blue;"} | 6.408466e-06 | 0.0003909877 |
-| [GOBP_MITOTIC_CELL_CYCLE_PHASE_TRANSITION]{style="color: blue;"} | 8.291796e-06 | 0.0004096147 |
-| [GOBP_BLOOD_VESSEL_MORPHOGENESIS]{style="color: red;"} | 1.719120e-05 | 0.0007077046 |
-| [GOBP_REGULATION_OF_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 1.586304e-05 | 0.0007077046 |
-| [GOBP_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 2.781322e-05 | 0.0010569024 |
-| GOBP_CELL_AGING | 3.013967e-05 | 0.0010634999 |
-| [GOBP_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 3.409266e-05 | 0.0011227849 |
+|:---|---:|---:|
+| [GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT]{style="color: red;"} | 1.87e-06 | 0.00018 |
+| GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS | 3.91e-07 | 0.00018 |
+| [GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 8.07e-07 | 0.00018 |
+| GOBP_REGULATION_OF_CELLULAR_LOCALIZATION | 1.65e-06 | 0.00018 |
+| [GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION]{style="color: blue;"} | 1.38e-06 | 0.00018 |
+| [GOBP_TUBE_DEVELOPMENT]{style="color: red;"} | 3.69e-06 | 0.00030 |
+| GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS | 7.12e-06 | 0.00039 |
+| [GOBP_CELL_CYCLE_G1_S_PHASE_TRANSITION]{style="color: blue;"} | 6.76e-06 | 0.00039 |
+| [GOBP_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION]{style="color: blue;"} | 6.40e-06 | 0.00039 |
+| [GOBP_MITOTIC_CELL_CYCLE_PHASE_TRANSITION]{style="color: blue;"} | 8.29e-06 | 0.00040 |
+| [GOBP_BLOOD_VESSEL_MORPHOGENESIS]{style="color: red;"} | 1.71e-05 | 0.00070 |
+| [GOBP_REGULATION_OF_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 1.58e-05 | 0.00070 |
+| [GOBP_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 2.78e-05 | 0.00105 |
+| GOBP_CELL_AGING | 3.01e-05 | 0.00106 |
+| [GOBP_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 3.40e-05 | 0.00112 |
 :::
 
 ## Discussion
 
--   Study
+-   **Tumor Burden Hypothesis:**
+    -   General trend: Higher TMB $\rightarrow$ higher survival.
+    
+-   **Severity Indication:**
+    -   Surprisingly, more mutations do not necessarily indicate a higher severity of cancer in terms of immediate survival.
 
-    -   Tumor burden
-
-    -   higher TMB-\> higher survival
-
-    -   more mutations no indication of severity of cancer
-
-    -   Glioma only exemption, here no correlation?
+-   **The Glioma Exception:**
+    -   Glioma appears to be an exemption to the TMB rule.
+    -   No clear correlation observed in our subset analysis.
