@@ -240,7 +240,12 @@ tibble_KM_f <- tibble(
   strata = rep(names(KM_f$strata),KM_f$strata))
 
 tibble_KM_f <- tibble_KM_f %>%
-  mutate(strata = str_remove(strata, "AGE_GROUP="))
+  mutate(strata = str_remove(strata, "AGE_GROUP="),
+         strata = factor(strata,
+                         levels = c("<30", "31-50", "50-60", "61-70", ">71"),
+                         ordered = TRUE
+                         )
+         )
 
 ggplot(tibble_KM_f,
        mapping = aes(x = time, 
@@ -287,5 +292,3 @@ ggplot(tibble_KM_f,
 ```
 
 Overall, the survival probability increases after 40 months as the slope of the curve is less steep. It is possible that in some cases only a few patients are left then, and were not reported further.
-
-# html saving to results
