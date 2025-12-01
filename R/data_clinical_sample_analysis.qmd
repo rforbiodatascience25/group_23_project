@@ -35,6 +35,7 @@ scale_color_discrete <- function(...) scale_color_viridis_d(...)
 Investigate the raw data, look for necessary cleaning
 
 ```{r}
+#| message: false
 clinical_sample <- read_delim(here("raw/tmb_mskcc_2018/data_clinical_sample.txt"), delim = "\t", skip = 4, col_names = TRUE)
 ```
 
@@ -103,6 +104,7 @@ The dataset is quite clean. The sample without recorded age might cause issue wh
 ## Load merged dataset with Patient information
 
 ```{r}
+#| message: false
 patient_sample <- read_tsv(file = here('data','patient_sample_gene_panel.tsv'))
 ```
 

@@ -1,12 +1,15 @@
 ---
 title: "Importing Raw data"
-format: html
+format: 
+  html:
+    self-contained: true
 editor: visual
 ---
 
 # Load Libraries
 
 ```{r}
+#| message: false
 library(here)
 library(tidyverse)
 library(ggplot2)
