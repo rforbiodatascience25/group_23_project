@@ -244,7 +244,7 @@ ggplot(tibble_KM_f,
   geom_step()+
   scale_color_viridis_d(option = "viridis") +
   coord_cartesian(ylim = c(0, NA))+
-  labs(title = 'Survival Curve of the patients depending on their TMB', 
+  labs(title = 'Survival Curve of the Glioma patients depending on their TMB', 
        x = 'Time (in months)',
        y = 'Overall Survival Probability',
        color = 'TMB severity')+
@@ -308,7 +308,7 @@ survival_glioma_gender <- ggplot(tibble_KM_f,
   geom_step()+
   scale_color_viridis_d(option = "viridis") +
   coord_cartesian(ylim = c(0, NA))+
-  labs(title = 'Survival Curve of the patients depending on their TMB', 
+  labs(title = 'Survival Curve of the patients depending on their Gender', 
        x = 'Time (in months)', 
        y = 'Overall Survival Probability',
        color = 'Gender')+
@@ -342,7 +342,7 @@ ggplot(tibble_KM_f,
   geom_step()+
   scale_color_viridis_d(option = "viridis") +
   coord_cartesian(ylim = c(0, NA))+
-  labs(title = 'Survival Curve of the patients depending on their TMB', 
+  labs(title = 'Survival Curve of the patients depending on their Age at Diagnosis', 
        x = 'Time (in months)', 
        y = 'Overall Survival Probability',
        color = 'Age group at diagnosis')+
