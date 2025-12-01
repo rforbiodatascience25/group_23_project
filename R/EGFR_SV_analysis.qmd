@@ -1,0 +1,303 @@
+---
+title: "EGFR SV analysis"
+format: 
+  html:
+      self-contained: true
+editor: visual
+output-dir: "results"
+---
+
+## Import library
+
+```{r}
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(here)
+library(readr)
+library(viridis)
+```
+
+## Import data
+
+As this study will later focus on a single gene, we also want to compare with the data from the mutations file
+
+```{r}
+data_sv <- read_tsv(here("data", "sv_cleaned"))
+
+data_patient_sample <- read.delim(here("data", "patient_sample_gene_panel"))
+
+data_mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
+```
+
+## Data augmentation
+
+As already stated in the SV class analysis, clinical and SV data have different dimensions. The same reasoning applies with the mutations file, where several mutations have been sequenced for each patient.
+
+```{r}
+
+sv_clinic_augm <- data_sv |> left_join(data_patient_sample, by = c("Sample_Id" = "SAMPLE_ID"))
+
+clinical_with_sv <- data_patient_sample |> 
+  left_join(sv_per_patient, by = c("SAMPLE_ID" = "Sample_Id")) |> 
+  mutate(Total_SV = replace_na(Total_SV, 0))
+
+mutations_augm_pat <- data_mutations |> 
+  left_join(data_patient_sample, by = c("Tumor_Sample_Barcode" = "SAMPLE_ID"))
+
+```
+
+## Data analysis
+
+### Is a gene recurrent among SVs?
+
+To assess whether a gene is overrepresented among SVs, we analyze two distinct locations: the beginning site and the ending site of the SV. The genes associated with these sites are provided by the Site1_Hugo_Symbol and Site2_Hugo_Symbol attributes, respectively. While we can examine these sites separately, it is more robust to either sum or take the union of the two associated gene sets. By summing the events, we consider each impact on a gene and quantify the frequency of these impacts. Alternatively, taking the union allows us to count only the unique SVs in which each specific gene is involved at least once.
+
+First, summing all counts:
+
+```{r}
+genes_longer <- sv_clinic_augm |> 
+  pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
+  filter(!is.na(Gene_Name))
+
+genes_longer  |> 
+  count(Gene_Name, sort = TRUE) |> 
+  head(10)
+
+```
+
+Then only taking the union:
+
+```{r}
+
+genes_longer_distinct <- sv_clinic_augm |> 
+  pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
+  filter(!is.na(Gene_Name)) |> 
+  distinct(Sample_Id, Gene_Name) 
+
+genes_longer_distinct  |> 
+  count(Gene_Name, sort = TRUE) |> 
+  head(10)
+
+```
+
+Also, we can look at each site separately:
+
+```{r}
+sv_clinic_augm |> 
+  count(Site1_Hugo_Symbol, sort = TRUE) |> 
+  head(10)
+```
+
+```{r}
+sv_clinic_augm |> 
+  count(Site2_Hugo_Symbol, sort = TRUE) |> 
+  head(10)
+```
+
+EGFR is over represented, whatever the counting method used.
+
+```{r}
+top_genes <- genes_longer  |> 
+  count(Gene_Name, sort = TRUE) |> 
+  head(10)
+
+SVs_per_gene <- top_genes |> 
+  mutate(Gene_Name = factor(Gene_Name, levels = rev(Gene_Name))) |>
+  ggplot(aes(x = Gene_Name, y = n, fill=Gene_Name)) +
+  geom_text(aes(label = n), hjust = -0.5, size = 4) +
+  geom_col(color = "black", alpha = 0.9, linewidth = 0.3) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() +
+  coord_flip() +
+  theme(panel.grid.major.y = element_blank(), legend.position = "none")+
+  labs(
+    title = "Top 10 Genes Impacted by Structural Variant Events",
+    subtitle = "EGFR is the most frequent hit",
+    x = NULL, 
+    y = "Total SV Events (Site 1 + Site 2)"
+  ) 
+
+SVs_per_gene
+```
+
+The gene EGFR is indeed involved in 59 sites over 692 sites for the 346 SVs. Let's have a closer look at this. Here, we are reasoning per SV, and only consider the SVs where EGFR is involved either on at least one of the 2 sites.
+
+```{r}
+
+EGFR_SV <- sv_clinic_augm |> 
+  filter(Site1_Hugo_Symbol == "EGFR" | Site2_Hugo_Symbol == "EGFR") 
+
+
+EGFR_SV |> 
+  ggplot(aes(x = Class, fill = Class)) +
+  geom_bar(color = "black", alpha = 0.9, linewidth = 0.3) +
+  theme_minimal() +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme(legend.position = "none", panel.grid.major.x = element_blank())
+
+
+```
+
+EGFR is involved in 30 SVs, and among these 25 are deletion! Let's see if a type of cancer is predominant within the EGFR-involved SVs.
+
+```{r}
+EGFR_per_cancer <- EGFR_SV |> 
+  ggplot(aes(x = CANCER_TYPE, fill = Class)) +
+  geom_bar(color = "black", alpha = 0.8, linewidth = 0.3) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() +
+  theme(panel.grid.major.x = element_blank()) +
+  labs(
+    title = "Frequency of EGFR SV Events by Cancer Type",
+    subtitle = "Decomposition of unique EGFR SVs by variant class and cancer type.", 
+    x = NULL,
+    y = "Total SVs Implicating EGFR", 
+    fill = "SV Class"
+  )
+
+EGFR_per_cancer
+```
+
+Almost all EGFR SVs are from glioma samples. But are there SVs impacting other gene in glioma ?
+
+```{r}
+
+glioma_SV <- sv_clinic_augm |> 
+  filter(CANCER_TYPE == "Glioma") 
+
+glioma_SV_longer <- sv_clinic_augm |> 
+  filter(CANCER_TYPE == "Glioma") |> 
+  pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
+  filter(!is.na(Gene_Name))
+
+glioma_SV |> 
+  ggplot(aes(x = Class, fill = Class)) +
+  geom_bar(color = "black", alpha = 0.8) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+We will look at the genes from Site 1 and Site 2 separately
+
+```{r}
+glioma_SV |> 
+  ggplot(aes(x = Site1_Hugo_Symbol, fill = Site1_Hugo_Symbol)) +
+  geom_bar(color = "black", alpha = 0.8) +
+  coord_flip() +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() 
+```
+
+```{r}
+glioma_SV |> 
+  ggplot(aes(x = Site2_Hugo_Symbol, fill = Site2_Hugo_Symbol)) +
+  geom_bar(color = "black", alpha = 0.8) +
+  coord_flip() +
+   scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() 
+
+```
+
+EGFR is overrepresented in both cancer types, confirming it as a major SV driver in glioma. We will therefore continue to aggregate both impact sites (Site 1 and Site 2) to account for the total event frequency.
+
+```{r}
+other_genes_levels <- glioma_SV_longer |>
+  filter(Gene_Name != "EGFR") |>
+  pull(Gene_Name) |>
+  unique() |>
+  sort()
+
+new_levels <- c("EGFR", other_genes_levels) # for EGFR to have the darkest color of the viridis palette
+
+SV_genes_in_glioma <- glioma_SV_longer |> 
+  mutate(Group = ifelse(Gene_Name == "EGFR", "EGFR", "Other_genes"), Gene_Name = factor(Gene_Name, levels = new_levels)) |> 
+  ggplot(aes(x = Group, fill = Gene_Name)) +
+  geom_bar(color = "black", width = 0.6, linewidth = 0.25, alpha = 0.9) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  theme_minimal() +
+  labs(
+    title = "SV Event Frequency: EGFR vs. Other Genes in Glioma",
+    subtitle = "The 'Other_genes' bar is decomposed by individual gene.",
+    x = NULL,
+    y = "Total SV Impact Events"
+  ) + 
+  theme(legend.position = "none", panel.grid.major.x = element_blank())
+
+SV_genes_in_glioma
+```
+
+### Study of mutations for glioma samples
+
+Based on the previous findings, it would be interesting to look at the genes most impacted by pinpoint mutations in glioma. Does EGFR represent a large share of these genes?
+
+```{r}
+
+data_mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
+
+mutations_augm_pat <- data_mutations |> 
+  left_join(data_patient_sample, by = c("Tumor_Sample_Barcode" = "SAMPLE_ID"))
+
+glioma_mut <- mutations_augm_pat |> 
+  filter(CANCER_TYPE == "Glioma")
+```
+
+```{r}
+
+top_genes_mut <- glioma_mut |> 
+  count(Hugo_Symbol, sort = TRUE) |>  
+  slice_head(n = 10)
+
+top_genes_mut
+```
+
+EGFR is not the first gene impacted by mutations, but it still is in 6th position.
+
+```{r}
+
+# Highlighting the EGFR column in red
+genes_list <- unique(top_genes_mut$Hugo_Symbol)
+custom_colors <- rep("black", length(genes_list))
+names(custom_colors) <- genes_list
+custom_colors["EGFR"] <- "red"
+
+Mutation_count_in_glioma <- top_genes_mut |> 
+  mutate(Hugo_Symbol = fct_reorder(Hugo_Symbol, n)) |>
+  ggplot(aes(x = Hugo_Symbol, y = n, fill=Hugo_Symbol, color = Hugo_Symbol)) +
+  geom_text(aes(label = n), hjust = -0.5, size = 4) +
+  geom_col(color = custom_colors, alpha = 0.9, linewidth = 0.3) +
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE) +
+  scale_color_manual(values = custom_colors) +
+  theme_minimal() +
+  coord_flip() +
+  theme(panel.grid.major.y = element_blank(), legend.position = "none")+
+  labs(
+    title = "Top 10 genes in Glioma Impacted by Mutations",
+    subtitle = "EGFR is in 6th position",
+    x = NULL, 
+    y = "Total number of mutations"
+  ) 
+
+Mutation_count_in_glioma
+```
+
+It could be interesting to compare the patients having a glioma, to see if some glioma are enriched in EGFR SV, or others in mutations from the top 5 above (TERT TP53 PTEN NF1 ATRX).
+
+## Exporting plots
+
+```{r}
+
+ggsave(here('results','figures', 'SV_count_per_gene.png'), SVs_per_gene)
+ggsave(here('results','figures', 'EGFR_count_per_cancer.png'), EGFR_per_cancer)
+ggsave(here('results','figures', 'SV_gene_in_glioma.png'), SV_genes_in_glioma)
+ggsave(here('results','figures', 'Mutation_count_in_glioma.png'), Mutation_count_in_glioma)
+
+```
