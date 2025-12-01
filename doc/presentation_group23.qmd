@@ -14,17 +14,24 @@ format:
 
 ## Introduction/Background
 
-Study(mailny investigating TMB), why was the study conducted?
-
-Looking at different cancers, they wanted to look if a specific component of cancers, TMB, could affect the survival and the success rate of treatment with Immune Checkpoint Inhibitors (ICI), such as PD1, PDL1 and CTLA4.
-
-we focus on Mutations here
+-   Study with 1661 patients/samples
+-   Main objective: New predictive biomarkers for Immune Checkpoint Inhibitors (ICI)
+-   Examine the impact of Tumor Mutational Burden (TMB)
+-   Higher TMB = Higher response?
 
 ## Materials
 
-Dataset, some statistics(maily cancer type)
+-   MSK-IMPACT -\> Next Generation Sequencing
+-   3 versions: IMPACT 3 (341 genes), IMPACT 5 (410 genes), IMPACT 6 (468 genes)
+-   Higher count of mutations detected as more genes are analysed
+-   Datasets:
+    -   data_clinical_patient.txt
+    -   data_clinical_sample.txt
+    -   data_gene_panel_matrix.txt
+    -   data_mutations.txt
+    -   data_sv.txt
 
-and Impact version
+![](../results/figures/mutation_count_IMPACT.png){.absolute top="170" left="30" width="400" height="400"}
 
 ## Methods
 
@@ -42,21 +49,19 @@ and Impact version
 
 ## Results 1
 
--   Survival analysis - stratified by Cancer type
+-   Survival analysis - stratified by Cancer type ![](../results/figures/survival_cancer_type.png){.absolute top="170" left="30" width="400" height="400"}
 
 -   Number of Mutations & SV per Cancer Type
 
 ## Results 2
 
--   SV Analysis
+-   SV Analysis ![](../results/figures/SV_lengths_distribution.png){.absolute top="170" left="30" width="400" height="400"}
 
--   Kind of SVs+ Length
-
--   Number of SVs per Gene-\>EGFR
+-   Number of SVs per Gene ![](../results/figures/SV_count_per_gene.png){.absolute top="170" right="30" width="400" height="400"}
 
 ## Results 3
 
--   EGFR per Cancer Type -\> Glioma
+-   EGFR per Cancer Type -\> Glioma ![](../results/figures/EGFR_count_per_cancer.png)
 
 -   Overview Glioma
 
@@ -64,7 +69,7 @@ and Impact version
 
 -   Survival Correlation with Co-founders(especially gender)
 
--   Survival analysis on gender(subset glioma) ![](../results/figures/EGFR_count_per_cancer.png){.absolute top="170" left="30" width="400" height="400"}
+-   Survival analysis on gender(subset glioma) ![](../results/figures/survival_glioma_gender.png){.absolute top="170" left="30" width="400" height="400"}
 
 ## Results 5
 

@@ -91,7 +91,7 @@ df_gender <- df |>
                        )
   )
 
-df_gender |> 
+surv_count_per_gender_per_cancer <- df_gender |> 
   ggplot(
     aes(x = Survival_Status,
         fill = Sex
@@ -105,6 +105,8 @@ df_gender |>
   facet_wrap(~CANCER_TYPE) + 
   labs(title = "Influence of the gender on the survival states, stratified by cancer type") +
   theme_classic() 
+
+surv_count_per_gender_per_cancer
 ```
 
 We see that there is almost no people with "Skin Cancer, Non-Melanoma" in the cohort, probably explaining why it was not significant at all. Otherwise, we can see that these plots are coherent with the cox regression on cancer types.
@@ -125,7 +127,7 @@ summary(cox_model_age_gender_glob)
 We see from the p values that none of the age_group is significant, whereas the sex is close to be significant (p-value of 0.09).
 
 ```{r}
-df_gender |> 
+surv_count_gender <- df_gender |> 
   ggplot(
     aes(x = Survival_Status,
         fill = Sex
@@ -139,6 +141,8 @@ df_gender |>
   facet_wrap(~Age_group) + 
   labs(title = "Influence of the gender on the survival states, stratified by age group") +
   theme_classic() 
+
+surv_count_gender
 ```
 
 Indeed we can see on the above plot that the distribution is similar for all age groups, and that gender seems to impact as the distributions are different for male and female. Lets check in detail this difference.
@@ -193,7 +197,7 @@ surv_fit_gender_glob <- survfit(cox_model_gender_glob, newdata = newdata)
 ```
 
 ```{r}
-ggsurvplot(
+surv_plot_gender <- ggsurvplot(
   surv_fit_gender_glob,
   data = newdata, 
   legend.labs = c("Female", "Male"),
@@ -206,6 +210,8 @@ ggsurvplot(
   ylab = "Survival Probability",
   legend.title = "Gender"
 )
+
+surv_plot_gender$plot
 ```
 
 The predictor is in accordance with the cox regression: a male has a higher probability of survival than a woman at anytime.
@@ -258,7 +264,7 @@ summary(cox_model_glioma_age_gender)
 Once again the only p-value below 0.05 here is for the gender, thus even though we would think age_group might be relevant, the only significant part is the gender for patient who have a Glioma!
 
 ```{r}
-df_glioma |> 
+surv_count_gender_glioma <- df_glioma |> 
   ggplot(
     aes(x = OS_STATUS,
         fill = Sex
@@ -273,6 +279,7 @@ df_glioma |>
   labs(title = "Influence of the gender on the survival states, stratified by age group") +
   theme_classic() 
 
+surv_count_gender_glioma
 ```
 
 As for the study with all the cancer types, the distributions seem indeed to be the same for all age groups. Lets check if the gender influence is the same as before, i.e. that male have higher probability to survive.
@@ -290,7 +297,7 @@ surv_fit_glioma_gender <- survfit(cox_model_glioma_gender, newdata = newdata)
 ```
 
 ```{r}
-ggsurvplot(
+surv_plot_glioma_gender <- ggsurvplot(
   surv_fit_glioma_gender,
   data = newdata, 
   legend.labs = c("Female", "Male"),
@@ -303,6 +310,8 @@ ggsurvplot(
   ylab = "Survival Probability",
   legend.title = "Gender"
 )
+
+surv_plot_glioma_gender$plot
 ```
 
 And indeed we see a bigger gap between the survival probabilities for Male and Female in case of Glioma.
@@ -334,3 +343,16 @@ df_glioma |>
 ```
 
 So we can see two things: first we have very few samples for the age groups before 30 years old and after 71 years old, second there are more male than female. This two differences combined with the few number of samples are very likely to bias our study.
+
+# Exporting the plots
+
+```{r}
+if(!dir.exists(here("results"))) dir.create(here("results")) 
+if(!dir.exists(here("results",'figures'))) dir.create(here("results", 'figures'))
+
+ggsave(here('results','figures', 'surv_count_per_gender_per_cancer.png'), surv_count_per_gender_per_cancer)
+ggsave(here('results','figures', 'surv_count_per_gender.png'), surv_count_gender)
+ggsave(here('results','figures', 'surv_count_per_gender_for_glioma.png'), surv_count_gender_glioma)
+ggsave(here('results','figures', 'surv_plot_per_gender.png'), surv_plot_gender$plot)
+ggsave(here('results','figures', 'surv_plot_per_gender_for_glioma.png'), surv_plot_glioma_gender$plot)
+```
