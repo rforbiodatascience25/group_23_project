@@ -62,7 +62,7 @@ Load the Clinical Sample data.
 ```{r}
 #Load the clinical sample data
 clinical_sample <- read_tsv(here("data",
-                                   "patient_sample_gene_panel"))
+                                   "patient_sample_gene_panel.tsv"))
 clinical_sample
 ```
 

@@ -24,7 +24,7 @@ Load the Gene Panel Matrix dataset and select the *SAMPLE_ID* and *IMPACT_versio
 ```{r}
 #Load the gene panel matrix data
 gene_panel_matrix <- read_tsv(here("data",
-                                     "patient_sample_gene_panel"))
+                                     "patient_sample_gene_panel.tsv"))
 #Select the column of interest
 gene_panel_matrix <- gene_panel_matrix |> 
   select(SAMPLE_ID,
