@@ -24,7 +24,7 @@ Load the Gene Panel Matrix dataset and select the *SAMPLE_ID* and *IMPACT_versio
 ```{r}
 #Load the gene panel matrix data
 gene_panel_matrix <- read_tsv(here("data",
-                                     "patient_sample_gene_panel.tsv"))
+                                     "patient_sample_gene_panel"))
 #Select the column of interest
 gene_panel_matrix <- gene_panel_matrix |> 
   select(SAMPLE_ID,
@@ -141,21 +141,22 @@ percentage_type <- percentage_type |>
 A representation of the number of mutations detected by the IMPACT version is done in order to assess whether the latest versions of IMPACT demonstrate improved capacity for identifying new mutations.
 
 ```{r}
-ggplot(data = combined_data,
-       mapping = aes(x = IMPACT_version,
-                     y = n_mutation,
-                     fill = IMPACT_version)) +
-  geom_boxplot(alpha = 0.5) +
-  #It is necessary to do the log10 of the y values to prevent outliers from
-  #hiding the main distribution
-  scale_y_log10() +
-  theme_minimal() +
-  theme(legend.position = "none") +
-  scale_fill_viridis(option = "viridis",
-                     discrete = TRUE) +
-  labs(title = "Number of mutations per IMPACT version (log scale)",
-       y = "Mutations (log10)",
-       x = "IMPACT version")
+mutation_count_IMPACT <- ggplot(data = combined_data,
+                           mapping = aes(x = IMPACT_version,
+                                         y = n_mutation,
+                                         fill = IMPACT_version)) +
+                      geom_boxplot(alpha = 0.5) +
+                      #It is necessary to do the log10 of the y values to 
+                      #prevent outliers from hiding the main distribution
+                      scale_y_log10() +
+                      theme_minimal() +
+                      theme(legend.position = "none") +
+                      scale_fill_viridis(option = "viridis",
+                                         discrete = TRUE) +
+                      labs(title = "Number of mutations per IMPACT version (log scale)",
+                           y = "Mutations (log10)",
+                           x = "IMPACT version")
+mutation_count_IMPACT
 ```
 
 As shown in the plot, the overall number of mutations detected increases with higher IMPACT versions, reflecting that a greater number of studied genes corresponds to a higher number of detected mutations. The medians of detected mutations are the following:
@@ -189,3 +190,10 @@ ggplot(data = percentage_type,
 While newer IMPACT versions detect more mutations overall, the distribution of mutation types remains largely unchanged. The most significant change is the proportion of Frameshift mutations, which increases with each IMPACT version.
 
 This indicates that version upgrades increase sensitivity without substantially altering the mutation distribution.
+
+## Saving figures:
+
+```{r}
+ggsave("../results/figures/mutation_count_IMPACT.png",
+       plot = mutation_count_IMPACT)
+```
