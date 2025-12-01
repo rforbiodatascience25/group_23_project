@@ -54,7 +54,9 @@ format:
 
 ## Methods
 
-::: {.panel-tabset}
+::: columns
+  
+::: {.column width="31%"}
 
 ### Survival Analysis
 -   **Package:** `survival`
@@ -64,6 +66,9 @@ format:
 -   **Data:** `clinical_patients`.
 -   **Output:** Step curve stratified by parameters (sex, age, cancer type).
 
+:::
+  
+::: {.column width="31%"}
 ### Cox Regression
 -   **Package:** `survival`
 -   **Goal:** Hazard risk study.
@@ -72,11 +77,16 @@ format:
     -   $X_i$: Explanatory variables.
 -   **Hazard Ratio:** $\displaystyle \frac{\lambda(t,j_1)}{\lambda(t,j_2)} = \exp(\beta_i)$
 
+:::
+
+::: {.column width="31%"}
 ### GSEA
 -   **Gene Set Enrichment Analysis**
 -   **Source:** GO Data from Molecular Signature Database.
 -   **Metric:** Ranked list based on numbers of mutated Samples per Gene.
 -   **Function:** `fgseaMultilevel()` from `fgsea` package.
+
+:::
 
 :::
 
