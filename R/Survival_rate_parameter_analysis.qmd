@@ -16,7 +16,7 @@ library("viridis")
 # Loading Data
 
 ```{r}
-patients_sample_gene_panel <- read_delim(here("data", "patient_sample_gene_panel"), delim = "\t", col_names = TRUE)
+patients_sample_gene_panel <- read_delim(here("data", "patient_sample_gene_panel"), delim = "\t", col_names = TRUE, show_col_types = FALSE)
 
 ```
 
@@ -80,7 +80,7 @@ tibble_KM_f <- tibble(
 tibble_KM_f <- tibble_KM_f %>%
   mutate(strata = str_remove(strata, "CANCER_TYPE="))
 
-ggplot(tibble_KM_f,
+survival_cancer_type <- ggplot(tibble_KM_f,
        mapping = aes(x = time, 
                      y = survival, 
                      color = strata))+
@@ -93,7 +93,7 @@ ggplot(tibble_KM_f,
        y = 'Overall Survival Probability',
        color = 'Cancer Type')+
   theme_minimal()
-
+ggsave("../results/figures/survival_cancer_type.png", plot = survival_cancer_type)
   
 ```
 
@@ -277,7 +277,7 @@ tibble_KM_f <- tibble(
 tibble_KM_f <- tibble_KM_f %>%
   mutate(strata = str_remove(strata, "SEX="))
 
-ggplot(tibble_KM_f,
+survival_glioma_gender <- ggplot(tibble_KM_f,
        mapping = aes(x = time, 
                      y = survival, 
                      color = strata))+
@@ -289,5 +289,7 @@ ggplot(tibble_KM_f,
        y = 'Overall Survival Probability',
        color = 'Gender')+
   theme_minimal()
-  
+
+ggsave("../results/figures/survival_glioma_gender.png", plot = survival_glioma_gender)
+
 ```
