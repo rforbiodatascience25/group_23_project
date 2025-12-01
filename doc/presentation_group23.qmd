@@ -51,7 +51,7 @@ format:
 
 -   Survival analysis - stratified by Cancer type ![](../results/figures/survival_cancer_type.png){.absolute top="170" left="30" width="400" height="400"}
 
--   Number of Mutations & SV per Cancer Type
+-   Number of Mutations & SV per Cancer Type ![](../results/figures/SV_count_per_cancer.png){.absolute bottom="20" left="30" width="400" height="400"}
 
 ## Results 2
 
