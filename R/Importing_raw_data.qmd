@@ -320,5 +320,5 @@ patients_sample_gene_panel <- left_join(patients_sample, gene_panel_matrix, by =
 
 ```{r}
 patients_sample_gene_panel|>
-  write_tsv(file = here('data','patient_sample_gene_panel'))
+  write_tsv(file = here('data','patient_sample_gene_panel.tsv'))
 ```
