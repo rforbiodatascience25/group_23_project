@@ -30,9 +30,9 @@ BP_list = split(BP_df$ensembl_gene, BP_df$gs_name)
 
 ```{r}
 #| message: false
-patient_sample <- read_tsv(file = here('data','patient_sample_gene_panel.tsv'))
-sv <- read_tsv(file = here('data','sv_cleaned.tsv'))
-mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
+patient_sample <- read_tsv(file = here("data","patient_sample_gene_panel.tsv"))
+sv <- read_tsv(file = here("data","sv_cleaned.tsv"))
+mutations <- read_tsv(file = here("data","data_mutation_cleaned.tsv"))
 ```
 
 # GSEA with mutations per Gene
@@ -50,11 +50,11 @@ clinical_clean <- patient_sample |> select(c(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE
 
 gene_sv_count <- sv |> 
   left_join(clinical_clean, by = c("Sample_Id" = "SAMPLE_ID")) |>
-  filter(CANCER_TYPE == 'Glioma')|>
+  filter(CANCER_TYPE == "Glioma")|>
   pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
   filter(!is.na(Gene_Name))|>
   count(Gene_Name, sort = TRUE)|>
-  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Gene_Name' = 'gene_symbol'))|>
+  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c("Gene_Name" = "gene_symbol"))|>
   distinct()|>
   na.omit()
 
@@ -66,7 +66,7 @@ length(gene_sv_stats)
 ```{r}
 pathway_scoring_gene_sv <- fgseaMultilevel(pathways= BP_list, stats = gene_sv_stats,minSize = 0, maxSize = 500, scoreType = "std")
 pathway_scoring_gene_sv <- arrange(pathway_scoring_gene_sv, pval)
-head(pathway_scoring_gene_sv|> select(pathway, pval, padj), n = 15)
+head(pathway_scoring_gene_sv |> select(pathway, pval, padj), n = 15)
 ```
 
 Looking at the pvalue and adjusted p-value these results are not very robust. This is probably due to the small sample size of only 28 genes.
@@ -80,7 +80,7 @@ gene_mutation_count <- mutations |>
   left_join(clinical_clean, by = c("Tumor_Sample_Barcode" = "SAMPLE_ID"))|>
   filter(CANCER_TYPE == "Glioma")|> 
   count(Hugo_Symbol, sort = TRUE)|>
-  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Hugo_Symbol' = 'gene_symbol'))|>
+  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c("Hugo_Symbol" = "gene_symbol"))|>
   distinct()|>
   na.omit()
 
@@ -104,7 +104,7 @@ These results are more reliable than the ones of the structural variances. The m
 ```{r}
 overlap <- inner_join(
   pathway_scoring_gene_sv |> head(n=100),
-  pathway_scoring_gene_m |>  head(n=100), by = 'pathway'
+  pathway_scoring_gene_m |>  head(n=100), by = "pathway"
   ) |> 
   select(pathway, pval.x, pval.y)
 
@@ -125,13 +125,13 @@ clinical_clean <- patient_sample |> select(c(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE
 sample_sv_count <- sv |> 
    select(c(Sample_Id, Site1_Hugo_Symbol, Site1_Chromosome, Site2_Hugo_Symbol, Site2_Chromosome, Class, SV_Length))|>
   left_join(clinical_clean, by = c("Sample_Id" = "SAMPLE_ID")) |>
-  filter(CANCER_TYPE == 'Glioma')|>
+  filter(CANCER_TYPE == "Glioma")|>
   pivot_longer(cols = c("Site1_Hugo_Symbol", "Site2_Hugo_Symbol"), names_to = "Position", values_to = "Gene_Name")|>
   filter(!is.na(Gene_Name))|>
   select(Sample_Id, Gene_Name)|>
   distinct()|>
   count(Gene_Name, sort = TRUE)|>
-  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Gene_Name' = 'gene_symbol'))|>
+  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c("Gene_Name" = "gene_symbol"))|>
   distinct()|>
   na.omit()
 
@@ -148,11 +148,11 @@ head(pathway_scoring_sample_sv|> select(pathway, pval, padj), n =15)
 ```{r}
 mutation_gene_sample <- mutations |> 
   left_join(clinical_clean |> select(SAMPLE_ID, CANCER_TYPE), by = c("Tumor_Sample_Barcode" = "SAMPLE_ID")) |>
-  filter(CANCER_TYPE == 'Glioma')|>
+  filter(CANCER_TYPE == "Glioma")|>
   select(Tumor_Sample_Barcode, Hugo_Symbol) |> 
   distinct() |> 
   count(Hugo_Symbol, sort = TRUE) |> 
-  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Hugo_Symbol' = 'gene_symbol'))|>
+  left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c("Hugo_Symbol" = "gene_symbol"))|>
   distinct()|>
   na.omit()
 
@@ -174,7 +174,7 @@ The comparison of the both counting versions, result in very similar outputs.
 ```{r}
 overlap <- inner_join(
   pathway_scoring_gene_m |> filter(padj <0.05),
-  pathway_scoring_sample_m |>  filter(padj < 0.05), by = 'pathway'
+  pathway_scoring_sample_m |>  filter(padj < 0.05), by = "pathway"
   ) |> 
   select(pathway, pval.x, pval.y)
 

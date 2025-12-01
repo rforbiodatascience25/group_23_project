@@ -17,7 +17,7 @@ library(table1)
 # Data import
 
 ```{r}
-data_mutation <- read_tsv(here("raw/tmb_mskcc_2018", "data_mutations.txt"),
+data_mutation <- read_tsv(here("data/_raw/tmb_mskcc_2018", "data_mutations.txt"),
                                  na = c("", "NA", "NULL"),
                                  show_col_types = FALSE)
 ```

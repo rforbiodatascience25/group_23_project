@@ -63,3 +63,5 @@ if(!dir.exists(here("results"))) dir.create(here("results"))
 html_files <- list.files(here("R"), pattern = "\\.html$", full.names = TRUE)
 file.rename(from = html_files, to = file.path(here("results"), basename(html_files)))
 ```
+
+{{< include gene_enrichment_analysis.qmd >}}

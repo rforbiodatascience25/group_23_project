@@ -21,8 +21,8 @@ library(table1)
 # Download raw data
 
 ```{r}
-folder <- here('raw')
-local_path <- file.path(folder, 'raw_data.tar.gz')
+folder <- here("data", "_raw")
+local_path <- file.path(folder, "raw_data.tar.gz")
 
 ```
 
@@ -30,7 +30,7 @@ local_path <- file.path(folder, 'raw_data.tar.gz')
 if (!dir.exists(folder)) {
   dir.create(folder, recursive = TRUE)
 }
-download.file('https://cbioportal-datahub.s3.amazonaws.com/tmb_mskcc_2018.tar.gz', local_path, mode = 'wb')
+download.file("https://cbioportal-datahub.s3.amazonaws.com/tmb_mskcc_2018.tar.gz", local_path, mode = "wb")
 ```
 
 # Unpack raw data
@@ -53,7 +53,7 @@ clinical_patient <- read_delim(file.path(folder, "tmb_mskcc_2018/data_clinical_p
 
 gene_panel_matrix <- read_delim(file.path(folder, "tmb_mskcc_2018/data_gene_panel_matrix.txt"), delim = "\t")
 
-raw_data_sv <- read_delim(file.path(folder, "tmb_mskcc_2018/data_sv.txt"), delim = '\t')
+raw_data_sv <- read_delim(file.path(folder, "tmb_mskcc_2018/data_sv.txt"), delim = "\t")
 ```
 
 # Data cleaning of mutations
@@ -126,14 +126,14 @@ na_containing_columns <- data_mutation_without_nas |>
 na_containing_columns
 ```
 
-We see that dbSNP_RS is almost only NAs (20026 over 20563), thus we can drop this column. Apart from that, the only variables that have a significant number of NAs are ALLELE_NUM ans IS_NEW. It seems that ALLELE_NUM is an internal indicator, so we wouldn't use it, therefor we'll also drop it.
+We see that dbSNP_RS is almost only NAs (20026 over 20563), thus we can drop this column. Apart from that, the only variables that have a significant number of NAs are ALLELE_NUM ans IS_NEW. It seems that ALLELE_NUM is an internal indicator, so we wouldn"t use it, therefor we"ll also drop it.
 
 ```{r}
 data_mutation_without_nas <- data_mutation_without_nas |> 
   select(-c("dbSNP_RS", "ALLELE_NUM"))
 ```
 
-For IS_NEW, we'll check if NA corresponds to a not-new allele, in this case we would just infere the NAs to be null or 0.
+For IS_NEW, we"ll check if NA corresponds to a not-new allele, in this case we would just infere the NAs to be null or 0.
 
 ```{r}
 is_new_values <- data_mutation_without_nas |>
@@ -143,7 +143,7 @@ print("The values in the IS_NEW column are:")
 is_new_values 
 ```
 
-So indeed the NAs here means that it's not new. So we will replace NAs by NOTNEW, and then input NOTNEW by 0 and NEWRECORD by 1 (hotspot encoding is easier to use in code).
+So indeed the NAs here means that it"s not new. So we will replace NAs by NOTNEW, and then input NOTNEW by 0 and NEWRECORD by 1 (hotspot encoding is easier to use in code).
 
 ```{r}
 data_mutation_without_nas <- data_mutation_without_nas |> 
@@ -153,7 +153,7 @@ data_mutation_without_nas <- data_mutation_without_nas |>
   ))
 ```
 
-For the rest of the column with NAs, we will keep all their rows and just using na.rm = TRUE when using the columns (we can do inference bc they're not statistical or calculated variable).
+For the rest of the column with NAs, we will keep all their rows and just using na.rm = TRUE when using the columns (we can do inference bc they"re not statistical or calculated variable).
 
 We will search all columns with constant value to also drop them as we already know their values.
 
@@ -255,7 +255,7 @@ data_mutation_without_nas_long |>
 if(!dir.exists(here("data"))) dir.create(here("data"))
 
 data_mutation_without_nas_long |>
-  write_tsv(file = here('data','data_mutation_cleaned.tsv'))
+  write_tsv(file = here("data","data_mutation_cleaned.tsv"))
 ```
 
 # Patients Cleaning
@@ -268,8 +268,8 @@ clinical_patient <- clinical_patient |>
       OS_STATUS == "1:DECEASED" ~ 1
       ), 
     SEX_NUM = case_when(
-      SEX == 'Male' ~ 0,
-      SEX == 'Female' ~ 1
+      SEX == "Male" ~ 0,
+      SEX == "Female" ~ 1
       ),
     AGE_GROUP = factor(
       AGE_GROUP,
@@ -302,28 +302,28 @@ cleaned_sv <- raw_data_sv |>
 
 ```
 
-The file's dimensions are inconsistent with the other files, and the Sample_ID column is not a unique identifier, so it cannot serve as a primary key for subsequent joins. We will export this cleaned file and handle the various merging operations later in the analysis, ensuring the appropriate joining method is applied based on the expected output.
+The file"s dimensions are inconsistent with the other files, and the Sample_ID column is not a unique identifier, so it cannot serve as a primary key for subsequent joins. We will export this cleaned file and handle the various merging operations later in the analysis, ensuring the appropriate joining method is applied based on the expected output.
 
 ```{r}
 cleaned_sv |>
-  write_tsv(file = here('data','sv_cleaned.tsv'))
+  write_tsv(file = here("data","sv_cleaned.tsv"))
 ```
 
 ## Merging Patient-Sample
 
 ```{r}
-patients_sample <- left_join(clinical_patient, clinical_sample, by = 'PATIENT_ID')
+patients_sample <- left_join(clinical_patient, clinical_sample, by = "PATIENT_ID")
 ```
 
 ## Merging Patient-Sample with Gene panel Matrix
 
 ```{r}
-patients_sample_gene_panel <- left_join(patients_sample, gene_panel_matrix, by = 'SAMPLE_ID')
+patients_sample_gene_panel <- left_join(patients_sample, gene_panel_matrix, by = "SAMPLE_ID")
 ```
 
 # Exporting the cleaned merged data
 
 ```{r}
 patients_sample_gene_panel|>
-  write_tsv(file = here('data','patient_sample_gene_panel.tsv'))
+  write_tsv(file = here("data","patient_sample_gene_panel.tsv"))
 ```

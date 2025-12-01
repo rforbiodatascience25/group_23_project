@@ -59,7 +59,9 @@ length(unique(clinical_sample$SAMPLE_ID))
 Number Metastatic vs Primary
 
 ```{r}
-clinical_sample |> group_by(SAMPLE_TYPE)|> summarise(n= n())
+clinical_sample |> 
+  group_by(SAMPLE_TYPE)|> 
+  summarise(n= n())
 ```
 
 Age distribution:
@@ -67,7 +69,7 @@ Age distribution:
 ```{r}
 ggplot(clinical_sample, aes(AGE_AT_SEQ_REPORT))+
   geom_bar()+
-  labs(title ='Age distribution')
+  labs(title ="Age distribution")
 ```
 
 Investigate the warning: One Sample without recorded Age and TMB
@@ -83,7 +85,7 @@ Many samples with low TMB
 ```{r}
 ggplot(clinical_sample, aes(TMB_NONSYNONYMOUS))+
   geom_density()+
-  labs(title = 'TMB Distribution')
+  labs(title = "TMB Distribution")
 ```
 
 Investigate high samples with high TMB
@@ -103,7 +105,7 @@ The dataset is quite clean. The sample without recorded age might cause issue wh
 
 ```{r}
 #| message: false
-patient_sample <- read_tsv(file = here('data','patient_sample_gene_panel.tsv'))
+patient_sample <- read_tsv(file = here("data","patient_sample_gene_panel.tsv"))
 ```
 
 ### Previous findings
@@ -120,11 +122,11 @@ Count how many samples were taken per organ.
 
 ```{r}
 patient_sample |>
-  mutate(sample_site = ifelse(METASTATIC_SITE=='Not Applicable', PRIMARY_SITE, METASTATIC_SITE))|>
+  mutate(sample_site = ifelse(METASTATIC_SITE == "Not Applicable", PRIMARY_SITE, METASTATIC_SITE))|>
   ggplot( aes(sample_site))+
   geom_bar()+
   labs(
-    title = 'Number of Samples per Organ'
+    title = "Number of Samples per Organ"
   )+
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1, size = 4))
 ```
@@ -135,7 +137,7 @@ Filter for organs with \> 20 tumors sampled.
 
 ```{r}
 patient_sample <- patient_sample |>
-  mutate(sample_site = ifelse(METASTATIC_SITE=='Not Applicable', PRIMARY_SITE, METASTATIC_SITE))
+  mutate(sample_site = ifelse(METASTATIC_SITE == "Not Applicable", PRIMARY_SITE, METASTATIC_SITE))
 
 common_tumor_sites <- patient_sample|>
   group_by(sample_site)|> 
@@ -147,7 +149,7 @@ patient_sample|>
   ggplot(aes(sample_site))+
   geom_bar()+
   labs(
-    title = 'Number of Samples for Organs with more than 20 Samples'
+    title = "Number of Samples for Organs with more than 20 Samples"
   )+
   theme(axis.text.x = element_text(angle = 90, hjust=1, size = 10))
 ```
@@ -159,7 +161,7 @@ Create Network of where primary tumors have spread to as Metastasis.
 ```{r}
 nodes <- patient_sample |>
   select(PRIMARY_SITE, METASTATIC_SITE)|>
-  mutate(to = ifelse(METASTATIC_SITE=='Not Applicable', NA, METASTATIC_SITE))|>
+  mutate(to = ifelse(METASTATIC_SITE == "Not Applicable", NA, METASTATIC_SITE))|>
   rename(from = PRIMARY_SITE) |> 
   select(-METASTATIC_SITE)|>
   na.omit(to)|>
@@ -167,7 +169,7 @@ nodes <- patient_sample |>
   unique()
 network_inf <- patient_sample |>
   select(PRIMARY_SITE, METASTATIC_SITE)|>
-  mutate(to = ifelse(METASTATIC_SITE=='Not Applicable', NA, METASTATIC_SITE))|>
+  mutate(to = ifelse(METASTATIC_SITE == "Not Applicable", NA, METASTATIC_SITE))|>
   rename(from = PRIMARY_SITE) |> 
   select(-METASTATIC_SITE)|>
   na.omit(to)|>
@@ -176,12 +178,12 @@ network_inf <- patient_sample |>
 
 node_labels <-c(unique(network_inf$from), unique(network_inf$to))
 node_labels <- unique(node_labels)
-g <- graph_from_data_frame(network_inf, directed = TRUE)#, vertices = c(nodes, nodes)
-ggraph(g , layout = 'stress')+
-  geom_edge_link(aes(alpha = n), arrow = arrow(length = unit(2.5, 'mm')))+#
+g <- graph_from_data_frame(network_inf, directed = TRUE)
+ggraph(g , layout = "stress")+
+  geom_edge_link(aes(alpha = n), arrow = arrow(length = unit(2.5, "mm")))+#
   geom_node_point()+
   geom_node_text(aes(label=node_labels), repel = TRUE, size = 3)+
-  labs(title = 'Network of Primary Tumor sites connected to their Metastatic sites')
+  labs(title = "Network of Primary Tumor sites connected to their Metastatic sites")
 ```
 
 This is a highly connected Network. Some hubs can be seen and as represented with the strength of the arrow, it is visible that some primary tumor sides have common metastatic sites.
@@ -193,16 +195,16 @@ network_common_tumor_sites <- network_inf|>
   filter(from %in% common_tumor_sites$sample_site)
 node_labels <- network_common_tumor_sites|>
   select(-n)|>
-  pivot_longer(cols = c(from, to), values_to = 'vertice')|>
+  pivot_longer(cols = c(from, to), values_to = "vertice")|>
   select(-name)|>
   distinct(vertice)|>
   mutate(common_site = ifelse(vertice %in% common_tumor_sites$sample_site, TRUE, FALSE))
 g_common <- graph_from_data_frame(network_common_tumor_sites)
-ggraph(g_common , layout = 'stress')+
-  geom_edge_link(aes(alpha = n), arrow = arrow(length = unit(2.5, 'mm')))+#
+ggraph(g_common , layout = "stress")+
+  geom_edge_link(aes(alpha = n), arrow = arrow(length = unit(2.5, "mm")))+
   geom_node_point(aes(color = node_labels$common_site))+
   geom_node_text(aes(label=node_labels$vertice), repel = TRUE, size = 3)+
-labs(title = 'Subsetted network for primary sites with over 20 Samples and their metastatic sites')
+labs(title = "Subsetted network for primary sites with over 20 Samples and their metastatic sites")
 ```
 
 This is still a big Network. The common tumor sites are only 16 nodes, but they have multiple metastatic sites. Some common tumor sites are also connected, so spread to each other.
@@ -221,7 +223,7 @@ Subset the dataset to only Glioma Samples
 
 ```{r}
 sample_glioma <- patient_sample |> 
-  filter(CANCER_TYPE=='Glioma')
+  filter(CANCER_TYPE=="Glioma")
 ```
 
 ```{r}
@@ -251,117 +253,117 @@ ggplot() +
            fill = "Glioma"),
            alpha = 0.5)+
   labs(
-    fill = 'Dataset',
-    x = 'Months of Survival',
-    title = 'Survival Months per Dataset'
+    fill = "Dataset",
+    x = "Months of Survival",
+    title = "Survival Months per Dataset"
   )
   
 ggplot() +
   geom_bar(data = patient_sample,
-           aes(SEX,  after_stat(count / sum(count)), fill = 'Full'),
+           aes(SEX,  after_stat(count / sum(count)), fill = "Full"),
            alpha = 0.5)+
   geom_bar(data = sample_glioma,
-           aes(SEX,   after_stat(count / sum(count)), fill = 'Glioma'),
+           aes(SEX,   after_stat(count / sum(count)), fill = "Glioma"),
            alpha = 0.5)+
   labs(
     y = "Proportion",
-    fill = 'Dataset',
-    x = 'Gender',
-    title = 'Gender Distribution per Dataset'
+    fill = "Dataset",
+    x = "Gender",
+    title = "Gender Distribution per Dataset"
     )
   
 ggplot() +
   geom_bar(data = patient_sample,
-           aes(OS_STATUS, after_stat(count / sum(count)), fill = 'Full'),
+           aes(OS_STATUS, after_stat(count / sum(count)), fill = "Full"),
            alpha = 0.5)+
   geom_bar(data = sample_glioma,
-           aes(OS_STATUS, after_stat(count / sum(count)), fill = 'Glioma'),
+           aes(OS_STATUS, after_stat(count / sum(count)), fill = "Glioma"),
            alpha = 0.5)+
   labs(
     y = "Proportion",
-    fill = 'Dataset',
-    x = 'Survival Status',
-    title = 'Survival Distribution per Dataset'
+    fill = "Dataset",
+    x = "Survival Status",
+    title = "Survival Distribution per Dataset"
     )
 
 ggplot() +
   geom_bar(data = patient_sample,
-           aes(DRUG_TYPE, after_stat(count / sum(count)), fill = 'Full'),
+           aes(DRUG_TYPE, after_stat(count / sum(count)), fill = "Full"),
            alpha = 0.5)+
   geom_bar(data = sample_glioma,
-           aes(DRUG_TYPE, after_stat(count / sum(count)), fill = 'Glioma'),
+           aes(DRUG_TYPE, after_stat(count / sum(count)), fill = "Glioma"),
            alpha = 0.5)+
   labs(
     y = "Proportion",
-    fill = 'Dataset',
-    x = 'Drug Type',
-    title = 'Drug Type Distribution per Dataset'
+    fill = "Dataset",
+    x = "Drug Type",
+    title = "Drug Type Distribution per Dataset"
     )
 
 ggplot() +
   geom_density(data = patient_sample|> filter(OS_STATUS == 1),
-           aes(OS_MONTHS, fill = 'Full'),
+           aes(OS_MONTHS, fill = "Full"),
            alpha = 0.5)+
   geom_density(data = sample_glioma |> filter(OS_STATUS == 1),
-           aes(OS_MONTHS, fill = 'Glioma'),
+           aes(OS_MONTHS, fill = "Glioma"),
            alpha = 0.5)+
   labs(
-    fill = 'Dataset',
-    x = 'Survival Months',
-    title = 'Survival Distribution for diseased patients per Dataset'
+    fill = "Dataset",
+    x = "Survival Months",
+    title = "Survival Distribution for diseased patients per Dataset"
     )
 
 ggplot() +
   geom_density(data = patient_sample|> filter(OS_STATUS == 0),
-           aes(OS_MONTHS, fill = 'Full'),
+           aes(OS_MONTHS, fill = "Full"),
            alpha = 0.5)+
   geom_density(data = sample_glioma |> filter(OS_STATUS == 0),
-           aes(OS_MONTHS, fill = 'Glioma'),
+           aes(OS_MONTHS, fill = "Glioma"),
            alpha = 0.5)+
   labs(
-    fill = 'Dataset',
-    x = 'Survival Months',
-    title = 'Survival Distribution for alive patients per Dataset'
+    fill = "Dataset",
+    x = "Survival Months",
+    title = "Survival Distribution for alive patients per Dataset"
     )
 
 
 ggplot() +
   geom_density(data = patient_sample,
-           aes(SAMPLE_COVERAGE, fill = 'Full'),
+           aes(SAMPLE_COVERAGE, fill = "Full"),
            alpha = 0.5)+
   geom_density(data = sample_glioma,
-           aes(SAMPLE_COVERAGE, fill = 'Glioma'),
+           aes(SAMPLE_COVERAGE, fill = "Glioma"),
            alpha = 0.5)+
   labs(
-    fill = 'Dataset',
-    x = 'Sample Coverage',
-    title = 'Sample Coverage Distribution per Dataset'
+    fill = "Dataset",
+    x = "Sample Coverage",
+    title = "Sample Coverage Distribution per Dataset"
     )
 
 ggplot() +
   geom_density(data = patient_sample,
-           aes(as.numeric(TUMOR_PURITY), fill = 'Full'),
+           aes(as.numeric(TUMOR_PURITY), fill = "Full"),
            alpha = 0.5)+
   geom_density(data = sample_glioma,
-           aes(as.numeric(TUMOR_PURITY), fill = 'Glioma'),
+           aes(as.numeric(TUMOR_PURITY), fill = "Glioma"),
            alpha = 0.5)+
   labs(
-    fill = 'Dataset',
-    x = 'Tumor Purity',
-    title = 'Tumor Purity Distribution per Dataset'
+    fill = "Dataset",
+    x = "Tumor Purity",
+    title = "Tumor Purity Distribution per Dataset"
     )
 
 ggplot() +
   geom_density(data = patient_sample,
-           aes(TMB_NONSYNONYMOUS, fill = 'Full'),
+           aes(TMB_NONSYNONYMOUS, fill = "Full"),
            alpha = 0.5)+
   geom_density(data = sample_glioma,
-           aes(TMB_NONSYNONYMOUS, fill = 'Glioma'),
+           aes(TMB_NONSYNONYMOUS, fill = "Glioma"),
            alpha = 0.5)+
   labs(
-    fill = 'Dataset',
-    x = 'TMB',
-    title = 'TMB Distribution per Dataset'
+    fill = "Dataset",
+    x = "TMB",
+    title = "TMB Distribution per Dataset"
     )
 ```
 
@@ -376,8 +378,10 @@ For some Variables the Subsetted dataset for Glioma samples is close to the one 
 Look into the low TMB
 
 ```{r}
-sample_glioma |> select(PATIENT_ID, SAMPLE_ID, TMB_NONSYNONYMOUS)|>
-  arrange(desc(TMB_NONSYNONYMOUS)) |> head(n = 10)
+sample_glioma |> 
+  select(PATIENT_ID, SAMPLE_ID, TMB_NONSYNONYMOUS)|>
+  arrange(desc(TMB_NONSYNONYMOUS)) |> 
+  head(n = 10)
 ```
 
 Plot for the more detailed cancer type of gliomas
@@ -386,6 +390,8 @@ Plot for the more detailed cancer type of gliomas
 sample_glioma |>
   ggplot( aes(CANCER_TYPE_DETAILED))+
   geom_bar()+
-  labs(title = 'Detailed cancer type for glioma tumors')+
+  labs(title = "Detailed cancer type for glioma tumors")+
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1, size = 10))
 ```
+
+{{< include gene_enrichment_analysis.qmd >}}
