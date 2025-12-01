@@ -3104,25 +3104,10 @@ vertical-align: -.125em;
 <section id="load-libraries" class="level1">
 <h1>Load Libraries</h1>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-✔ dplyr     1.1.4     ✔ readr     2.1.5
-✔ forcats   1.0.0     ✔ stringr   1.5.1
-✔ ggplot2   3.5.1     ✔ tibble    3.2.1
-✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-✔ purrr     1.0.4     
-── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-✖ dplyr::filter() masks stats::filter()
-✖ dplyr::lag()    masks stats::lag()
-ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>here() starts at /home/people/s250823/projects/group23_project</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fgsea)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(msigdbr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(here)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fgsea)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(msigdbr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="load-data" class="level1">
@@ -3131,78 +3116,48 @@ vertical-align: -.125em;
 <h2 class="anchored" data-anchor-id="gene-ontology-information">Gene Ontology Information</h2>
 <p>This loads a dataset where genes with their gene symbol and eEnsemblID are mapped to biological processes. With this information we can see if their are certain processes which are more often targeted by mutations than is expected by chance.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>BP_df <span class="ot">=</span> <span class="fu">msigdbr</span>(<span class="at">species =</span> <span class="st">&quot;human&quot;</span>, <span class="at">category =</span> <span class="st">&quot;C5&quot;</span>, <span class="at">subcategory =</span> <span class="st">&quot;BP&quot;</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>BP_list <span class="ot">=</span> <span class="fu">split</span>(BP_df<span class="sc">$</span>ensembl_gene, BP_df<span class="sc">$</span>gs_name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>BP_df <span class="ot">=</span> <span class="fu">msigdbr</span>(<span class="at">species =</span> <span class="st">&quot;human&quot;</span>, <span class="at">category =</span> <span class="st">&quot;C5&quot;</span>, <span class="at">subcategory =</span> <span class="st">&quot;BP&quot;</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>BP_list <span class="ot">=</span> <span class="fu">split</span>(BP_df<span class="sc">$</span>ensembl_gene, BP_df<span class="sc">$</span>gs_name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="cleaned-data" class="level2">
 <h2 class="anchored" data-anchor-id="cleaned-data">Cleaned data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>patient_sample <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="at">file =</span> <span class="fu">here</span>(<span class="st">&#39;data&#39;</span>,<span class="st">&#39;patient_sample_gene_panel.tsv&#39;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Rows: 1661 Columns: 25
-── Column specification ────────────────────────────────────────────────────────
-Delimiter: &quot;\t&quot;
-chr (19): PATIENT_ID, SEX, AGE_GROUP, DRUG_TYPE, SAMPLE_ID, CANCER_TYPE, SAM...
-dbl  (6): OS_MONTHS, OS_STATUS, SEX_NUM, SAMPLE_COVERAGE, AGE_AT_SEQ_REPORT,...
-
-ℹ Use `spec()` to retrieve the full column specification for this data.
-ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>sv <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="at">file =</span> <span class="fu">here</span>(<span class="st">&#39;data&#39;</span>,<span class="st">&#39;sv_cleaned.tsv&#39;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Rows: 346 Columns: 28
-── Column specification ────────────────────────────────────────────────────────
-Delimiter: &quot;\t&quot;
-chr (16): Sample_Id, Site1_Hugo_Symbol, Site1_Region, Site1_Chromosome, Site...
-dbl (12): Site1_Region_Number, Site1_Position, Site2_Region_Number, Site2_Po...
-
-ℹ Use `spec()` to retrieve the full column specification for this data.
-ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>mutations <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="at">file =</span> <span class="fu">here</span>(<span class="st">&#39;data&#39;</span>,<span class="st">&#39;data_mutation_cleaned.tsv&#39;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Rows: 21383 Columns: 27
-── Column specification ────────────────────────────────────────────────────────
-Delimiter: &quot;\t&quot;
-chr (17): Hugo_Symbol, patient_id, Tumor_Sample_Barcode, Chromosome, Variant...
-dbl (10): Entrez_Gene_Id, Start_Position, End_Position, t_ref_count, t_alt_c...
-
-ℹ Use `spec()` to retrieve the full column specification for this data.
-ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
-</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>patient_sample <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="at">file =</span> <span class="fu">here</span>(<span class="st">&#39;data&#39;</span>,<span class="st">&#39;patient_sample_gene_panel.tsv&#39;</span>))</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>sv <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="at">file =</span> <span class="fu">here</span>(<span class="st">&#39;data&#39;</span>,<span class="st">&#39;sv_cleaned.tsv&#39;</span>))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>mutations <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(<span class="at">file =</span> <span class="fu">here</span>(<span class="st">&#39;data&#39;</span>,<span class="st">&#39;data_mutation_cleaned.tsv&#39;</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
 <section id="gsea-with-mutations-per-gene" class="level1">
 <h1>GSEA with mutations per Gene</h1>
-<p>The Genes are ranked on the number of mutations or structural varinces that have been identified in them.</p>
+<p>The Genes are ranked on the number of mutations or structural variances that have been identified in them.</p>
 <section id="sv" class="level2">
 <h2 class="anchored" data-anchor-id="sv">SV</h2>
 <p>Gene Set Enrichment analysis is first applied on to the mutations which cause structural variances.</p>
 <p>Data format: Genes + number of SVs</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>clinical_clean <span class="ot">&lt;-</span> patient_sample <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">c</span>(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>gene_sv_count <span class="ot">&lt;-</span> sv <span class="sc">|&gt;</span> </span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Sample_Id&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&#39;Glioma&#39;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(<span class="st">&quot;Site1_Hugo_Symbol&quot;</span>, <span class="st">&quot;Site2_Hugo_Symbol&quot;</span>), <span class="at">names_to =</span> <span class="st">&quot;Position&quot;</span>, <span class="at">values_to =</span> <span class="st">&quot;Gene_Name&quot;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Gene_Name))<span class="sc">|&gt;</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Gene_Name, <span class="at">sort =</span> <span class="cn">TRUE</span>)<span class="sc">|&gt;</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Gene_Name&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>gene_sv_stats <span class="ot">&lt;-</span> gene_sv_count<span class="sc">$</span>n</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gene_sv_stats) <span class="ot">=</span> gene_sv_count<span class="sc">$</span>ensembl_gene</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(gene_sv_stats)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>clinical_clean <span class="ot">&lt;-</span> patient_sample <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">c</span>(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>gene_sv_count <span class="ot">&lt;-</span> sv <span class="sc">|&gt;</span> </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Sample_Id&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&#39;Glioma&#39;</span>)<span class="sc">|&gt;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(<span class="st">&quot;Site1_Hugo_Symbol&quot;</span>, <span class="st">&quot;Site2_Hugo_Symbol&quot;</span>), <span class="at">names_to =</span> <span class="st">&quot;Position&quot;</span>, <span class="at">values_to =</span> <span class="st">&quot;Gene_Name&quot;</span>)<span class="sc">|&gt;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Gene_Name))<span class="sc">|&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Gene_Name, <span class="at">sort =</span> <span class="cn">TRUE</span>)<span class="sc">|&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Gene_Name&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>gene_sv_stats <span class="ot">&lt;-</span> gene_sv_count<span class="sc">$</span>n</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gene_sv_stats) <span class="ot">=</span> gene_sv_count<span class="sc">$</span>ensembl_gene</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(gene_sv_stats)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 28</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> gene_sv_stats,<span class="at">minSize =</span> <span class="dv">0</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_sv <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> gene_sv_stats,<span class="at">minSize =</span> <span class="dv">0</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam, : There are ties in the preranked stats (89.29% of the list).
 The order of those tied genes will be arbitrary, which may produce unexpected results.</code></pre>
@@ -3217,27 +3172,64 @@ is &quot;std&quot;, maybe you should switch to scoreType = &quot;pos&quot;.</cod
 0, : For some of the pathways the P-values were likely overestimated. For such
 pathways log2err is set to NA.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring, pval)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_sv <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_gene_sv, pval)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pathway_scoring_gene_sv<span class="sc">|&gt;</span> <span class="fu">select</span>(pathway, pval, padj), <span class="at">n =</span> <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                         pathway
+                                                                          &lt;char&gt;
+ 1:                     GOBP_POSITIVE_REGULATION_OF_PHOSPHORUS_METABOLIC_PROCESS
+ 2:                              GOBP_REGULATION_OF_PHOSPHORUS_METABOLIC_PROCESS
+ 3:                                           GOBP_AMEBOIDAL_TYPE_CELL_MIGRATION
+ 4:                                                  GOBP_ORGANELLE_LOCALIZATION
+ 5:                            GOBP_POSITIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS
+ 6:                GOBP_POSITIVE_REGULATION_OF_INTRACELLULAR_SIGNAL_TRANSDUCTION
+ 7:                                        GOBP_POSITIVE_REGULATION_OF_SIGNALING
+ 8:                         GOBP_REGULATION_OF_INTRACELLULAR_SIGNAL_TRANSDUCTION
+ 9:                              GOBP_REGULATION_OF_PROTEIN_MODIFICATION_PROCESS
+10:                    GOBP_POSITIVE_REGULATION_OF_CELLULAR_BIOSYNTHETIC_PROCESS
+11: GOBP_POSITIVE_REGULATION_OF_NUCLEOBASE_CONTAINING_COMPOUND_METABOLIC_PROCESS
+12:                            GOBP_POSITIVE_REGULATION_OF_RNA_METABOLIC_PROCESS
+13:                        GOBP_POSITIVE_REGULATION_OF_PROTEIN_METABOLIC_PROCESS
+14:                     GOBP_POSITIVE_REGULATION_OF_PROTEIN_MODIFICATION_PROCESS
+15:                                              GOBP_CALCIUM_MEDIATED_SIGNALING
+           pval      padj
+          &lt;num&gt;     &lt;num&gt;
+ 1: 0.006356991 0.7327409
+ 2: 0.020887368 0.7327409
+ 3: 0.025115310 0.7327409
+ 4: 0.025115310 0.7327409
+ 5: 0.025115310 0.7327409
+ 6: 0.025486172 0.7327409
+ 7: 0.025486172 0.7327409
+ 8: 0.031640968 0.7327409
+ 9: 0.041580661 0.7327409
+10: 0.042682927 0.7327409
+11: 0.042682927 0.7327409
+12: 0.042682927 0.7327409
+13: 0.046524703 0.7327409
+14: 0.046524703 0.7327409
+15: 0.050530141 0.7327409</code></pre>
 </div>
-<p>Looking at the pvalue and adjusted p-value these results are not very robust. This is probabyl due to the small sample size of only 28 genes.</p>
+</div>
+<p>Looking at the pvalue and adjusted p-value these results are not very robust. This is probably due to the small sample size of only 28 genes.</p>
 </section>
 <section id="mutations" class="level2">
 <h2 class="anchored" data-anchor-id="mutations">Mutations</h2>
 <p>The same analysis, but now with the number of mutations</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>gene_mutation_count <span class="ot">&lt;-</span> mutations <span class="sc">|&gt;</span> </span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Tumor_Sample_Barcode&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&quot;Glioma&quot;</span>)<span class="sc">|&gt;</span> </span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Hugo_Symbol, <span class="at">sort =</span> <span class="cn">TRUE</span>)<span class="sc">|&gt;</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Hugo_Symbol&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>gene_mutation_stats <span class="ot">&lt;-</span> gene_mutation_count<span class="sc">$</span>n</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gene_mutation_stats) <span class="ot">=</span> gene_mutation_count<span class="sc">$</span>ensembl_gene</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>gene_mutation_count <span class="ot">&lt;-</span> mutations <span class="sc">|&gt;</span> </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Tumor_Sample_Barcode&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>))<span class="sc">|&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&quot;Glioma&quot;</span>)<span class="sc">|&gt;</span> </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Hugo_Symbol, <span class="at">sort =</span> <span class="cn">TRUE</span>)<span class="sc">|&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Hugo_Symbol&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>gene_mutation_stats <span class="ot">&lt;-</span> gene_mutation_count<span class="sc">$</span>n</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gene_mutation_stats) <span class="ot">=</span> gene_mutation_count<span class="sc">$</span>ensembl_gene</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_m <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> gene_mutation_stats,<span class="at">minSize =</span> <span class="dv">15</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_m <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> gene_mutation_stats,<span class="at">minSize =</span> <span class="dv">15</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam, : There are ties in the preranked stats (92.59% of the list).
 The order of those tied genes will be arbitrary, which may produce unexpected results.</code></pre>
@@ -3247,47 +3239,68 @@ The order of those tied genes will be arbitrary, which may produce unexpected re
 gseaParam, : All values in the stats vector are greater than zero and scoreType
 is &quot;std&quot;, maybe you should switch to scoreType = &quot;pos&quot;.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_m <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_m, padj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_m <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_gene_m, padj)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pathway_scoring_gene_m<span class="sc">|&gt;</span> <span class="fu">select</span>(pathway, pval, padj), <span class="at">n =</span> <span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                     pathway         pval
+                                                      &lt;char&gt;        &lt;num&gt;
+ 1:                          GOBP_BLOOD_VESSEL_MORPHOGENESIS 3.387836e-06
+ 2:                      GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT 1.377570e-06
+ 3:        GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS 2.218444e-06
+ 4:      GOBP_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION 4.015017e-06
+ 5:   GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION 3.640182e-06
+ 6:                                    GOBP_TUBE_DEVELOPMENT 6.878260e-06
+ 7:                    GOBP_CELL_CYCLE_G1_S_PHASE_TRANSITION 8.570505e-06
+ 8:           GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY 1.109001e-05
+ 9:                 GOBP_MITOTIC_CELL_CYCLE_PHASE_TRANSITION 1.916705e-05
+10:         GOBP_NEGATIVE_REGULATION_OF_CELL_DIFFERENTIATION 2.473842e-05
+11: GOBP_REGULATION_OF_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY 2.265309e-05
+12:                  GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS 2.982396e-05
+13:                 GOBP_REGULATION_OF_CELLULAR_LOCALIZATION 2.952542e-05
+14:                                    GOBP_HEAD_DEVELOPMENT 3.451768e-05
+15:                                      GOBP_RNA_PROCESSING 4.128502e-05
+            padj
+           &lt;num&gt;
+ 1: 0.0003966837
+ 2: 0.0003966837
+ 3: 0.0003966837
+ 4: 0.0003966837
+ 5: 0.0003966837
+ 6: 0.0005663101
+ 7: 0.0006048328
+ 8: 0.0006848081
+ 9: 0.0010520582
+10: 0.0011109800
+11: 0.0011109800
+12: 0.0011333105
+13: 0.0011333105
+14: 0.0012179808
+15: 0.0012746749</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_gene_m <span class="sc">%&gt;%</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(padj <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 142</code></pre>
+</div>
 </div>
 <p>These results are more reliable than the ones of the structural variances. The most significant pathways also seem logical as they show that pathways are targeted by mutations which influence cell death and also cell cycle processes. This is very common in tumors.</p>
 </section>
 <section id="comparison-of-results" class="level2">
 <h2 class="anchored" data-anchor-id="comparison-of-results">Comparison of results:</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>overlap <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  pathway_scoring <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="at">n=</span><span class="dv">100</span>),</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  pathway_scoring_m <span class="sc">%&gt;%</span>  <span class="fu">head</span>(<span class="at">n=</span><span class="dv">100</span>), <span class="at">by =</span> <span class="st">&#39;pathway&#39;</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pathway, pval.x, pval.y)</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>overlap</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>overlap <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  pathway_scoring_gene_sv <span class="sc">%&gt;%</span> <span class="fu">head</span>(<span class="at">n=</span><span class="dv">100</span>),</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  pathway_scoring_gene_m <span class="sc">%&gt;%</span>  <span class="fu">head</span>(<span class="at">n=</span><span class="dv">100</span>), <span class="at">by =</span> <span class="st">&#39;pathway&#39;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pathway, pval.x, pval.y)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>overlap</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                                                                         pathway
-                                                                          &lt;char&gt;
- 1:                            GOBP_POSITIVE_REGULATION_OF_RNA_METABOLIC_PROCESS
- 2:                                        GOBP_POSITIVE_REGULATION_OF_SIGNALING
- 3:                                              GOBP_CELL_CELL_SIGNALING_BY_WNT
- 4: GOBP_CELL_SURFACE_RECEPTOR_SIGNALING_PATHWAY_INVOLVED_IN_CELL_CELL_SIGNALING
- 5:                                       GOBP_NEGATIVE_REGULATION_OF_CELL_DEATH
- 6:                      GOBP_POSITIVE_REGULATION_OF_CELL_CYCLE_PHASE_TRANSITION
- 7:                               GOBP_POSITIVE_REGULATION_OF_CELL_CYCLE_PROCESS
- 8:                       GOBP_POSTTRANSCRIPTIONAL_REGULATION_OF_GENE_EXPRESSION
- 9:                               GOBP_REGULATION_OF_CELLULAR_RESPONSE_TO_STRESS
-10:                          GOBP_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION
-11:                                      GOBP_REGULATION_OF_PROTEIN_LOCALIZATION
-        pval.x       pval.y
-         &lt;num&gt;        &lt;num&gt;
- 1: 0.01124293 6.209205e-03
- 2: 0.01227173 4.052747e-03
- 3: 0.05479391 6.396266e-03
- 4: 0.05479391 6.451623e-03
- 5: 0.05479391 1.132109e-03
- 6: 0.05479391 2.168395e-03
- 7: 0.05479391 1.377779e-03
- 8: 0.05479391 5.846980e-04
- 9: 0.05479391 7.372888e-04
-10: 0.05479391 5.057286e-06
-11: 0.05479391 2.284528e-03</code></pre>
+<pre><code>                                    pathway     pval.x       pval.y
+                                     &lt;char&gt;      &lt;num&gt;        &lt;num&gt;
+1:    GOBP_POSITIVE_REGULATION_OF_SIGNALING 0.02548617 3.459324e-03
+2: GOBP_REGULATION_OF_CELLULAR_LOCALIZATION 0.07214429 2.952542e-05</code></pre>
 </div>
 </div>
 <p>This compares the 100 most mutated pathways form both analysis. Some interesting Pathways are shown here, for example the behaviour pathways, as it is common that brain cancer patients show changes in behaviour.</p>
@@ -3299,25 +3312,25 @@ is &quot;std&quot;, maybe you should switch to scoreType = &quot;pos&quot;.</cod
 <section id="sv-1" class="level2">
 <h2 class="anchored" data-anchor-id="sv-1">SV</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>clinical_clean <span class="ot">&lt;-</span> patient_sample <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">c</span>(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>sample_sv_count <span class="ot">&lt;-</span> sv <span class="sc">|&gt;</span> </span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">select</span>(<span class="fu">c</span>(Sample_Id, Site1_Hugo_Symbol, Site1_Chromosome, Site2_Hugo_Symbol, Site2_Chromosome, Class, SV_Length))<span class="sc">|&gt;</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Sample_Id&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&#39;Glioma&#39;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(<span class="st">&quot;Site1_Hugo_Symbol&quot;</span>, <span class="st">&quot;Site2_Hugo_Symbol&quot;</span>), <span class="at">names_to =</span> <span class="st">&quot;Position&quot;</span>, <span class="at">values_to =</span> <span class="st">&quot;Gene_Name&quot;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Gene_Name))<span class="sc">|&gt;</span></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Sample_Id, Gene_Name)<span class="sc">|&gt;</span></span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Gene_Name, <span class="at">sort =</span> <span class="cn">TRUE</span>)<span class="sc">|&gt;</span></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Gene_Name&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>sample_sv_stats <span class="ot">&lt;-</span> sample_sv_count<span class="sc">$</span>n</span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(sample_sv_stats) <span class="ot">=</span> sample_sv_count<span class="sc">$</span>ensembl_gene</span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>pathway_scoring_m <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> sample_sv_stats,<span class="at">minSize =</span> <span class="dv">0</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>clinical_clean <span class="ot">&lt;-</span> patient_sample <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="fu">c</span>(SAMPLE_ID, CANCER_TYPE, SAMPLE_TYPE, TMB_NONSYNONYMOUS))</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>sample_sv_count <span class="ot">&lt;-</span> sv <span class="sc">|&gt;</span> </span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">select</span>(<span class="fu">c</span>(Sample_Id, Site1_Hugo_Symbol, Site1_Chromosome, Site2_Hugo_Symbol, Site2_Chromosome, Class, SV_Length))<span class="sc">|&gt;</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Sample_Id&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&#39;Glioma&#39;</span>)<span class="sc">|&gt;</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">c</span>(<span class="st">&quot;Site1_Hugo_Symbol&quot;</span>, <span class="st">&quot;Site2_Hugo_Symbol&quot;</span>), <span class="at">names_to =</span> <span class="st">&quot;Position&quot;</span>, <span class="at">values_to =</span> <span class="st">&quot;Gene_Name&quot;</span>)<span class="sc">|&gt;</span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Gene_Name))<span class="sc">|&gt;</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Sample_Id, Gene_Name)<span class="sc">|&gt;</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Gene_Name, <span class="at">sort =</span> <span class="cn">TRUE</span>)<span class="sc">|&gt;</span></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Gene_Name&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>sample_sv_stats <span class="ot">&lt;-</span> sample_sv_count<span class="sc">$</span>n</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(sample_sv_stats) <span class="ot">=</span> sample_sv_count<span class="sc">$</span>ensembl_gene</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_sv <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> sample_sv_stats,<span class="at">minSize =</span> <span class="dv">0</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam, : There are ties in the preranked stats (89.29% of the list).
 The order of those tied genes will be arbitrary, which may produce unexpected results.</code></pre>
@@ -3332,67 +3345,63 @@ is &quot;std&quot;, maybe you should switch to scoreType = &quot;pos&quot;.</cod
 some of the pathways the P-values were likely overestimated. For such pathways
 log2err is set to NA.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">arrange</span>(pathway_scoring_m, pval)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_sv <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_sample_sv, pval)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pathway_scoring_sample_sv<span class="sc">|&gt;</span> <span class="fu">select</span>(pathway, pval, padj), <span class="at">n =</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                                                                           pathway
-                                                                            &lt;char&gt;
-   1:                GOBP_POSITIVE_REGULATION_OF_INTRACELLULAR_SIGNAL_TRANSDUCTION
-   2:                                        GOBP_POSITIVE_REGULATION_OF_SIGNALING
-   3:                    GOBP_POSITIVE_REGULATION_OF_CELLULAR_BIOSYNTHETIC_PROCESS
-   4: GOBP_POSITIVE_REGULATION_OF_NUCLEOBASE_CONTAINING_COMPOUND_METABOLIC_PROCESS
-   5:                        GOBP_POSITIVE_REGULATION_OF_PROTEIN_METABOLIC_PROCESS
-  ---                                                                             
-1164:                              GOBP_RESPONSE_TO_PLATELET_DERIVED_GROWTH_FACTOR
-1165:                                                      GOBP_SKIN_MORPHOGENESIS
-1166:                                              GOBP_STRIATED_MUSCLE_ADAPTATION
-1167:                   GOBP_TUMOR_NECROSIS_FACTOR_SUPERFAMILY_CYTOKINE_PRODUCTION
-1168:                                    GOBP_TYPE_B_PANCREATIC_CELL_PROLIFERATION
-            pval      padj   log2err         ES        NES  size
-           &lt;num&gt;     &lt;num&gt;     &lt;num&gt;      &lt;num&gt;      &lt;num&gt; &lt;int&gt;
-   1: 0.02273221 0.7870272        NA  0.8823529  1.7300336     7
-   2: 0.02273221 0.7870272        NA  0.8823529  1.7300336     7
-   3: 0.02368973 0.7870272 0.3524879  0.9032258  1.7648201     5
-   4: 0.02368973 0.7870272 0.3524879  0.9032258  1.7648201     5
-   5: 0.02368973 0.7870272        NA  0.9375000  1.8317887     5
-  ---                                                           
-1164: 1.00000000 1.0000000 0.0465084 -0.5185185 -0.6773302     1
-1165: 1.00000000 1.0000000 0.0465084 -0.5185185 -0.6773302     1
-1166: 1.00000000 1.0000000 0.0465084 -0.5185185 -0.6773302     1
-1167: 1.00000000 1.0000000 0.0465084 -0.5185185 -0.6773302     1
-1168: 1.00000000 1.0000000 0.0465084 -0.5185185 -0.6773302     1
-                                          leadingEdge
-                                               &lt;list&gt;
-   1: ENSG00000146648,ENSG00000171735,ENSG00000068078
-   2: ENSG00000146648,ENSG00000171735,ENSG00000068078
-   3:                 ENSG00000146648,ENSG00000171735
-   4:                 ENSG00000146648,ENSG00000171735
-   5: ENSG00000146648,ENSG00000171735,ENSG00000068078
-  ---                                                
-1164:                                 ENSG00000116285
-1165:                                 ENSG00000116285
-1166:                                 ENSG00000116285
-1167:                                 ENSG00000116285
-1168:                                 ENSG00000116285</code></pre>
+<pre><code>                                                                         pathway
+                                                                          &lt;char&gt;
+ 1:                       GOBP_PROTEIN_MODIFICATION_BY_SMALL_PROTEIN_CONJUGATION
+ 2:            GOBP_PROTEIN_MODIFICATION_BY_SMALL_PROTEIN_CONJUGATION_OR_REMOVAL
+ 3:                    GOBP_POSITIVE_REGULATION_OF_CELLULAR_BIOSYNTHETIC_PROCESS
+ 4: GOBP_POSITIVE_REGULATION_OF_NUCLEOBASE_CONTAINING_COMPOUND_METABOLIC_PROCESS
+ 5:                            GOBP_POSITIVE_REGULATION_OF_RNA_METABOLIC_PROCESS
+ 6:                GOBP_POSITIVE_REGULATION_OF_INTRACELLULAR_SIGNAL_TRANSDUCTION
+ 7:                                        GOBP_POSITIVE_REGULATION_OF_SIGNALING
+ 8:                     GOBP_POSITIVE_REGULATION_OF_PHOSPHORUS_METABOLIC_PROCESS
+ 9:                        GOBP_POSITIVE_REGULATION_OF_PROTEIN_METABOLIC_PROCESS
+10:                     GOBP_POSITIVE_REGULATION_OF_PROTEIN_MODIFICATION_PROCESS
+11:                              GOBP_REGULATION_OF_PROTEIN_MODIFICATION_PROCESS
+12:                                                  GOBP_NERVOUS_SYSTEM_PROCESS
+13:                                                 GOBP_NOTCH_SIGNALING_PATHWAY
+14:                      GOBP_POSITIVE_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY
+15:                               GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY
+          pval      padj
+         &lt;num&gt;     &lt;num&gt;
+ 1: 0.03080145 0.8202247
+ 2: 0.03080145 0.8202247
+ 3: 0.04354588 0.8202247
+ 4: 0.04354588 0.8202247
+ 5: 0.04354588 0.8202247
+ 6: 0.04462018 0.8202247
+ 7: 0.04462018 0.8202247
+ 8: 0.04702651 0.8202247
+ 9: 0.04746533 0.8202247
+10: 0.04746533 0.8202247
+11: 0.05122405 0.8202247
+12: 0.05124654 0.8202247
+13: 0.06275304 0.8202247
+14: 0.06275304 0.8202247
+15: 0.06275304 0.8202247</code></pre>
 </div>
 </div>
 </section>
 <section id="mutations-1" class="level2">
 <h2 class="anchored" data-anchor-id="mutations-1">Mutations</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>mutation_gene_sample <span class="ot">&lt;-</span> mutations <span class="sc">%&gt;%</span> </span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean <span class="sc">|&gt;</span> <span class="fu">select</span>(SAMPLE_ID, CANCER_TYPE), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Tumor_Sample_Barcode&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&#39;Glioma&#39;</span>)<span class="sc">|&gt;</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Tumor_Sample_Barcode, Hugo_Symbol) <span class="sc">%&gt;%</span> </span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">%&gt;%</span> </span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Hugo_Symbol, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Hugo_Symbol&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
-<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
-<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
-<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>gene_mutation_stats <span class="ot">&lt;-</span> mutation_gene_sample<span class="sc">$</span>n</span>
-<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gene_mutation_stats) <span class="ot">=</span> mutation_gene_sample<span class="sc">$</span>ensembl_gene</span>
-<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>pathway_scoring_m <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> gene_mutation_stats,<span class="at">minSize =</span> <span class="dv">15</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>mutation_gene_sample <span class="ot">&lt;-</span> mutations <span class="sc">%&gt;%</span> </span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(clinical_clean <span class="sc">|&gt;</span> <span class="fu">select</span>(SAMPLE_ID, CANCER_TYPE), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&quot;Tumor_Sample_Barcode&quot;</span> <span class="ot">=</span> <span class="st">&quot;SAMPLE_ID&quot;</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(CANCER_TYPE <span class="sc">==</span> <span class="st">&#39;Glioma&#39;</span>)<span class="sc">|&gt;</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(Tumor_Sample_Barcode, Hugo_Symbol) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Hugo_Symbol, <span class="at">sort =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(BP_df <span class="sc">|&gt;</span> <span class="fu">select</span>(gene_symbol, ensembl_gene), <span class="at">by =</span> <span class="fu">c</span>(<span class="st">&#39;Hugo_Symbol&#39;</span> <span class="ot">=</span> <span class="st">&#39;gene_symbol&#39;</span>))<span class="sc">|&gt;</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>()<span class="sc">|&gt;</span></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.omit</span>()</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>gene_mutation_stats <span class="ot">&lt;-</span> mutation_gene_sample<span class="sc">$</span>n</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(gene_mutation_stats) <span class="ot">=</span> mutation_gene_sample<span class="sc">$</span>ensembl_gene</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_m <span class="ot">&lt;-</span> <span class="fu">fgseaMultilevel</span>(<span class="at">pathways=</span> BP_list, <span class="at">stats =</span> gene_mutation_stats,<span class="at">minSize =</span> <span class="dv">15</span>, <span class="at">maxSize =</span> <span class="dv">500</span>, <span class="at">scoreType =</span> <span class="st">&quot;std&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning in preparePathwaysAndStats(pathways, stats, minSize, maxSize, gseaParam, : There are ties in the preranked stats (93.7% of the list).
 The order of those tied genes will be arbitrary, which may produce unexpected results.</code></pre>
@@ -3402,10 +3411,261 @@ The order of those tied genes will be arbitrary, which may produce unexpected re
 gseaParam, : All values in the stats vector are greater than zero and scoreType
 is &quot;std&quot;, maybe you should switch to scoreType = &quot;pos&quot;.</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>patway_scoring_m <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_m, padj)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_m <span class="ot">&lt;-</span> <span class="fu">arrange</span>(pathway_scoring_sample_m, padj)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(pathway_scoring_sample_m <span class="sc">|&gt;</span> <span class="fu">select</span>(pathway, pval, padj), <span class="at">n=</span><span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                     pathway         pval
+                                                      &lt;char&gt;        &lt;num&gt;
+ 1:        GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS 1.317321e-07
+ 2:                      GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT 1.719820e-06
+ 3:           GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY 3.377058e-06
+ 4:   GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION 3.169241e-06
+ 5:                                    GOBP_TUBE_DEVELOPMENT 3.560145e-06
+ 6:                 GOBP_MITOTIC_CELL_CYCLE_PHASE_TRANSITION 6.066911e-06
+ 7:                 GOBP_REGULATION_OF_CELLULAR_LOCALIZATION 5.997576e-06
+ 8:      GOBP_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION 5.098402e-06
+ 9:                  GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS 1.342481e-05
+10:                          GOBP_BLOOD_VESSEL_MORPHOGENESIS 1.666548e-05
+11:                    GOBP_CELL_CYCLE_G1_S_PHASE_TRANSITION 1.532649e-05
+12:                         GOBP_APOPTOTIC_SIGNALING_PATHWAY 2.058669e-05
+13:                                          GOBP_CELL_AGING 2.142390e-05
+14: GOBP_REGULATION_OF_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY 2.144701e-05
+15:                    GOBP_REGULATION_OF_RESPONSE_TO_STRESS 5.472278e-05
+            padj
+           &lt;num&gt;
+ 1: 6.507567e-05
+ 2: 3.517424e-04
+ 3: 3.517424e-04
+ 4: 3.517424e-04
+ 5: 3.517424e-04
+ 6: 3.746318e-04
+ 7: 3.746318e-04
+ 8: 3.746318e-04
+ 9: 7.368730e-04
+10: 7.484317e-04
+11: 7.484317e-04
+12: 7.567730e-04
+13: 7.567730e-04
+14: 7.567730e-04
+15: 1.802204e-03</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>pathway_scoring_sample_m <span class="sc">%&gt;%</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(padj <span class="sc">&lt;</span> <span class="fl">0.05</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 99</code></pre>
+</div>
 </div>
 <p>The comparison of the both counting versions, result in very similar outputs.</p>
 </section>
+</section>
+<section id="comparisons-of-counting-methods" class="level1">
+<h1>Comparisons of counting Methods</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>overlap <span class="ot">&lt;-</span> <span class="fu">inner_join</span>(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  pathway_scoring_gene_m <span class="sc">%&gt;%</span> <span class="fu">filter</span>(padj <span class="sc">&lt;</span><span class="fl">0.05</span>),</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  pathway_scoring_sample_m <span class="sc">%&gt;%</span>  <span class="fu">filter</span>(padj <span class="sc">&lt;</span> <span class="fl">0.05</span>), <span class="at">by =</span> <span class="st">&#39;pathway&#39;</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span> </span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(pathway, pval.x, pval.y)</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>overlap</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                  pathway
+                                                                   &lt;char&gt;
+ 1:                                       GOBP_BLOOD_VESSEL_MORPHOGENESIS
+ 2:                                   GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT
+ 3:                     GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS
+ 4:                   GOBP_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION
+ 5:                GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION
+ 6:                                                 GOBP_TUBE_DEVELOPMENT
+ 7:                                 GOBP_CELL_CYCLE_G1_S_PHASE_TRANSITION
+ 8:                        GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY
+ 9:                              GOBP_MITOTIC_CELL_CYCLE_PHASE_TRANSITION
+10:                      GOBP_NEGATIVE_REGULATION_OF_CELL_DIFFERENTIATION
+11:              GOBP_REGULATION_OF_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY
+12:                               GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS
+13:                              GOBP_REGULATION_OF_CELLULAR_LOCALIZATION
+14:                                                 GOBP_HEAD_DEVELOPMENT
+15:                                                   GOBP_RNA_PROCESSING
+16:                                          GOBP_VASCULATURE_DEVELOPMENT
+17:                                                       GOBP_CELL_AGING
+18:                                        GOBP_RESPONSE_TO_OXYGEN_LEVELS
+19:                            GOBP_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY
+20:         GOBP_ANATOMICAL_STRUCTURE_FORMATION_INVOLVED_IN_MORPHOGENESIS
+21:                                               GOBP_TUBE_MORPHOGENESIS
+22:                               GOBP_CENTRAL_NERVOUS_SYSTEM_DEVELOPMENT
+23:                                      GOBP_APOPTOTIC_SIGNALING_PATHWAY
+24:                            GOBP_ESTABLISHMENT_OF_PROTEIN_LOCALIZATION
+25:                        GOBP_REGULATION_OF_CELL_CYCLE_PHASE_TRANSITION
+26:                              GOBP_CELLULAR_MACROMOLECULE_LOCALIZATION
+27:                                                GOBP_HEART_DEVELOPMENT
+28:                             GOBP_NEGATIVE_REGULATION_OF_CELL_ADHESION
+29:                                     GOBP_RESPONSE_TO_ABIOTIC_STIMULUS
+30:                                 GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE
+31:                                                            GOBP_AGING
+32:                                               GOBP_TISSUE_DEVELOPMENT
+33:                                       GOBP_MITOTIC_CELL_CYCLE_PROCESS
+34:                                  GOBP_REGULATION_OF_PROTEIN_STABILITY
+35:                                            GOBP_FOREBRAIN_DEVELOPMENT
+36:                      GOBP_NEGATIVE_REGULATION_OF_TRANSFERASE_ACTIVITY
+37:                        GOBP_REGULATION_OF_CELLULAR_RESPONSE_TO_STRESS
+38:                                       GOBP_REGULATION_OF_NEUROGENESIS
+39:                                 GOBP_REGULATION_OF_RESPONSE_TO_STRESS
+40:                GOBP_POSTTRANSCRIPTIONAL_REGULATION_OF_GENE_EXPRESSION
+41:                                      GOBP_CELL_CYCLE_PHASE_TRANSITION
+42:                                 GOBP_NEGATIVE_REGULATION_OF_SIGNALING
+43:                      GOBP_NEGATIVE_REGULATION_OF_RESPONSE_TO_STIMULUS
+44:                                                   GOBP_CELL_MIGRATION
+45:                                        GOBP_MUSCLE_CELL_PROLIFERATION
+46:                                      GOBP_CELLULAR_RESPONSE_TO_STRESS
+47:                        GOBP_REGULATION_OF_CELLULAR_COMPONENT_MOVEMENT
+48:                                                     GOBP_NEURON_DEATH
+49:                                 GOBP_REGULATION_OF_CELL_CYCLE_PROCESS
+50:                                GOBP_PROTEIN_LOCALIZATION_TO_ORGANELLE
+51:                         GOBP_REGULATION_OF_NERVOUS_SYSTEM_DEVELOPMENT
+52:                        GOBP_POSITIVE_REGULATION_OF_CELL_CYCLE_PROCESS
+53:                                  GOBP_PROTEIN_LOCALIZATION_TO_NUCLEUS
+54:                   GOBP_CELL_MORPHOGENESIS_INVOLVED_IN_DIFFERENTIATION
+55:                               GOBP_REGULATION_OF_CELL_DIFFERENTIATION
+56:                                         GOBP_NEURON_APOPTOTIC_PROCESS
+57:          GOBP_NEGATIVE_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION
+58:                                                         GOBP_BEHAVIOR
+59:                                               GOBP_MITOTIC_CELL_CYCLE
+60:                        GOBP_REGULATION_OF_LEUKOCYTE_APOPTOTIC_PROCESS
+61:                          GOBP_CELLULAR_CARBOHYDRATE_METABOLIC_PROCESS
+62:                                               GOBP_CELL_CYCLE_PROCESS
+63:                                               GOBP_CELL_MORPHOGENESIS
+64:               GOBP_POSITIVE_REGULATION_OF_CELL_CYCLE_PHASE_TRANSITION
+65:                               GOBP_REGULATION_OF_PROTEIN_LOCALIZATION
+66: GOBP_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY_VIA_DEATH_DOMAIN_RECEPTORS
+67:  GOBP_NEGATIVE_REGULATION_OF_PROTEIN_SERINE_THREONINE_KINASE_ACTIVITY
+68:                                GOBP_NEGATIVE_REGULATION_OF_CELL_DEATH
+69:       GOBP_NEGATIVE_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION
+70:          GOBP_NEGATIVE_REGULATION_OF_MULTICELLULAR_ORGANISMAL_PROCESS
+71:                                              GOBP_BIOLOGICAL_ADHESION
+72:                                   GOBP_CARBOHYDRATE_METABOLIC_PROCESS
+73:                                           GOBP_EPITHELIUM_DEVELOPMENT
+74:              GOBP_NEGATIVE_REGULATION_OF_PHOSPHORUS_METABOLIC_PROCESS
+75:                                          GOBP_REGULATION_OF_TRANSPORT
+76:                                                    GOBP_WOUND_HEALING
+77:                                      GOBP_LEUKOCYTE_APOPTOTIC_PROCESS
+78:           GOBP_REGULATION_OF_CYCLIN_DEPENDENT_PROTEIN_KINASE_ACTIVITY
+79:                      GOBP_CELLULAR_MACROMOLECULE_BIOSYNTHETIC_PROCESS
+80:               GOBP_REGULATION_OF_MULTICELLULAR_ORGANISMAL_DEVELOPMENT
+81:                                       GOBP_CELL_CELL_SIGNALING_BY_WNT
+82:                                                       GOBP_LOCOMOTION
+83:                                GOBP_ORGANOPHOSPHATE_METABOLIC_PROCESS
+84:                                   GOBP_PHOSPHOLIPID_METABOLIC_PROCESS
+85:                                GOBP_POSITIVE_REGULATION_OF_CELL_CYCLE
+86:                                 GOBP_SMOOTH_MUSCLE_CELL_PROLIFERATION
+87:                                         GOBP_REGULATION_OF_CELL_CYCLE
+88:                 GOBP_REGULATION_OF_ANATOMICAL_STRUCTURE_MORPHOGENESIS
+89:                                         GOBP_DEVELOPMENTAL_MATURATION
+90:                             GOBP_ORGANOPHOSPHATE_BIOSYNTHETIC_PROCESS
+91:                                            GOBP_RESPONSE_TO_METAL_ION
+92:                    GOBP_REGULATION_OF_PROTEIN_LOCALIZATION_TO_NUCLEUS
+93:                                               GOBP_SYNAPTIC_SIGNALING
+94:                                   GOBP_MORPHOGENESIS_OF_AN_EPITHELIUM
+                                                                  pathway
+          pval.x       pval.y
+           &lt;num&gt;        &lt;num&gt;
+ 1: 3.387836e-06 1.666548e-05
+ 2: 1.377570e-06 1.719820e-06
+ 3: 2.218444e-06 1.317321e-07
+ 4: 4.015017e-06 5.098402e-06
+ 5: 3.640182e-06 3.169241e-06
+ 6: 6.878260e-06 3.560145e-06
+ 7: 8.570505e-06 1.532649e-05
+ 8: 1.109001e-05 3.377058e-06
+ 9: 1.916705e-05 6.066911e-06
+10: 2.473842e-05 8.081819e-05
+11: 2.265309e-05 2.144701e-05
+12: 2.982396e-05 1.342481e-05
+13: 2.952542e-05 5.997576e-06
+14: 3.451768e-05 4.277817e-04
+15: 4.128502e-05 3.086554e-04
+16: 3.904669e-05 6.712017e-05
+17: 5.863235e-05 2.142390e-05
+18: 7.411055e-05 9.816586e-05
+19: 8.777576e-05 8.917667e-05
+20: 1.054738e-04 2.665820e-04
+21: 1.066019e-04 1.553083e-04
+22: 1.985842e-04 8.764212e-04
+23: 2.187911e-04 2.058669e-05
+24: 2.171747e-04 2.847430e-03
+25: 2.349188e-04 4.721577e-04
+26: 2.714100e-04 5.552235e-04
+27: 2.893662e-04 1.301681e-03
+28: 2.810950e-04 6.311671e-04
+29: 2.711388e-04 4.306292e-04
+30: 3.124627e-04 4.401827e-04
+31: 3.281156e-04 1.711343e-04
+32: 3.394917e-04 2.483546e-04
+33: 3.896173e-04 1.371705e-04
+34: 4.191006e-04 6.998142e-04
+35: 4.959488e-04 1.904578e-03
+36: 4.949479e-04 1.582364e-03
+37: 4.579705e-04 5.946149e-05
+38: 4.758375e-04 9.041409e-03
+39: 4.625274e-04 5.472278e-05
+40: 5.208076e-04 7.230458e-04
+41: 6.182252e-04 5.999077e-04
+42: 6.365426e-04 2.238401e-03
+43: 6.548601e-04 7.547702e-03
+44: 6.823363e-04 1.647531e-03
+45: 6.998853e-04 9.224194e-04
+46: 7.281300e-04 1.168925e-03
+47: 7.838656e-04 3.089347e-03
+48: 8.439367e-04 4.686132e-04
+49: 8.380351e-04 8.065672e-05
+50: 8.855983e-04 1.432359e-03
+51: 8.702629e-04 5.758128e-03
+52: 9.634300e-04 1.010073e-03
+53: 9.595334e-04 2.931796e-03
+54: 1.022683e-03 6.213287e-04
+55: 1.076885e-03 2.665820e-04
+56: 1.107875e-03 9.613144e-04
+57: 1.368125e-03 8.556176e-04
+58: 1.445407e-03 4.434357e-03
+59: 1.500267e-03 2.665820e-04
+60: 1.502065e-03 2.302618e-03
+61: 1.631422e-03 2.424477e-03
+62: 1.647531e-03 1.095293e-03
+63: 1.629123e-03 4.547766e-04
+64: 1.636005e-03 1.030126e-03
+65: 1.634020e-03 1.305606e-03
+66: 1.827349e-03 1.181690e-03
+67: 1.789080e-03 2.534809e-03
+68: 1.868427e-03 1.739571e-03
+69: 1.884319e-03 6.420882e-03
+70: 2.090411e-03 4.350189e-03
+71: 2.423389e-03 5.763040e-03
+72: 2.435044e-03 1.413783e-03
+73: 2.571379e-03 1.371412e-03
+74: 2.804572e-03 4.305940e-03
+75: 3.274336e-03 3.618159e-03
+76: 3.429178e-03 7.122883e-03
+77: 3.634287e-03 3.108793e-03
+78: 3.826576e-03 7.894722e-03
+79: 3.978387e-03 4.064930e-03
+80: 4.052747e-03 7.739238e-04
+81: 4.437849e-03 7.901869e-03
+82: 5.019433e-03 5.168154e-03
+83: 5.005073e-03 4.067789e-03
+84: 5.062910e-03 4.705756e-03
+85: 5.044631e-03 3.120521e-03
+86: 5.294795e-03 5.879418e-04
+87: 5.465597e-03 1.058477e-03
+88: 6.289849e-03 5.929532e-03
+89: 7.304467e-03 3.463578e-03
+90: 8.156238e-03 4.705756e-03
+91: 1.008160e-02 9.408829e-03
+92: 1.017582e-02 3.765300e-03
+93: 1.204006e-02 7.334934e-03
+94: 1.324024e-02 7.585592e-03
+          pval.x       pval.y</code></pre>
+</div>
+</div>
 </section>
 
 </main>
