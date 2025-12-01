@@ -35,6 +35,8 @@ format:
     -   data_mutations.txt
     -   data_sv.txt
 
+![](../results/figures/mutation_count_IMPACT.png){.absolute top="170" left="30" width="400" height="400"}
+
 ## Methods
 
 -   Survival Analysis:
