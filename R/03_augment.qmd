@@ -1,0 +1,82 @@
+---
+title: "augment data"
+format: 
+  html:
+    self-contained: true
+editor: visual
+---
+
+# Load Libraries
+
+```{r}
+#| message: false
+library(here)
+library(tidyverse)
+library(readr)
+```
+
+# Load Data
+
+```{r}
+folder <- here("data", "_raw")
+```
+
+```{r}
+clinical_sample <- read_delim(file.path(folder, "tmb_mskcc_2018/data_clinical_sample.txt"), delim = "\t", skip = 4, col_names = TRUE)
+
+clinical_patient <- read_delim(file.path(folder, "tmb_mskcc_2018/data_clinical_patient.txt"), delim = "\t", skip = 4, col_names = TRUE)
+
+gene_panel_matrix <- read_delim(file.path(folder, "tmb_mskcc_2018/data_gene_panel_matrix.txt"), delim = "\t")
+```
+
+# Patients Cleaning
+
+```{r}
+clinical_patient <- clinical_patient |> 
+  mutate( 
+    OS_STATUS = case_when(
+      OS_STATUS == "0:LIVING" ~ 0,
+      OS_STATUS == "1:DECEASED" ~ 1
+      ), 
+    SEX_NUM = case_when(
+      SEX == "Male" ~ 0,
+      SEX == "Female" ~ 1
+      ),
+    AGE_GROUP = factor(
+      AGE_GROUP,
+      levels = c("<30", "31-50", "50-60", "61-70", ">71"),
+      ordered = TRUE
+      )
+    )
+```
+
+# Cleaning Gene-Panel Matrix
+
+```{r}
+gene_panel_matrix <- gene_panel_matrix |> 
+  mutate(IMPACT_version = case_when(
+    mutations == "IMPACT341" ~ "IMPACT_v3",
+    mutations == "IMPACT410" ~ "IMPACT_v5",
+    mutations == "IMPACT468" ~ "IMPACT_v6"
+    )
+  )
+```
+
+## Merging Patient-Sample
+
+```{r}
+patients_sample <- left_join(clinical_patient, clinical_sample, by = "PATIENT_ID")
+```
+
+## Merging Patient-Sample with Gene panel Matrix
+
+```{r}
+patients_sample_gene_panel <- left_join(patients_sample, gene_panel_matrix, by = "SAMPLE_ID")
+```
+
+# Exporting the cleaned merged data
+
+```{r}
+patients_sample_gene_panel|>
+  write_tsv(file = here("data","patient_sample_gene_panel.tsv"))
+```

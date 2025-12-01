@@ -56,6 +56,9 @@ format:
 
 -   Number of Mutations & SV per Cancer Type ![](../results/figures/SV_count_per_cancer.png){.absolute bottom="20" left="30" width="400" height="400"}
 
+-   Mutation Type per Cancer Type
+![](../results/figures/mutation_by_cancer.png){.absolute bottom="20" left="30" width="400" height="400"}
+
 ## Results 2
 
 -   SV Analysis ![](../results/figures/SV_lengths_distribution.png){.absolute top="170" left="30" width="400" height="400"}

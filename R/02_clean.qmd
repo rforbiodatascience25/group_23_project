@@ -1,5 +1,5 @@
 ---
-title: "Importing Raw data"
+title: "clean raw data"
 format: 
   html:
     self-contained: true
@@ -13,45 +13,17 @@ editor: visual
 library(here)
 library(tidyverse)
 library(ggplot2)
-library(dplyr)
-library(purrr)
-library(table1)
-```
-
-# Download raw data
-
-```{r}
-folder <- here("data", "_raw")
-local_path <- file.path(folder, "raw_data.tar.gz")
-
-```
-
-```{r}
-if (!dir.exists(folder)) {
-  dir.create(folder, recursive = TRUE)
-}
-download.file("https://cbioportal-datahub.s3.amazonaws.com/tmb_mskcc_2018.tar.gz", local_path, mode = "wb")
-```
-
-# Unpack raw data
-
-```{r}
-untar(
-  tarfile = local_path,
-  exdir = folder
-)
+library(readr)
 ```
 
 # Load Data
 
 ```{r}
-clinical_sample <- read_delim(file.path(folder, "tmb_mskcc_2018/data_clinical_sample.txt"), delim = "\t", skip = 4, col_names = TRUE)
+folder <- here("data", "_raw")
+```
 
+```{r}
 mutation <- read_delim(file.path(folder, "tmb_mskcc_2018/data_mutations.txt"), delim = "\t", col_names = TRUE)
-
-clinical_patient <- read_delim(file.path(folder, "tmb_mskcc_2018/data_clinical_patient.txt"), delim = "\t", skip = 4, col_names = TRUE)
-
-gene_panel_matrix <- read_delim(file.path(folder, "tmb_mskcc_2018/data_gene_panel_matrix.txt"), delim = "\t")
 
 raw_data_sv <- read_delim(file.path(folder, "tmb_mskcc_2018/data_sv.txt"), delim = "\t")
 ```
@@ -258,39 +230,6 @@ data_mutation_without_nas_long |>
   write_tsv(file = here("data","data_mutation_cleaned.tsv"))
 ```
 
-# Patients Cleaning
-
-```{r}
-clinical_patient <- clinical_patient |> 
-  mutate( 
-    OS_STATUS = case_when(
-      OS_STATUS == "0:LIVING" ~ 0,
-      OS_STATUS == "1:DECEASED" ~ 1
-      ), 
-    SEX_NUM = case_when(
-      SEX == "Male" ~ 0,
-      SEX == "Female" ~ 1
-      ),
-    AGE_GROUP = factor(
-      AGE_GROUP,
-      levels = c("<30", "31-50", "50-60", "61-70", ">71"),
-      ordered = TRUE
-      )
-    )
-```
-
-# Cleaning Gene-Panel Matrix
-
-```{r}
-gene_panel_matrix <- gene_panel_matrix |> 
-  mutate(IMPACT_version = case_when(
-    mutations == "IMPACT341" ~ "IMPACT_v3",
-    mutations == "IMPACT410" ~ "IMPACT_v5",
-    mutations == "IMPACT468" ~ "IMPACT_v6"
-    )
-  )
-```
-
 # Structural Variants Cleaning and exporting
 
 Discarding two columns that had a constant value: SOMATIC for SV_Status and GRCh37 for NCBI_Build.
@@ -307,23 +246,4 @@ The file"s dimensions are inconsistent with the other files, and the Sample_ID c
 ```{r}
 cleaned_sv |>
   write_tsv(file = here("data","sv_cleaned.tsv"))
-```
-
-## Merging Patient-Sample
-
-```{r}
-patients_sample <- left_join(clinical_patient, clinical_sample, by = "PATIENT_ID")
-```
-
-## Merging Patient-Sample with Gene panel Matrix
-
-```{r}
-patients_sample_gene_panel <- left_join(patients_sample, gene_panel_matrix, by = "SAMPLE_ID")
-```
-
-# Exporting the cleaned merged data
-
-```{r}
-patients_sample_gene_panel|>
-  write_tsv(file = here("data","patient_sample_gene_panel.tsv"))
 ```
