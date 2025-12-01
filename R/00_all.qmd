@@ -17,27 +17,68 @@ library(quarto)
 
 # Load all necessary Data
 
-This script downloads the analysed dataset, unpacks it and will clean all data object which are necessary for the subsequent analysis.
+This script downloads the analysed dataset and unpacks it.
 
 ```{r}
 #| echo: true
 #| results: "hide"
-quarto::quarto_render(here("R", "Importing_raw_data.qmd"))
+quarto::quarto_render(here("R", "01_load.qmd"))
 ```
 
-# Analysis on specific Datasets
+{{< include 01_load.qmd >}}
 
-In these scripts, the seperate data files are analysed for necessary cleaning and interesting patterns or correlations.
+# Cleaning and augmentation of Datasets
+
+In these scripts, the separate data files are analysed for necessary cleaning and interesting patterns or correlations.
 
 ```{r}
 #| echo: true
 #| results: "hide"
-quarto::quarto_render(here("R", "data_clinical_patient_analysis.qmd"))
-quarto::quarto_render(here("R", "data_clinical_sample_analysis.qmd"))
-quarto::quarto_render(here("R", "data_mutations_analysis.qmd"))
-quarto::quarto_render(here("R", "sv_class_analysis.qmd"))
-quarto::quarto_render(here("R", "gene_panel_mutation.qmd"))
+quarto::quarto_render(here("R", "02_clean.qmd"))
+quarto::quarto_render(here("R", "03_augment.qmd"))
 ```
+
+## Cleaning Script
+
+{{< include 02_clean.qmd >}}
+
+## Augmentation Script
+
+{{< include 03_augment.qmd >}}
+
+# Descriptive Scripts
+
+These script explore all 5 Dataset.
+
+```{r}
+#| echo: true
+#| results: "hide"
+quarto::quarto_render(here("R", "04_1_data_clinical_patient_analysis.qmd"))
+quarto::quarto_render(here("R", "04_2_data_clinical_sample_analysis.qmd"))
+quarto::quarto_render(here("R", "04_3_data_mutations_analysis.qmd"))
+quarto::quarto_render(here("R", "04_4_gene_panel_mutation.qmd"))
+quarto::quarto_render(here("R", "04_5_sv_class_analysis.qmd"))
+```
+
+## Patient Dataset
+
+{{< include 04_1_data_clinical_patient_analysis.qmd >}}
+
+## Sample Dataset
+
+{{< include 04_2_data_clinical_sample_analysis.qmd >}}
+
+## Mutation Dataset
+
+{{< include 04_3_data_mutations_analysis.qmd >}}
+
+## Gene Panel Dataset
+
+{{< include 04_4_gene_panel_mutation.qmd >}}
+
+## Structural Variance Dataset
+
+{{< include 04_5_sv_class_analysis.qmd >}}
 
 # Downstream Analysis
 
@@ -46,12 +87,32 @@ These scripts perform more particular Analysis to follow findings from the explo
 ```{r}
 #| echo: true
 #| results: "hide"
-quarto::quarto_render(here("R", "Cox_Regression.qmd"))
-quarto::quarto_render(here("R", "EGFR_SV_analysis.qmd"))
-quarto::quarto_render(here("R", "gene_enrichment_analysis.qmd"))
-quarto::quarto_render(here("R", "mutation_types.qmd"))
-quarto::quarto_render(here("R", "Survival_rate_parameter_analysis.qmd"))
+quarto::quarto_render(here("R", "05_Survival_rate_parameter_analysis.qmd"))
+quarto::quarto_render(here("R", "06_mutation_types.qmd"))
+quarto::quarto_render(here("R", "07_EGFR_SV_analysis.qmd"))
+quarto::quarto_render(here("R", "08_Cox_Regression.qmd"))
+quarto::quarto_render(here("R", "09_gene_enrichment_analysis.qmd"))
 ```
+
+## Survival Rate Analysis
+
+{{< include 05_Survival_rate_parameter_analysis.qmd >}}
+
+## Mutation Types
+
+{{< include 06_mutation_types.qmd >}}
+
+## Subsetted Structural Variance Analysis
+
+{{< include 07_EGFR_SV_analysis.qmd >}}
+
+## Cox Regression
+
+{{< include 08_Cox_Regression.qmd >}}
+
+## Gene Set Enrichment Analysis
+
+{{< include 09_gene_enrichment_analysis.qmd >}}
 
 # Move HTML files to Results
 
@@ -63,5 +124,3 @@ if(!dir.exists(here("results"))) dir.create(here("results"))
 html_files <- list.files(here("R"), pattern = "\\.html$", full.names = TRUE)
 file.rename(from = html_files, to = file.path(here("results"), basename(html_files)))
 ```
-
-{{< include gene_enrichment_analysis.qmd >}}
