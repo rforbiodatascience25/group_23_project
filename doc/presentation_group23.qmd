@@ -65,6 +65,7 @@ and Impact version
 -   Survival Correlation with Co-founders(especially gender)
 
 -   Survival analysis on gender(subset glioma)
+![](../results/figures/EGFR_count_per_cancer.png){.absolute top="170" left="30" width="400" height="400"}
 
 ## Results 5
 
