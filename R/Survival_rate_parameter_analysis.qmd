@@ -33,7 +33,11 @@ patients_sample <- patients_sample_gene_panel |>
 
 # Analysis
 
-```{r}
+Looking at both patients and sample, it can be interesting to look at various variables.
+
+Starting with the Tumor Mutational Burden (TMB), is there a correlation between the drug given and the TMB?
+
+```{r TMB classes}
 #Comparing the number of mutation, and the drug given, in the case of Glioma cancer
 patients_sample <- patients_sample |> 
   mutate(TMB_group = case_when(TMB_NONSYNONYMOUS<5 ~'Low TMB',
@@ -66,7 +70,7 @@ patients_sample |>
 
 Does the cancer type affects the survival of patients?
 
-```{r}
+```{r Cancer Survival}
 
 KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~CANCER_TYPE, data = patients_sample)
 
@@ -85,7 +89,7 @@ survival_cancer_type <- ggplot(tibble_KM_f,
                      y = survival, 
                      color = strata))+
   geom_step()+
-  scale_fill_viridis(option = "viridis",
+  scale_color_viridis(option = "viridis",
                      discrete = TRUE) +
   coord_cartesian(ylim = c(0,NA))+
   labs(title = 'Survival Curve of the patients depending on their Cancer type', 
@@ -93,13 +97,17 @@ survival_cancer_type <- ggplot(tibble_KM_f,
        y = 'Overall Survival Probability',
        color = 'Cancer Type')+
   theme_minimal()
-ggsave("../results/figures/survival_cancer_type.png", plot = survival_cancer_type)
-  
+
+survival_cancer_type
 ```
+
+The cancer definitly impacts the survival probability, it can be interesting to look more into the different cancer types.
 
 #### Further analysis of patients based on their cancer type
 
-```{r}
+Looking at the ages when different cancers were diagnosed.
+
+```{r Cancer and Age diagnosis}
 ggplot(patients_sample,
        mapping = aes(x = AGE_AT_SEQ_REPORT, 
                      fill = CANCER_TYPE))+
@@ -114,7 +122,9 @@ ggplot(patients_sample,
   
 ```
 
-```{r}
+Are there cancers that lead to higher TMB?
+
+```{r cancer type and TMB}
 ggplot(patients_sample,
        mapping = aes(x = factor(TMB_group, order = TRUE), 
                      fill = CANCER_TYPE))+
@@ -128,7 +138,9 @@ ggplot(patients_sample,
   
 ```
 
-```{r}
+Repartition of cancers by gender:
+
+```{r Cancers and Gender}
 ggplot(patients_sample,
        mapping = aes(x = CANCER_TYPE, 
                      fill = SEX))+
@@ -144,7 +156,9 @@ ggplot(patients_sample,
   
 ```
 
-```{r}
+Are there drugs more given to a certain type of cancer?
+
+```{r Cancers and Drug Type}
 ggplot(patients_sample,
        mapping = aes(x = CANCER_TYPE, 
                      fill = DRUG_TYPE))+
@@ -160,11 +174,13 @@ ggplot(patients_sample,
   
 ```
 
+### Survival Analysis
+
 the impact of TMB on all cancer survival rate:
 
 Does the tumor mutational burden (liked to the number of mutation) affect the survival and thus is an indicator of the severity of the cancer?
 
-```{r}
+```{r TMB survival - All cancers}
 KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~TMB_group, data = patients_sample)
 
 #convert to a tibble
@@ -182,7 +198,7 @@ ggplot(tibble_KM_f,
                      y = survival, 
                      color = strata))+
   geom_step()+
-  scale_fill_viridis(option = "viridis",
+  scale_color_viridis(option = "viridis",
                      discrete = TRUE)+
   coord_cartesian(ylim = c(0,NA))+
   labs(title = 'Survival Curve of the patients depending on their TMB', 
@@ -194,7 +210,7 @@ ggplot(tibble_KM_f,
 
 Higher TMB leads to higher survival.
 
-What about in Glioma?
+We chose to focus our analysis on Glioma cancer:
 
 ## Diving into Glioma
 
@@ -205,7 +221,7 @@ patients_sample_glioma <- patients_sample |>
 
 ### Survival Analysis stratified by Tumor Mutational Burden
 
-```{r}
+```{r TMB and Gioma}
 
 KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~TMB_group, data = patients_sample_glioma)
 
@@ -224,7 +240,7 @@ ggplot(tibble_KM_f,
                      y = survival, 
                      color = strata))+
   geom_step()+
-  scale_fill_viridis_d(option = "viridis") +
+  scale_color_viridis_d(option = "viridis") +
   coord_cartesian(ylim = c(0, NA))+
   labs(title = 'Survival Curve of the patients depending on their TMB', 
        x = 'Time (in months)',
@@ -240,7 +256,7 @@ Lets look more into it, what is the distribution of TMB in Glioma?
 
 #### Further analysis of Glioma cancer
 
-```{r}
+```{r TMB repartition - Glioma}
 #looking at the repartition of TMBs in the different sections
 ggplot(patients_sample_glioma, 
        mapping = aes(x = TMB_group))+
@@ -250,7 +266,9 @@ ggplot(patients_sample_glioma,
   theme_minimal()
 ```
 
-```{r}
+Does the TMB in glioma impact the choice f medication?
+
+```{r TMB and Drug Type - Glioma}
 ggplot(patients_sample_glioma, 
        mapping = aes(x = (TMB_group), 
                      fill = DRUG_TYPE))+
@@ -264,7 +282,11 @@ ggplot(patients_sample_glioma,
   
 ```
 
-```{r}
+**Survival Analysis**
+
+For Glioma, some results showed that the gender had a greater impact on the survival than the age:
+
+```{r Survival, gender -Glioma}
 KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~SEX, data = patients_sample_glioma)
 
 #convert to a tibble
@@ -282,7 +304,7 @@ survival_glioma_gender <- ggplot(tibble_KM_f,
                      y = survival, 
                      color = strata))+
   geom_step()+
-  scale_fill_viridis_d(option = "viridis") +
+  scale_color_viridis_d(option = "viridis") +
   coord_cartesian(ylim = c(0, NA))+
   labs(title = 'Survival Curve of the patients depending on their TMB', 
        x = 'Time (in months)', 
@@ -290,6 +312,44 @@ survival_glioma_gender <- ggplot(tibble_KM_f,
        color = 'Gender')+
   theme_minimal()
 
-ggsave("../results/figures/survival_glioma_gender.png", plot = survival_glioma_gender)
+survival_glioma_gender
+```
 
+```{r Survival Age - Glioma}
+KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~AGE_GROUP, data = patients_sample_glioma)
+
+#convert to a tibble
+
+tibble_KM_f <- tibble(
+  time = KM_f$time,
+  survival = KM_f$surv,
+  strata = rep(names(KM_f$strata),KM_f$strata))
+
+tibble_KM_f <- tibble_KM_f %>%
+  mutate(strata = str_remove(strata, "AGE_GROUP="),
+         strata = factor(strata,
+                         levels = c("<30", "31-50", "50-60", "61-70", ">71"),
+                         ordered = TRUE
+                         )
+         )
+
+ggplot(tibble_KM_f,
+       mapping = aes(x = time, 
+                     y = survival, 
+                     color = strata))+
+  geom_step()+
+  scale_color_viridis_d(option = "viridis") +
+  coord_cartesian(ylim = c(0, NA))+
+  labs(title = 'Survival Curve of the patients depending on their TMB', 
+       x = 'Time (in months)', 
+       y = 'Overall Survival Probability',
+       color = 'Age group at diagnosis')+
+  theme_minimal()
+```
+
+## Saving Figures:
+
+```{r}
+ggsave("../results/figures/survival_cancer_type.png", plot = survival_cancer_type)
+ggsave("../results/figures/survival_glioma_gender.png", plot = survival_glioma_gender)
 ```
