@@ -18,17 +18,30 @@ format:
 
 -   Main objective: New predictive biomarkers for Immune Checkpoint Inhibitors (ICI)
 
--	  Examine the impact of Tumor Mutational Burden (TMB)
+-   
 
--	  Higher TMB = Higher response?
+    ```         
+    Examine the impact of Tumor Mutational Burden (TMB)
+    ```
+
+-   
+
+    ```         
+    Higher TMB = Higher response?
+    ```
 
 ## Materials
 
--   MSK-IMPACT -> Next Generation Sequencing
+-   MSK-IMPACT -\> Next Generation Sequencing
 
 -   3 versions: IMPACT 3 (341 genes), IMPACT 5 (410 genes), IMPACT 6 (468 genes)
 
--	  Higher count of mutations detected as more genes are analysed
+-   
+
+    ```         
+    Higher count of mutations detected as more genes are analysed
+    ```
+
     -   data_clinical_patient.txt
     -   data_clinical_sample.txt
     -   data_gene_panel_matrix.txt
@@ -53,7 +66,7 @@ format:
 
 ## Results 1
 
--   Survival analysis - stratified by Cancer type
+-   Survival analysis - stratified by Cancer type ![](../results/figures/survival_cancer_type.png){.absolute top="170" left="30" width="400" height="400"}
 
 -   Number of Mutations & SV per Cancer Type
 
@@ -75,7 +88,7 @@ format:
 
 -   Survival Correlation with Co-founders(especially gender)
 
--   Survival analysis on gender(subset glioma) ![](../results/figures/EGFR_count_per_cancer.png){.absolute top="170" left="30" width="400" height="400"}
+-   Survival analysis on gender(subset glioma) ![](../results/figures/survival_glioma_gender.png){.absolute top="170" left="30" width="400" height="400"}
 
 ## Results 5
 
@@ -87,7 +100,7 @@ format:
 
 ::: table-small
 | Biological Process | pvalue | adjusted pvalue |
-|:---|---:|---:|
+|:-----------------------|-----------------------:|-----------------------:|
 | [GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT]{style="color: red;"} | 1.874506e-06 | 0.0001852012 |
 | GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS | 3.918503e-07 | 0.0001852012 |
 | [GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 8.078272e-07 | 0.0001852012 |
