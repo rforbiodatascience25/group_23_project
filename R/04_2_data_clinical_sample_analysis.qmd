@@ -353,7 +353,7 @@ ggplot() +
     title = "Tumor Purity Distribution per Dataset"
     )
 
-ggplot() +
+TMB_glioma <- ggplot() +
   geom_density(data = patient_sample,
            aes(TMB_NONSYNONYMOUS, fill = "Full"),
            alpha = 0.5)+
@@ -365,6 +365,8 @@ ggplot() +
     x = "TMB",
     title = "TMB Distribution per Dataset"
     )
+
+TMB_glioma
 ```
 
 For some Variables the Subsetted dataset for Glioma samples is close to the one of the whole Dataset. It is noticable though that
@@ -392,4 +394,13 @@ sample_glioma |>
   geom_bar()+
   labs(title = "Detailed cancer type for glioma tumors")+
   theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust=1, size = 10))
+```
+
+## Exporting plot
+
+```{r}
+if(!dir.exists(here("results"))) dir.create(here("results"))
+if(!dir.exists(here("results",'figures'))) dir.create(here("results", 'figures'))
+
+ggsave(here('results','figures', 'TMB_all_vs_glioma.png'), TMB_glioma)
 ```
