@@ -289,10 +289,3 @@ ggplot(tibble_KM_f,
 Overall, the survival probability increases after 40 months as the slope of the curve is less steep. It is possible that in some cases only a few patients are left then, and were not reported further.
 
 # html saving to results
-
-```{r}
-rmarkdown::render(
-  input = "data_clinical_patient_analysis.qmd",
-  output_file = "../results/data_clinical_patient_analysis.html"
-)
-```
