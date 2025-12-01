@@ -128,22 +128,22 @@ glioma_mutations_count <- glioma_sample_mutation |>
 ## Data representation
 
 ```{r}
-ggplot(data = mutations_count,
-       mapping = aes(x = CANCER_TYPE,
-                     y = count,
-                     fill = Variant_Classification)) + 
-  geom_col(alpha = 0.8) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90,
-                                   hjust = 1,
-                                   size = 7),
-        panel.grid.major.x = element_blank()) +
-  scale_fill_viridis(option = "viridis",
-                     discrete = TRUE) +
-  labs(title = "Distribution of Mutation Type by Cancer Type",
-       x = "Cancer Type",
-       y = "Mutation Count",
-       fill = "Mutation Type")
+mutation_by_cancer <- ggplot(data = mutations_count,
+                         mapping = aes(x = CANCER_TYPE,
+                                       y = count,
+                                       fill = Variant_Classification)) + 
+                    geom_col(alpha = 0.8) +
+                    theme_minimal() +
+                    theme(axis.text.x = element_text(angle = 90,
+                                                     hjust = 1,
+                                                     size = 7),
+                          panel.grid.major.x = element_blank()) +
+                    scale_fill_viridis(option = "viridis",
+                                       discrete = TRUE) +
+                    labs(title = "Distribution of Mutation Type by Cancer Type",
+                         x = "Cancer Type",
+                         y = "Mutation Count",
+                         fill = "Mutation Type")
 ```
 
 ```{r}
@@ -163,4 +163,11 @@ ggplot(data = glioma_mutations_count,
        x = "Detailed Glioma Type",
        y = "Mutation Count",
        fill = "Mutation Type")
+```
+
+## Saving figures:
+
+```{r}
+ggsave("../results/figures/mutation_by_cancer.png",
+       plot = mutation_by_cancer)
 ```
