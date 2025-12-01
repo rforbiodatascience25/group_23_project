@@ -1,14 +1,15 @@
 ---
 title: "mutation_types"
-format: html
+format: 
+  html:
+    self-contained: true
 editor: visual
-self-contained: true
 ---
 
 ## Load libraries
 
 ```{r}
-#| echo: False
+#| message: False
 library(tidyverse)
 library(here)
 library(dplyr)
@@ -23,8 +24,8 @@ Load the mutations dataset and remove duplicate entries that only differ in the 
 
 ```{r}
 #Load the mutations data
-mutations <- read_delim(here("data",
-                             "data_mutation_cleaned.tsv"), delim = "\t")
+mutations <- read_tsv(here("data",
+                             "data_mutation_cleaned.tsv"))
 #Remove the duplicates
 mutations <- mutations |> 
   distinct(across(-consequence),
@@ -60,8 +61,8 @@ Load the Clinical Sample data.
 
 ```{r}
 #Load the clinical sample data
-clinical_sample <- read_delim(here("data",
-                                   "patient_sample_gene_panel"))
+clinical_sample <- read_tsv(here("data",
+                                   "patient_sample_gene_panel.tsv"))
 clinical_sample
 ```
 
