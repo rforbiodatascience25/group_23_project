@@ -34,7 +34,7 @@ Investigate the raw data, look for necessary cleaning
 
 ```{r}
 #| message: false
-clinical_sample <- read_delim(here("raw/tmb_mskcc_2018/data_clinical_sample.txt"), delim = "\t", skip = 4, col_names = TRUE)
+clinical_sample <- read_delim(here("data/_raw/tmb_mskcc_2018/data_clinical_sample.txt"), delim = "\t", skip = 4, col_names = TRUE)
 ```
 
 Categorical Variables:
