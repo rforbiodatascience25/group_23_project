@@ -135,8 +135,8 @@ ex: EGFR_count_per_cancer.png\
 
 The folder with the presenattion slides
 
-presentation_group23.qmd\
-presentation_group23.html\
+presentation.qmd\
+presentation.html\
 styles.css
 
 .gitignore
