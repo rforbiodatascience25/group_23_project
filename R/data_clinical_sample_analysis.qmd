@@ -41,12 +41,12 @@ clinical_sample <- read_delim(here("raw/tmb_mskcc_2018/data_clinical_sample.txt"
 Categorical Variables:
 
 ```{r}
-clinical_sample %>% select(CANCER_TYPE) %>% unique()
-clinical_sample %>% select(SAMPLE_TYPE) %>% unique()
-clinical_sample %>% select(SAMPLE_CLASS) %>% unique()
-clinical_sample %>% select(METASTATIC_SITE) %>% unique()
-clinical_sample %>% select(PRIMARY_SITE) %>% unique()
-clinical_sample %>% select(GENE_PANEL) %>% unique()
+clinical_sample |> select(CANCER_TYPE) |> unique()
+clinical_sample |> select(SAMPLE_TYPE) |> unique()
+clinical_sample |> select(SAMPLE_CLASS) |> unique()
+clinical_sample |> select(METASTATIC_SITE) |> unique()
+clinical_sample |> select(PRIMARY_SITE) |> unique()
+clinical_sample |> select(GENE_PANEL) |> unique()
 
 ```
 
@@ -220,7 +220,7 @@ network_inf |>
 Subset the dataset to only Glioma Samples
 
 ```{r}
-sample_glioma <- patient_sample %>% 
+sample_glioma <- patient_sample |> 
   filter(CANCER_TYPE=='Glioma')
 ```
 

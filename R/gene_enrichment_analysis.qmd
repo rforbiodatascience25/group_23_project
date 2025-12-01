@@ -92,8 +92,8 @@ names(gene_mutation_stats) = gene_mutation_count$ensembl_gene
 pathway_scoring_gene_m <- fgseaMultilevel(pathways= BP_list, stats = gene_mutation_stats,minSize = 15, maxSize = 500, scoreType = "std")
 pathway_scoring_gene_m <- arrange(pathway_scoring_gene_m, padj)
 head(pathway_scoring_gene_m|> select(pathway, pval, padj), n = 15)
-pathway_scoring_gene_m %>%
-  filter(padj < 0.05) %>% 
+pathway_scoring_gene_m |>
+  filter(padj < 0.05) |> 
   nrow()
 ```
 
@@ -103,9 +103,9 @@ These results are more reliable than the ones of the structural variances. The m
 
 ```{r}
 overlap <- inner_join(
-  pathway_scoring_gene_sv %>% head(n=100),
-  pathway_scoring_gene_m %>%  head(n=100), by = 'pathway'
-  ) %>% 
+  pathway_scoring_gene_sv |> head(n=100),
+  pathway_scoring_gene_m |>  head(n=100), by = 'pathway'
+  ) |> 
   select(pathway, pval.x, pval.y)
 
 overlap
@@ -146,12 +146,12 @@ head(pathway_scoring_sample_sv|> select(pathway, pval, padj), n =15)
 ## Mutations
 
 ```{r}
-mutation_gene_sample <- mutations %>% 
+mutation_gene_sample <- mutations |> 
   left_join(clinical_clean |> select(SAMPLE_ID, CANCER_TYPE), by = c("Tumor_Sample_Barcode" = "SAMPLE_ID")) |>
   filter(CANCER_TYPE == 'Glioma')|>
-  select(Tumor_Sample_Barcode, Hugo_Symbol) %>% 
-  distinct() %>% 
-  count(Hugo_Symbol, sort = TRUE) %>% 
+  select(Tumor_Sample_Barcode, Hugo_Symbol) |> 
+  distinct() |> 
+  count(Hugo_Symbol, sort = TRUE) |> 
   left_join(BP_df |> select(gene_symbol, ensembl_gene), by = c('Hugo_Symbol' = 'gene_symbol'))|>
   distinct()|>
   na.omit()
@@ -162,8 +162,8 @@ names(gene_mutation_stats) = mutation_gene_sample$ensembl_gene
 pathway_scoring_sample_m <- fgseaMultilevel(pathways= BP_list, stats = gene_mutation_stats,minSize = 15, maxSize = 500, scoreType = "std")
 pathway_scoring_sample_m <- arrange(pathway_scoring_sample_m, padj)
 head(pathway_scoring_sample_m |> select(pathway, pval, padj), n=15)
-pathway_scoring_sample_m %>%
-  filter(padj < 0.05) %>% 
+pathway_scoring_sample_m |>
+  filter(padj < 0.05) |> 
   nrow()
 ```
 
@@ -173,9 +173,9 @@ The comparison of the both counting versions, result in very similar outputs.
 
 ```{r}
 overlap <- inner_join(
-  pathway_scoring_gene_m %>% filter(padj <0.05),
-  pathway_scoring_sample_m %>%  filter(padj < 0.05), by = 'pathway'
-  ) %>% 
+  pathway_scoring_gene_m |> filter(padj <0.05),
+  pathway_scoring_sample_m |>  filter(padj < 0.05), by = 'pathway'
+  ) |> 
   select(pathway, pval.x, pval.y)
 
 overlap
