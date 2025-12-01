@@ -1,6 +1,15 @@
 ---
 title: "presentation_group23"
-format: revealjs
+format: 
+  revealjs:
+    css: styles.css
+    slide-number: true
+    tables:
+      width: 100%
+    tbl-cap-location: top
+    slide-level: 2
+    theme: default
+    embed-resources: true
 ---
 
 ## Introduction/Background
@@ -27,6 +36,9 @@ and Impact version
     -   result: step curve, each step indicates the status of patients per unit time. It can be stratified to different parameters (sex, age, cancer..)
 -   Cox Regression
 -   Gene Set Enrichment Analysis
+    -   GO Data from Molecular Signature Database
+    -   Ranked list based on numbers of mutated Samples per Gene
+    -   fgseaMultilevel() from fgsea package
 
 ## Results 1
 
@@ -56,9 +68,33 @@ and Impact version
 
 ## Results 5
 
+::: {.text-block}
 -   Gene SV+ Mutation from Glioma
 
 -   GSEA (SV) & Mutations
+:::
+
+::: {.table-small}
+<div class="table-small" style="transform:scale(0.30); transform-origin:top left; max-height:300px;">
+| Biological Process | pvalue | adjusted pvalue |
+|:-----------------------|-----------------------:|-----------------------:|
+| [GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT]{style="color: red;"} | 1.874506e-06 | 0.0001852012 |
+| GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS | 3.918503e-07 | 0.0001852012 |
+| [GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 8.078272e-07 | 0.0001852012 |
+| GOBP_REGULATION_OF_CELLULAR_LOCALIZATION | 1.656334e-06 | 0.0001852012 |
+| [GOBP_REGULATION_OF_MITOTIC_CELL_CYCLE_PHASE_TRANSITION]{style="color: blue;"} | 1.381711e-06 | 0.0001852012 |
+| [GOBP_TUBE_DEVELOPMENT]{style="color: red;"} | 3.698399e-06 | 0.0003045015 |
+| GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS | 7.123257e-06 | 0.0003909877 |
+| [GOBP_CELL_CYCLE_G1_S_PHASE_TRANSITION]{style="color: blue;"} | 6.760265e-06 | 0.0003909877 |
+| [GOBP_REGULATION_OF_CELL_CYCLE_G1_S_PHASE_TRANSITION]{style="color: blue;"} | 6.408466e-06 | 0.0003909877 |
+| [GOBP_MITOTIC_CELL_CYCLE_PHASE_TRANSITION]{style="color: blue;"} | 8.291796e-06 | 0.0004096147 |
+| [GOBP_BLOOD_VESSEL_MORPHOGENESIS]{style="color: red;"} | 1.719120e-05 | 0.0007077046 |
+| [GOBP_REGULATION_OF_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 1.586304e-05 | 0.0007077046 |
+| [GOBP_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 2.781322e-05 | 0.0010569024 |
+| GOBP_CELL_AGING | 3.013967e-05 | 0.0010634999 |
+| [GOBP_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 3.409266e-05 | 0.0011227849 |
+</div>
+:::
 
 ## Discussion
 
