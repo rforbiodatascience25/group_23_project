@@ -53,6 +53,9 @@ format:
 
 -   Number of Mutations & SV per Cancer Type ![](../results/figures/SV_count_per_cancer.png){.absolute bottom="20" left="30" width="400" height="400"}
 
+-   Mutation Type per Cancer Type
+![](../results/figures/mutation_by_cancer.png){.absolute bottom="20" left="30" width="400" height="400"}
+
 ## Results 2
 
 -   SV Analysis ![](../results/figures/SV_lengths_distribution.png){.absolute top="170" left="30" width="400" height="400"}
@@ -81,7 +84,7 @@ format:
 
 ::: table-small
 | Biological Process | pvalue | adjusted pvalue |
-|:---|---:|---:|
+|:-----------------------|-----------------------:|-----------------------:|
 | [GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT]{style="color: red;"} | 1.874506e-06 | 0.0001852012 |
 | GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS | 3.918503e-07 | 0.0001852012 |
 | [GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 8.078272e-07 | 0.0001852012 |
