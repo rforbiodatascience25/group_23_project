@@ -15,7 +15,7 @@ format:
 
 ## Introduction/Background
 
-::: columns
+::::: columns
 ::: {.column width="60%"}
 -   **Study Cohort:** 1661 patients/samples.
 -   **Objective:** Identify predictive biomarkers for Immune Checkpoint Inhibitors (ICI).
@@ -26,20 +26,24 @@ format:
 ::: {.column width="40%"}
 <!-- You can add a schematic image here if you have one, or leave blank -->
 :::
-:::
+:::::
 
 ## Materials
 
-::: columns
+::::: columns
 ::: {.column width="50%"}
 -   **Sequencing:** MSK-IMPACT (Next Generation Sequencing).
+
 -   **Panels Used:**
+
     -   IMPACT 3 (341 genes)
     -   IMPACT 5 (410 genes)
     -   IMPACT 6 (468 genes)
+
 -   **Note:** Higher mutation counts detected as more genes are analyzed.
 
 -   **Datasets:**
+
     -   data_clinical_patient.txt
     -   data_clinical_sample.txt
     -   data_gene_panel_matrix.txt
@@ -50,13 +54,13 @@ format:
 ::: {.column width="50%"}
 ![](../results/figures/mutation_count_IMPACT.png)
 :::
-:::
+:::::
 
 ## Methods
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ### Survival Analysis
+
 -   **Package:** `survival`
 -   **Function:** `Surv()`
     -   Parameters: Survival time + Status (0=Living, 1=Deceased).
@@ -65,6 +69,7 @@ format:
 -   **Output:** Step curve stratified by parameters (sex, age, cancer type).
 
 ### Cox Regression
+
 -   **Package:** `survival`
 -   **Goal:** Hazard risk study.
 -   **Formula:** $\lambda(t,j) = \lambda_0(t) \cdot \exp(\sum \beta_i X_i)$
@@ -73,103 +78,84 @@ format:
 -   **Hazard Ratio:** $\displaystyle \frac{\lambda(t,j_1)}{\lambda(t,j_2)} = \exp(\beta_i)$
 
 ### GSEA
+
 -   **Gene Set Enrichment Analysis**
 -   **Source:** GO Data from Molecular Signature Database.
 -   **Metric:** Ranked list based on numbers of mutated Samples per Gene.
 -   **Function:** `fgseaMultilevel()` from `fgsea` package.
-
 :::
 
 ## Results: Overview - Survival Analysis & Mutation Types
 
-::: {layout-ncol=3}
+:::: {layout-ncol="3"}
 ![](../results/figures/surv_count_per_gender_per_cancer.png)
 
 ![](../results/figures/survival_cancer_type.png)
 
 ::: {width="90%"}
-
 ![](../results/figures/SV_count_per_cancer.png)
-
 
 ![](../results/figures/mutation_by_cancer.png)
 :::
-
-:::
+::::
 
 ## Results: Structural Variants (SV)
 
 **Structural Variants (SVs) are large-scale genomic rearrangements that can significantly disrupt gene function.**
 
-::: columns
+::::: columns
 ::: {.column width="50%"}
-
 ![](../results/figures/SV_lengths_distribution.png)
 :::
 
 ::: {.column width="50%"}
-
 ![](../results/figures/SV_count_per_gene.png)
 :::
-:::
+:::::
 
 **EGFR is the most significantly overrepresented gene when aggregating both the beginning and ending sites of the SVs.**
 
-## Results: EGFR Focus in Glioma  
-
+## Results: EGFR Focus in Glioma
 
 **EGFR is a receptor tyrosine kinase frequently altered in cancer. Its activation drives uncontrolled cell growth and proliferation.**
 
-
-::: columns
-  
+::::: columns
 ::: {.column width="50%"}
-
-
-![](../results/figures/EGFR_count_per_cancer.png){width=100%}
+![](../results/figures/EGFR_count_per_cancer.png){width="100%"}
 :::
 
 ::: {.column width="50%"}
-
-![](../results/figures/SV_gene_in_glioma.png){width=100%}
+![](../results/figures/SV_gene_in_glioma.png){width="100%"}
 :::
-
-:::
-
+:::::
 
 ## Results: Mutations in Glioma
 
-::: columns
-
+::::: columns
 ::: {.column width="60%"}
-
-
-
-![](../results/figures/Mutation_count_in_glioma.png){width=100%}
+![](../results/figures/Mutation_count_in_glioma.png){width="100%"}
 :::
 
 ::: {.column width="40%"}
+-   **EGFR is not a primary mutational target**
 
-- **EGFR is not a primary mutational target**   
+-   **Alternative Pathways:** Genes like **TERT** and **TP53** show a much higher incidence of pinpoint mutations.
 
-
-
-- **Alternative Pathways:** Genes like **TERT** and **TP53** show a much higher incidence of pinpoint mutations. 
-
-  → distinct biological pathways compared to the SV-driven EGFR pathway.
-
-
+    → distinct biological pathways compared to the SV-driven EGFR pathway.
 :::
+:::::
 
-:::
-
-## Results: GSEA (SV & Mutations)
+## Results: Gene Set Enrichment Analysis
 
 **Significant Pathways in Glioma**
 
+15 most significant pathways:
+
+:::::: columns
+:::: column
 ::: table-small
 | Biological Process | pvalue | adjusted pvalue |
-|:---|---:|---:|
+|:-----------------------|-----------------------:|-----------------------:|
 | [GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT]{style="color: red;"} | 1.87e-06 | 0.00018 |
 | GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS | 3.91e-07 | 0.00018 |
 | [GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 8.07e-07 | 0.00018 |
@@ -186,32 +172,43 @@ format:
 | GOBP_CELL_AGING | 3.01e-05 | 0.00106 |
 | [GOBP_EXTRINSIC_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 3.40e-05 | 0.00112 |
 :::
+::::
+
+::: column
+Genes with mutation: 270
+
+-\> 123 significant pathways
+
+Genes with Structural Variance: 28
+
+-\> 0 significant pathways
+
+Limitation of results: few datapoints
+:::
+::::::
 
 ## Results: Confounders in Glioma
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ### Gender Effect (Global)
-![](../results/figures/surv_plot_per_gender.png){width=60%}
+
+![](../results/figures/surv_plot_per_gender.png){width="60%"}
 
 ### Glioma Subset (KM)
-![](../results/figures/survival_glioma_gender.png){width=60%}
+
+![](../results/figures/survival_glioma_gender.png){width="60%"}
 
 ### Glioma Subset (Adjusted)
-![](../results/figures/surv_plot_per_gender_for_glioma.png){width=60%}
 
+![](../results/figures/surv_plot_per_gender_for_glioma.png){width="60%"}
 :::
-
-
 
 ## Discussion
 
 -   **Tumor Burden Hypothesis:**
     -   General trend: Higher TMB $\rightarrow$ higher survival.
-    
 -   **Severity Indication:**
     -   Surprisingly, more mutations do not necessarily indicate a higher severity of cancer in terms of immediate survival.
-
 -   **The Glioma Exception:**
     -   Glioma appears to be an exemption to the TMB rule.
     -   No clear correlation observed in our subset analysis.
