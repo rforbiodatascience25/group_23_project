@@ -22,7 +22,8 @@ format:
 
 ![](../results/figures/Figure_paper.png){width=60%}
 
-From
+*From Samstein et al., Nat Genet 2019*
+
 ## Materials
 
 ::: columns
@@ -123,7 +124,7 @@ From
 ## Results: EGFR Focus in Glioma  
 
 
-**EGFR is a receptor tyrosine kinase frequently altered in cancer. Its activation drives uncontrolled cell growth and proliferation.**
+**EGFR is a receptor tyrosine kinase frequently altered in cancer. Its activation drives uncontrolled cell growth and proliferation.** ^\*^
 
 
 ::: columns
@@ -141,6 +142,7 @@ From
 
 :::
 
+\* *From Yarden & Sliwkowski, Nat Rev Mol Cell Biol 2001*
 
 ## Results: Mutations in Glioma
 
