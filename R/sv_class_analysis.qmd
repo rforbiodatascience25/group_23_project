@@ -2,6 +2,7 @@
 title: "Structural Variant analysis"
 format: html
 editor: visual
+output-dir: "results"
 html:
     self-contained: true
 ---
@@ -75,7 +76,7 @@ We omitted the translocation class here, as it lacks a determined size and was a
 
 ```{r}
  
-sv_clinic_augm |> filter(Class != "TRANSLOCATION") |> 
+SVs_length_distrib <- sv_clinic_augm |> filter(Class != "TRANSLOCATION") |> 
   ggplot(aes(x=SV_Length, fill = Class)) +
   geom_histogram(position = "identity", alpha = 0.8) +
   scale_x_log10() +
@@ -89,6 +90,8 @@ sv_clinic_augm |> filter(Class != "TRANSLOCATION") |>
     title = 'Distribution of Structural Variant lengths by Class', 
     subtitle = 'Translocations excluded' 
   )
+
+SVs_length_distrib
 
 ```
 
@@ -119,7 +122,7 @@ This clearly highlights the disparities in lenghts per class.
 
 ```{r}
 
-sv_clinic_augm |> 
+SVs_per_cancer <- sv_clinic_augm |> 
   group_by(CANCER_TYPE) |> 
   ggplot(mapping = aes(x = CANCER_TYPE, fill = Class)) + 
   geom_bar(color = "black", linewidth = 0.2, alpha = 0.9) +
@@ -133,6 +136,8 @@ sv_clinic_augm |>
   labs(title = "Distribution of SV Class by Cancer Type",
        x = "Cancer Type",
        y = "SV Count")
+
+SVs_per_cancer
 
 ```
 
@@ -170,7 +175,7 @@ top_genes <- genes_longer  |>
   count(Gene_Name, sort = TRUE) |> 
   head(10)
 
-top_genes |> 
+SVs_per_gene <- top_genes |> 
   mutate(Gene_Name = factor(Gene_Name, levels = rev(Gene_Name))) |>
   ggplot(aes(x = Gene_Name, y = n, fill=Gene_Name)) +
   geom_text(aes(label = n), hjust = -0.5, size = 4) +
@@ -186,6 +191,8 @@ top_genes |>
     x = NULL, 
     y = "Total SV Events (Site 1 + Site 2)"
   ) 
+
+SVs_per_gene
 ```
 
 The gene EGFR is involved in 59 sites in total over 692 sites for the 346 SVs. Let's have a closer look at this. Here, we are reasoning per SV, and only consider the SVs where EGFR is involved either on at least one of the 2 sites.
@@ -210,9 +217,9 @@ EGFR_SV |>
 EGFR is involved in 30 SVs, and among these 25 are deletion! Let's see if a type of cancer is predominant within the EGFR-involved SVs.
 
 ```{r}
-EGFR_SV |> 
+EGFR_per_cancer <- EGFR_SV |> 
   ggplot(aes(x = CANCER_TYPE, fill = Class)) +
-  geom_bar(color = "black", alpha = 0.9, linewidth = 0.3) +
+  geom_bar(color = "black", alpha = 0.8, linewidth = 0.3) +
   scale_fill_viridis(option = "viridis",
                      discrete = TRUE) +
   theme_minimal() +
@@ -225,6 +232,7 @@ EGFR_SV |>
     fill = "SV Class"
   )
 
+EGFR_per_cancer
 ```
 
 Almost all EGFR SVs are from glioma samples. But are there SVs impacting other gene in glioma ?
@@ -280,7 +288,7 @@ other_genes_levels <- glioma_SV_longer |>
 
 new_levels <- c("EGFR", other_genes_levels) # for EGFR to have the darkest color of the viridis palette
 
-glioma_SV_longer |> 
+SV_genes_in_glioma <- glioma_SV_longer |> 
   mutate(Group = ifelse(Gene_Name == "EGFR", "EGFR", "Other_genes"), Gene_Name = factor(Gene_Name, levels = new_levels)) |> 
   ggplot(aes(x = Group, fill = Gene_Name)) +
   geom_bar(color = "black", width = 0.6, linewidth = 0.25, alpha = 0.9) +
@@ -295,6 +303,7 @@ glioma_SV_longer |>
   ) + 
   theme(legend.position = "none", panel.grid.major.x = element_blank())
 
+SV_genes_in_glioma
 ```
 
 ### Exploration of link between SVs, TMB and all cancer types
@@ -426,7 +435,7 @@ custom_colors <- rep("black", length(genes_list))
 names(custom_colors) <- genes_list
 custom_colors["EGFR"] <- "red"
 
-top_genes_mut |> 
+Mutation_count_in_glioma <- top_genes_mut |> 
   mutate(Hugo_Symbol = fct_reorder(Hugo_Symbol, n)) |>
   ggplot(aes(x = Hugo_Symbol, y = n, fill=Hugo_Symbol, color = Hugo_Symbol)) +
   geom_text(aes(label = n), hjust = -0.5, size = 4) +
@@ -443,6 +452,21 @@ top_genes_mut |>
     x = NULL, 
     y = "Total number of mutations"
   ) 
+
+Mutation_count_in_glioma
 ```
 
 It could be interesting to compare the patients having a glioma, to see if some glioma are enriched in EGFR SV, or others in mutations from the top 5 above (TERT TP53 PTEN NF1 ATRX).
+
+## Exporting plots
+
+```{r}
+
+ggsave(here('results','figures', 'SV_count_per_cancer.png'), SVs_per_cancer)
+ggsave(here('results','figures', 'SV_lengths_distribution.png'), SVs_length_distrib)
+ggsave(here('results','figures', 'SV_count_per_gene.png'), SVs_per_gene)
+ggsave(here('results','figures', 'EGFR_count_per_cancer.png'), EGFR_per_cancer)
+ggsave(here('results','figures', 'SV_gene_in_glioma.png'), SV_genes_in_glioma)
+ggsave(here('results','figures', 'Mutation_count_in_glioma.png'), Mutation_count_in_glioma)
+
+```
