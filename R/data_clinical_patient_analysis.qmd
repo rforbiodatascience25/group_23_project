@@ -1,14 +1,15 @@
 ---
 title: "data_clinical_patient_analysis"
-author: "Romane"
-format: html
+format: 
+  html:
+    self-contained: true
 editor: visual
 ---
 
 # Importing libraries
 
 ```{r}
-#| echo : False
+#| echo: false
 library("tidyverse")
 library('here')
 library('survival')
@@ -39,7 +40,7 @@ patients <- patients_sample_gene_panel |>
 
 # Plots
 
-First, we will be looking at the age distribution of Cancers in men and woman and separating the death proprtion from the living ones.
+First, we will be looking at the age distribution of Cancers in men and woman and separating the patients that died from the living ones.
 
 ```{r}
 patients |>
@@ -62,9 +63,9 @@ patients |>
   theme(plot.title = element_text(size = 9))
 ```
 
-In both groups, dead or alive, the patients, men and woman that have a cancer diagnosis are usually btween 61-70 years old. Cancers seems to be more diagnosed in man than in woman, at all ages.
+In both groups, dead or alive, the patients, men and woman that have a cancer diagnosis are usually between 61-70 years old. Cancers seems to be more diagnosed in man than in woman, at all ages.
 
-Looking more into this age group, lets consider the drug given against cancers.
+Looking more into this age group (61-70), lets consider the drug given against cancers. There is also a comparison of the drug given at all ages, for reference. In both cases, male and female are separated (medications do not affect men and women in the same way).
 
 ```{r}
 patients |> 
@@ -96,6 +97,29 @@ ggplot(patients,
   
 ```
 
+Looking at the 61-70 years old again, We want to see the time these patients survived for depending on the drug they were given. Again man and Woman are separated.
+
+```{r}
+patients |>
+  filter(AGE_GROUP == "61-70") |> 
+  ggplot(mapping = aes(x = SEX,
+                       y = OS_MONTHS, 
+                       fill = DRUG_TYPE))+
+  geom_boxplot()+
+  scale_fill_viridis(option = "viridis",
+                     discrete = TRUE,
+                     alpha = 0.7)+
+  
+  labs(title = 'Box Plot of the Drug success rate based on the months the patients lived, separated by gender',
+       x = 'Gender',
+       y = 'Time survived (in months)',
+       fill = 'Medication')+
+  theme_minimal()+
+  theme(plot.title = element_text(size = 10))
+```
+
+Here patients that had lived and those that are dead are mixed, could be see if there is a distinction, between the number of patients dead or alive, based on the same components of the previous plot.
+
 ```{r}
 patients |>
   filter(AGE_GROUP == "61-70") |> 
@@ -119,13 +143,13 @@ patients |>
 
 In General, PDL-1 is given more than other drugs, CTL4 is rarely given and sometimes Combo.
 
-As for the 61-70 agre group, woman given CTLA4, both survived and died the most.
+As for the 61-70 age group, woman given CTLA4, both survived and died the most.
 
-For both men and women PDL-1 has the lowest death proportion. It could be that PDL-1 is generally more given, in cancers tha are less agressive, and combo or CTLA4 for more agressive cancers taht do not react to PDL-1.
+For both men and women PDL-1 has the lowest death proportion. It could be that PDL-1 is generally more given, in cancers that are less aggressive, and combo or CTLA4 for more aggressive cancers that do not react to PDL-1.
 
 ## Survival rate
 
-With the patient data, containing Overall Survival months (OS_MONTHS) and Overall Survival Status (OS_STATUS), it is possible to compute a survival probability over time, using the Kaplan Meier method. The Survival package follows this principal and allows us to compute the survival rate of the patients. To do so, Surv() creates the formula object, associating the status of a patients to it's survival time. Then, survfit uses the formula object to fit it to the Kaplan Meier estimator, calculating the survival probabilities at each observed event time. The result can then be used to plot the Kaplan–Meier survival.
+With the patient data, containing Overall Survival months (OS_MONTHS) and Overall Survival Status (OS_STATUS), it is possible to compute a survival probability over time, using the Kaplan Meier method. The Survival package follows this principal and allows us to compute the survival rate of the patients. To do so, Surv() creates the formula object, associating the status of a patients to it's survival time. Then, survfit() uses the formula object to fit it to the Kaplan Meier estimator, calculating the survival probabilities at each observed event time. The result can then be used to plot the Kaplan–Meier survival.
 
 ```{r}
 
@@ -139,7 +163,7 @@ tibble_KM_f <- tibble(
   survival = KM_f$surv,
   lower = KM_f$lower,
   upper = KM_f$upper)
-print(tibble_KM_f)
+
 
 ggplot(tibble_KM_f, 
        mapping = aes(x = time,
@@ -157,6 +181,12 @@ ggplot(tibble_KM_f,
 
 
 ```
+
+From the survival analysis, there is a rapid decline in the survival probability in the first months (20-30).
+
+It would be interesting to look at the impact of the different variables between the patients, mainly if the age has an impact on survival or if the gender could also impact the survival probability. From this data set, we also have the drug that was given to each patients, we can see if a drug is more successful by looking at its survival probability.
+
+**By Gender:**
 
 ```{r}
 
@@ -195,6 +225,10 @@ ggplot(tibble_KM_f,
   
 ```
 
+Overall, the gender has a minimal impact on the survival probability.
+
+**By Age group:**
+
 ```{r}
 KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~AGE_GROUP, data = patients)
 
@@ -223,6 +257,8 @@ ggplot(tibble_KM_f,
     theme_minimal()
 ```
 
+**By Drug type**
+
 ```{r}
 KM_f <- survfit(Surv(OS_MONTHS, OS_STATUS) ~DRUG_TYPE, data = patients)
 
@@ -250,30 +286,6 @@ ggplot(tibble_KM_f,
   theme_minimal()
 ```
 
-From the course, we can make a Logistic regression model
+Overall, the survival probability increases after 40 months as the slope of the curve is less steep. It is possible that in some cases only a few patients are left then, and were not reported further.
 
-```{r Logistic Regression Model}
-my_glm_mdl <- glm(formula = OS_STATUS ~ OS_MONTHS,
-                  family = binomial(link = "logit"),
-                  data = patients)
-```
-
-```{r}
-
-patients |>
-  mutate(my_glm_model = pluck(my_glm_mdl, "fitted.values")) |>
-  arrange(OS_MONTHS) |> 
-  ggplot(aes(x = OS_MONTHS,
-             y = OS_STATUS)) +
-  geom_point(alpha = 0.5,
-             size = 3)+
-  geom_line(aes(y = my_glm_model))+
-  labs(title = 'Logistic Regression model of Patients survival in months', 
-       x = "Time (in Months)", 
-       y = 'Overall Survival Probability')
-
-```
-
-Death rate decreases over time
-
-However, the problem with a GLM, is that it does not take into account the "censored" patients, some patients are alive after 4 months but there is no later update. The data does not follow the patient until the end yet GML assumes it does.
+# html saving to results
