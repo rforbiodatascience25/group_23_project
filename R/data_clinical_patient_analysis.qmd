@@ -19,10 +19,10 @@ library('viridis')
 # Importing data
 
 ```{r}
-patients_sample_gene_panel <- read_delim(here("data", "patient_sample_gene_panel"), delim = "\t")
+patients_sample_gene_panel <- read_delim(here("data", "patient_sample_gene_panel"), delim = "\t", show_col_types = FALSE)
 ```
 
-# Subseting Data
+# Subsetting Data
 
 From the merge data set, we will do analysis on the patients information for now, so taking only the columns that were originally in the patient data set, diregarding the cancer types,..
 
