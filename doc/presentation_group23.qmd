@@ -37,6 +37,13 @@ format:
     -   IMPACT 5 (410 genes)
     -   IMPACT 6 (468 genes)
 -   **Note:** Higher mutation counts detected as more genes are analyzed.
+
+-   **Datasets:**
+    -   data_clinical_patient.txt
+    -   data_clinical_sample.txt
+    -   data_gene_panel_matrix.txt
+    -   data_mutations.txt
+    -   data_sv.txt
 :::
 
 ::: {.column width="50%"}
