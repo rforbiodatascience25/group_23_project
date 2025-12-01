@@ -81,7 +81,7 @@ format:
 
 ::: table-small
 | Biological Process | pvalue | adjusted pvalue |
-|:-----------------------|-----------------------:|-----------------------:|
+|:---|---:|---:|
 | [GOBP_CIRCULATORY_SYSTEM_DEVELOPMENT]{style="color: red;"} | 1.874506e-06 | 0.0001852012 |
 | GOBP_NEGATIVE_REGULATION_OF_DEVELOPMENTAL_PROCESS | 3.918503e-07 | 0.0001852012 |
 | [GOBP_REGULATION_OF_APOPTOTIC_SIGNALING_PATHWAY]{style="color: green;"} | 8.078272e-07 | 0.0001852012 |
