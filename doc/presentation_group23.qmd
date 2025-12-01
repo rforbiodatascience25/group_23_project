@@ -22,13 +22,10 @@ format:
 ## Materials
 
 -   MSK-IMPACT -\> Next Generation Sequencing
-
 -   3 versions: IMPACT 3 (341 genes), IMPACT 5 (410 genes), IMPACT 6 (468 genes)
-
 -   Higher count of mutations detected as more genes are analysed
 
 -   Datasets:
-
     -   data_clinical_patient.txt
     -   data_clinical_sample.txt
     -   data_gene_panel_matrix.txt
@@ -53,21 +50,19 @@ format:
 
 ## Results 1
 
--   Survival analysis - stratified by Cancer type
+-   Survival analysis - stratified by Cancer type ![](../results/figures/survival_cancer_type.png){.absolute top="170" left="30" width="400" height="400"}
 
 -   Number of Mutations & SV per Cancer Type
 
 ## Results 2
 
--   SV Analysis
+-   SV Analysis ![](../results/figures/SV_lengths_distribution.png)
 
--   Kind of SVs+ Length
-
--   Number of SVs per Gene-\>EGFR
+-   Number of SVs per Gene ![](../results/figures/SV_count_per_gene.png)
 
 ## Results 3
 
--   EGFR per Cancer Type -\> Glioma
+-   EGFR per Cancer Type -\> Glioma ![](../results/figures/EGFR_count_per_cancer.png)
 
 -   Overview Glioma
 
@@ -75,7 +70,7 @@ format:
 
 -   Survival Correlation with Co-founders(especially gender)
 
--   Survival analysis on gender(subset glioma) ![](../results/figures/EGFR_count_per_cancer.png){.absolute top="170" left="30" width="400" height="400"}
+-   Survival analysis on gender(subset glioma) ![](../results/figures/survival_glioma_gender.png){.absolute top="170" left="30" width="400" height="400"}
 
 ## Results 5
 
