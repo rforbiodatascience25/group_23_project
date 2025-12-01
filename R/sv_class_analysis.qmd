@@ -10,12 +10,10 @@ output-dir: "results"
 ## Import library
 
 ```{r}
-
+#| message: false
 library(tidyverse)
 library(ggplot2)
-library(dplyr)
 library(here)
-library(readr)
 library(viridis)
 ```
 
@@ -239,6 +237,8 @@ The lack of sequenced data for the SVs presents a severe limitation for this ana
 ## Exporting plots
 
 ```{r}
+if(!dir.exists(here("results"))) dir.create(here("results"))
+if(!dir.exists(here("results",'figures'))) dir.create(here("results", 'figures'))
 
 ggsave(here('results','figures', 'SV_count_per_cancer.png'), SVs_per_cancer)
 ggsave(here('results','figures', 'SV_lengths_distribution.png'), SVs_length_distrib)

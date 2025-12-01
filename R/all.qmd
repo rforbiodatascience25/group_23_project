@@ -10,6 +10,7 @@ This script will run all our Analysis, from downloading the data until producing
 # Load libraries
 
 ```{r}
+#| message: false
 library(here)
 library(quarto)
 ```

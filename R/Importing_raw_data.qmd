@@ -252,6 +252,8 @@ data_mutation_without_nas_long |>
 ## Export the cleaned data
 
 ```{r}
+if(!dir.exists(here("data"))) dir.create(here("data"))
+
 data_mutation_without_nas_long |>
   write_tsv(file = here('data','data_mutation_cleaned.tsv'))
 ```
@@ -304,7 +306,7 @@ The file's dimensions are inconsistent with the other files, and the Sample_ID c
 
 ```{r}
 cleaned_sv |>
-  write_tsv(file = here('data','sv_cleaned'))
+  write_tsv(file = here('data','sv_cleaned.tsv'))
 ```
 
 ## Merging Patient-Sample

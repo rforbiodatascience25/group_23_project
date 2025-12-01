@@ -10,12 +10,10 @@ output-dir: "results"
 ## Import library
 
 ```{r}
-
+#| message: false
 library(tidyverse)
 library(ggplot2)
-library(dplyr)
 library(here)
-library(readr)
 library(viridis)
 ```
 
@@ -24,9 +22,9 @@ library(viridis)
 As this study will later focus on a single gene, we also want to compare with the data from the mutations file
 
 ```{r}
-data_sv <- read_tsv(here("data", "sv_cleaned"))
+data_sv <- read_tsv(here("data", "sv_cleaned.tsv"))
 
-data_patient_sample <- read.delim(here("data", "patient_sample_gene_panel"))
+data_patient_sample <- read_tsv(here("data", "patient_sample_gene_panel.tsv"))
 
 data_mutations <- read_tsv(file = here('data','data_mutation_cleaned.tsv'))
 ```
